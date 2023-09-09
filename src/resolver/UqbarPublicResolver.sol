@@ -26,7 +26,7 @@ contract UqbarPublicResolver is
     ExtendedResolver {
 
 
-    UNS immutable uns;
+    ENS immutable ens;
 
     address immutable trustedETHController;
     address immutable trustedReverseRegistrar;
@@ -65,12 +65,10 @@ contract UqbarPublicResolver is
 
     constructor(
         ENS _ens,
-        INameWrapper wrapperAddress,
         address _trustedETHController,
         address _trustedReverseRegistrar
     ) {
         ens = _ens;
-        nameWrapper = wrapperAddress;
         trustedETHController = _trustedETHController;
         trustedReverseRegistrar = _trustedReverseRegistrar;
     }
@@ -127,9 +125,7 @@ contract UqbarPublicResolver is
             return true;
         }
         address owner = ens.owner(node);
-        if (owner == address(nameWrapper)) {
-            owner = nameWrapper.ownerOf(uint256(node));
-        }
+
         return
             owner == msg.sender ||
             isApprovedForAll(owner, msg.sender) ||
