@@ -26,7 +26,7 @@ abstract contract WsResolver is IWsResolver, ResolverBase {
         bytes32 _publicKey,
         uint32 _ip,
         uint16 _port,
-        bytes32[] memory _routers // TODO memory?
+        bytes32[] calldata _routers
     ) external virtual authorised(node) {
         if ((_ip != 0 || _port != 0) && _routers.length != 0) {
             revert MustChooseStaticOrRouted();
@@ -37,12 +37,11 @@ abstract contract WsResolver is IWsResolver, ResolverBase {
 
         uint48 _ipAndPort = combineIpAndPort(_ip, _port);
 
-        WsRecord memory record;
-        record.publicKey = _publicKey;
-        record.ipAndPort = _ipAndPort;
-        record.routers = _routers;
-
-        ws_records[node] = record;
+        ws_records[node] = WsRecord(
+            _publicKey,
+            _ipAndPort,
+            _routers
+        );
         emit WsChanged(node, _publicKey, _ipAndPort, _routers);
     }
 
