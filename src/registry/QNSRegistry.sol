@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "forge-std/console.sol";
 
 import "../interfaces/IQNS.sol";
 import "../lib/BytesUtils.sol";
@@ -100,12 +101,17 @@ contract QNSRegistry is IQNS {
         return keccak256(abi.encodePacked(node, labelhash));
     }
 
+    function owner(uint256 node) external view returns (address owner) {
+
+        owner = records[node].owner;
+
+    }
+
     // TODO: May keep or delete these
     function setTTL(uint256 node, uint64 ttl) public {}
     function ttl(uint256 node) public view returns (uint64 ttl) {}
     function recordExists(uint256 node) external view returns (bool exists) {}
     function resolver(uint256 node) external view returns (address resolver) {}
-    function owner(uint256 node) external view returns (address owner) {}
     function setResolver(uint256 node, address resolver) external {}
     function setOwner(uint256 node, address owner) external {}
 
