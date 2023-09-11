@@ -12,6 +12,7 @@ import "./profiles/NameResolver.sol";
 import "./profiles/PubkeyResolver.sol";
 import "./profiles/TextResolver.sol";
 import "./profiles/ExtendedResolver.sol";
+import "./profiles/WsResolver.sol";
 
 import { QNSRegistry } from "../registry/QNSRegistry.sol";
 
@@ -25,7 +26,8 @@ contract PublicResolver is
     NameResolver,
     PubkeyResolver,
     TextResolver,
-    ExtendedResolver {
+    ExtendedResolver,
+    WsResolver {
 
     QNSRegistry immutable qns;
 
@@ -147,7 +149,8 @@ contract PublicResolver is
             InterfaceResolver,
             NameResolver,
             PubkeyResolver,
-            TextResolver
+            TextResolver,
+            WsResolver
         )
         returns (bool)
     {

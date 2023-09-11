@@ -2,12 +2,12 @@
 pragma solidity >=0.8.4;
 
 import "./IWsResolver.sol";
-import "ens-contracts/resolvers/ResolverBase.sol";
+import "../ResolverBase.sol";
 
 error MustChooseStaticOrRouted();
 
 abstract contract WsResolver is IWsResolver, ResolverBase {
-    mapping(bytes32 => WsRecord) ws_records;
+    mapping(uint256 => WsRecord) ws_records;
 
     function combineIpAndPort(uint32 ip, uint16 port) public pure returns (uint48) {
         return uint48((uint48(ip) << 16) | port);
@@ -22,7 +22,7 @@ abstract contract WsResolver is IWsResolver, ResolverBase {
      * @param _routers The allowed routers of the QNS node (empty if direct node)
      */
     function setWs(
-        bytes32 node,
+        uint256 node,
         bytes32 _publicKey,
         uint32 _ip,
         uint16 _port,
@@ -52,7 +52,7 @@ abstract contract WsResolver is IWsResolver, ResolverBase {
      * @return record The record information from the resolver
      */
     function ws(
-        bytes32 node
+        uint256 node
     ) external view virtual override returns (WsRecord memory) {
         return ws_records[node];
     }

@@ -10,7 +10,7 @@ struct WsRecord {
 
 interface IWsResolver {
     event WsChanged(
-        bytes32 indexed node,
+        uint256 indexed node,
         bytes32 publicKey,
         uint48 ipAndPort,
         bytes32[] routers // TODO maybe string?
@@ -22,6 +22,6 @@ interface IWsResolver {
      * @return The associated ws routing information
      */
     function ws(
-        bytes32 node
+        uint256 node
     ) external view returns (WsRecord memory);
 }
