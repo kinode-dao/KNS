@@ -1,3 +1,14 @@
+# QNS
+Before running scripts, build dnswire with
+```
+cd dnswire
+cargo build
+```
+Then you can run scripts, for example
+```
+forge script script/QNS.s.sol --rpc-url http://127.0.0.1:8545 --ffi
+```
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**

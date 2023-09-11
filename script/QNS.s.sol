@@ -71,15 +71,17 @@ contract QNSScript is Script {
     function setUp() public {}
 
     function run() public {
-        vm.startBroadcast(address(this));
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address deployerPublicKey = vm.envAddress("PUBLIC_KEY");
+        vm.startBroadcast(deployerPrivateKey);
 
-        QNSRegistry    qnsRegistry = new QNSRegistry();
+        QNSRegistry qnsRegistry = new QNSRegistry();
 
         PublicResolver publicResolver = new PublicResolver(
             qnsRegistry, address(0), address(0));
 
         string[] memory inputs = new string[](3);
-        inputs[0] = "./dnswire.bin";
+        inputs[0] = "./dnswire/target/debug/dnswire";
         inputs[1] = "--to-hex";
         inputs[2] = "uq.";
         bytes memory res = vm.ffi(inputs);
@@ -100,18 +102,16 @@ contract QNSScript is Script {
         res = vm.ffi(inputs);
         fifsRegistrar.register(
             res,
-            address(this),
+            deployerPublicKey,
             address(publicResolver),
             type(uint64).max
         );
 
         uint bardotuq = uint(namehash(res, 0));
 
-        console.log("this", address(this));
-
         publicResolver.setWs(
             bardotuq,
-            bytes32(uint(uint160(address(this)))),
+            bytes32(uint(uint160(deployerPublicKey))),
             type(uint32).max,
             type(uint16).max,
             new bytes32[](0)
