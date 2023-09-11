@@ -1,19 +1,21 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-Licqnse-Identifier: UNLICQNSED
 pragma solidity ^0.8.13;
 
-import { ENS } from "ens-contracts/registry/ENSRegistry.sol";
-import "ens-contracts/resolvers/profiles/ABIResolver.sol";
-import "ens-contracts/resolvers/profiles/AddrResolver.sol";
-import "ens-contracts/resolvers/profiles/ContentHashResolver.sol";
-import "ens-contracts/resolvers/profiles/DNSResolver.sol";
-import "ens-contracts/resolvers/profiles/InterfaceResolver.sol";
-import "ens-contracts/resolvers/profiles/NameResolver.sol";
-import "ens-contracts/resolvers/profiles/PubkeyResolver.sol";
-import "ens-contracts/resolvers/profiles/TextResolver.sol";
-import "ens-contracts/resolvers/profiles/ExtendedResolver.sol";
+// solhint-disable-next-line
 import "ens-contracts/resolvers/Multicallable.sol";
+import "./profiles/ABIResolver.sol";
+import "./profiles/AddrResolver.sol";
+import "./profiles/ContentHashResolver.sol";
+import "./profiles/DNSResolver.sol";
+import "./profiles/InterfaceResolver.sol";
+import "./profiles/NameResolver.sol";
+import "./profiles/PubkeyResolver.sol";
+import "./profiles/TextResolver.sol";
+import "./profiles/ExtendedResolver.sol";
 
-contract UqbarPublicResolver is
+import { QNSRegistry } from "../registry/QNSRegistry.sol";
+
+contract PublicResolver is
     Multicallable,
     ABIResolver,
     AddrResolver,
@@ -25,8 +27,7 @@ contract UqbarPublicResolver is
     TextResolver,
     ExtendedResolver {
 
-
-    ENS immutable ens;
+    QNSRegistry immutable qns;
 
     address immutable trustedETHController;
     address immutable trustedReverseRegistrar;
@@ -45,7 +46,7 @@ contract UqbarPublicResolver is
      * the set of token approvals.
      * (owner, name, delegate) => approved
      */
-    mapping(address => mapping(bytes32 => mapping(address => bool)))
+    mapping(address => mapping(uint256 => mapping(address => bool)))
         private _tokenApprovals;
 
     // Logged when an operator is added or removed.
@@ -58,17 +59,17 @@ contract UqbarPublicResolver is
     // Logged when a delegate is approved or  an approval is revoked.
     event Approved(
         address owner,
-        bytes32 indexed node,
+        uint256 indexed node,
         address indexed delegate,
         bool indexed approved
     );
 
     constructor(
-        ENS _ens,
+        QNSRegistry _qns,
         address _trustedETHController,
         address _trustedReverseRegistrar
     ) {
-        ens = _ens;
+        qns = _qns;
         trustedETHController = _trustedETHController;
         trustedReverseRegistrar = _trustedReverseRegistrar;
     }
@@ -99,7 +100,7 @@ contract UqbarPublicResolver is
     /**
      * @dev Approve a delegate to be able to updated records on a node.
      */
-    function approve(bytes32 node, address delegate, bool approved) external {
+    function approve(uint256 node, address delegate, bool approved) external {
         require(msg.sender != delegate, "Setting delegate status for self");
 
         _tokenApprovals[msg.sender][node][delegate] = approved;
@@ -111,20 +112,20 @@ contract UqbarPublicResolver is
      */
     function isApprovedFor(
         address owner,
-        bytes32 node,
+        uint256 node,
         address delegate
     ) public view returns (bool) {
         return _tokenApprovals[owner][node][delegate];
     }
 
-    function isAuthorised(bytes32 node) internal view override returns (bool) {
+    function isAuthorised(uint256 node) internal view override returns (bool) {
         if (
             msg.sender == trustedETHController ||
             msg.sender == trustedReverseRegistrar
         ) {
             return true;
         }
-        address owner = ens.owner(node);
+        address owner = qns.owner(node);
 
         return
             owner == msg.sender ||

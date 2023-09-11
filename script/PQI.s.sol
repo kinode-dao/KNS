@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script, console2} from "forge-std/Script.sol";
 
-import { UqbarRegistry } from "../src/registry/UqbarRegistry.sol";
+import { QNSRegistry } from "../src/registry/QNSRegistry.sol";
 
 contract PQIScript is Script {
     function setUp() public {}
@@ -11,8 +11,9 @@ contract PQIScript is Script {
     function run() public {
         vm.broadcast();
 
-        UqbarRegistry uqbarRegistry = new UqbarRegistry();
+        QNSRegistry qnsRegistry = new QNSRegistry();
 
         vm.stopBroadcast();
     }
+
 }
