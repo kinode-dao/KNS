@@ -118,7 +118,7 @@ contract QNSScript is Script {
             new bytes32[](0)
         );
 
-        baseRegistrar.makeCommitment(
+        bytes32 commitment = baseRegistrar.makeCommitment(
             res,
             deployerPublicKey,
             keccak256(abi.encodePacked("secret")),
@@ -127,6 +127,8 @@ contract QNSScript is Script {
             false,
             type(uint16).max
         );
+
+        baseRegistrar.commit(commitment);
 
         baseRegistrar.register(
             res,
@@ -138,19 +140,6 @@ contract QNSScript is Script {
             type(uint16).max
         );
 
-        // baseRegistrar.register(payload);
-
-        // uint bardotuq = uint(namehash(res, 0));
-
-        // publicResolver.setWs(
-        //     bardotuq,
-        //     bytes32(uint(uint160(deployerPublicKey))),
-        //     type(uint32).max,
-        //     type(uint16).max,
-        //     new bytes32[](0)
-        // );
-
-        // vm.stopBroadcast();
     }
 
 }

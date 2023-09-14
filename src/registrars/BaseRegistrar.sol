@@ -8,6 +8,7 @@ import "../resolver/IResolver.sol";
 error CommitmentTooOld(bytes32 commitment);
 error CommitmentTooNew(bytes32 commitment);
 error CommitmentUnexpired(bytes32 commitment);
+error CommitmentDoesNotExist(bytes32 commitment);
 error DomainNotAvailable(uint256 domainId);
 error DomainTooShort();
 error DomainParentInvalid(bytes name);
@@ -37,7 +38,7 @@ contract BaseRegistrar is IBaseRegistrar {
         qns = _qns;
         baseNode = _baseNode;
         minCommitmentAge = 0;
-        maxCommitmentAge = type(uint).max;
+        maxCommitmentAge = type(uint128).max;
     }
 
     function addController(address controller) external onlyController {
@@ -98,12 +99,14 @@ contract BaseRegistrar is IBaseRegistrar {
         );
     }
 
-    function commit (bytes32 commitment) public {
+    function commit (bytes32 commit) public {
 
-        if (commitments[commitment] + maxCommitmentAge >= block.timestamp)
-            revert CommitmentUnexpired(commitment);
+        uint commitment = commitments[commit];
+
+        if (commitment != 0 && commitment + maxCommitmentAge >= block.timestamp)
+            revert CommitmentUnexpired(commit);
         else 
-            commitments[commitment] = block.timestamp;
+            commitments[commit] = block.timestamp;
 
     }
 
@@ -151,6 +154,10 @@ contract BaseRegistrar is IBaseRegistrar {
         uint256 domainId,
         bytes32 commitment
     ) internal {
+
+        // must exist
+        if (commitments[commitment] == 0)
+            revert CommitmentDoesNotExist(commitment);
 
         // too old or already registered
         if (commitments[commitment] + maxCommitmentAge <= block.timestamp)
