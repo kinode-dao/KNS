@@ -24,4 +24,12 @@ interface IWsResolver {
     function ws(
         uint256 node
     ) external view returns (WsRecord memory);
+
+    function setWs(
+        uint256 node,
+        bytes32 _publicKey,
+        uint32 _ip,
+        uint16 _port,
+        bytes32[] calldata _routers
+    ) external;
 }

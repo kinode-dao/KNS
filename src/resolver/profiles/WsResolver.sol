@@ -28,6 +28,7 @@ abstract contract WsResolver is IWsResolver, ResolverBase {
         uint16 _port,
         bytes32[] calldata _routers
     ) external virtual authorised(node) {
+
         if ((_ip != 0 || _port != 0) && _routers.length != 0) {
             revert MustChooseStaticOrRouted();
         }

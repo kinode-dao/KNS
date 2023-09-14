@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 // solhint-disable-next-line
-import "ens-contracts/resolvers/Multicallable.sol";
+import "./Multicallable.sol";
 import "./profiles/ABIResolver.sol";
 import "./profiles/AddrResolver.sol";
 import "./profiles/ContentHashResolver.sol";
@@ -124,9 +124,8 @@ contract PublicResolver is
         if (
             msg.sender == trustedETHController ||
             msg.sender == trustedReverseRegistrar
-        ) {
-            return true;
-        }
+        ) return true;
+
         address owner = qns.owner(node);
 
         return

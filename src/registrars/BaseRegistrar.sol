@@ -2,7 +2,8 @@ pragma solidity ^0.8.13;
 
 import "../registry/QNSRegistry.sol";
 import "../lib/BytesUtils.sol";
-import "../interfaces/IBAseRegistrar.sol";
+import "../interfaces/IBaseRegistrar.sol";
+import "../resolver/IResolver.sol";
 
 error CommitmentTooOld(bytes32 commitment);
 error CommitmentTooNew(bytes32 commitment);
@@ -35,6 +36,8 @@ contract BaseRegistrar is IBaseRegistrar {
     constructor (QNSRegistry _qns, uint256 _baseNode) {
         qns = _qns;
         baseNode = _baseNode;
+        minCommitmentAge = 0;
+        maxCommitmentAge = type(uint).max;
     }
 
     function addController(address controller) external onlyController {
@@ -56,8 +59,9 @@ contract BaseRegistrar is IBaseRegistrar {
     function setResolver(address resolver) 
         external onlyController { qns.setResolver(baseNode, resolver); }
 
+    // TODO: dependent on future support for expiry
     function available (uint256 id) public view returns (bool) {
-        // TODO: dependent on future support for expiry
+        return true; 
     }
 
     function makeCommitment (
@@ -128,6 +132,13 @@ contract BaseRegistrar is IBaseRegistrar {
             )
         );
 
+        qns.setSubnodeRecord(
+            name, 
+            owner, 
+            resolver, 
+            type(uint64).max
+        );
+
         if (resolverData.length > 0) 
             _setRecords(resolver, id, resolverData);
 
@@ -157,7 +168,13 @@ contract BaseRegistrar is IBaseRegistrar {
 
     }
 
-    function _setRecords(address resolver, uint256 id, bytes[] calldata data) internal {
+    function _setRecords(
+        address resolverAddress, 
+        uint256 id, 
+        bytes[] calldata data
+    ) internal {
+
+        IResolver(resolverAddress).multicallWithNodeCheck(id, data);
 
     }
 

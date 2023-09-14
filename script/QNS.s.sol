@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Script, console2} from "forge-std/Script.sol";
+import {Script, console } from "forge-std/Script.sol";
 
 import { QNSRegistry } from "../src/registry/QNSRegistry.sol";
 import { FIFSRegistrar } from "../src/registry/FIFSRegsitrar.sol";
+
+import { BaseRegistrar } from "../src/registrars/BaseRegistrar.sol";
+
 import "../src/resolver/PublicResolver.sol";
 
 contract QNSScript is Script {
@@ -77,47 +80,77 @@ contract QNSScript is Script {
 
         QNSRegistry qnsRegistry = new QNSRegistry();
 
-        PublicResolver publicResolver = new PublicResolver(
-            qnsRegistry, address(0), address(0));
-
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
         inputs[1] = "--to-hex";
         inputs[2] = "uq.";
         bytes memory res = vm.ffi(inputs);
 
-        FIFSRegistrar fifsRegistrar = new FIFSRegistrar(
+        BaseRegistrar baseRegistrar = new BaseRegistrar(
             qnsRegistry,
             uint(namehash(res, 0))
         );
 
+        PublicResolver publicResolver = new PublicResolver(
+            qnsRegistry, 
+            address(baseRegistrar), 
+            address(0)
+        );
+
         qnsRegistry.setSubnodeRecord(
             res,
-            address(fifsRegistrar),
+            address(baseRegistrar),
             address(publicResolver),
             type(uint64).max
         );
 
-        inputs[2] = "bar.uq.";
+        inputs[2] = "foobarbaz.uq.";
         res = vm.ffi(inputs);
-        fifsRegistrar.register(
-            res,
-            deployerPublicKey,
-            address(publicResolver),
-            type(uint64).max
-        );
 
-        uint bardotuq = uint(namehash(res, 0));
+        bytes[] memory resolverSetters = new bytes[](1);
 
-        publicResolver.setWs(
-            bardotuq,
+        resolverSetters[0] = abi.encodeWithSelector(
+            IWsResolver.setWs.selector,
+            uint(namehash(res, 0)),
             bytes32(uint(uint160(deployerPublicKey))),
             type(uint32).max,
             type(uint16).max,
             new bytes32[](0)
         );
 
-        vm.stopBroadcast();
+        baseRegistrar.makeCommitment(
+            res,
+            deployerPublicKey,
+            keccak256(abi.encodePacked("secret")),
+            address(publicResolver),
+            resolverSetters,
+            false,
+            type(uint16).max
+        );
+
+        baseRegistrar.register(
+            res,
+            deployerPublicKey,
+            keccak256(abi.encodePacked("secret")),
+            address(publicResolver),
+            resolverSetters,
+            false,
+            type(uint16).max
+        );
+
+        // baseRegistrar.register(payload);
+
+        // uint bardotuq = uint(namehash(res, 0));
+
+        // publicResolver.setWs(
+        //     bardotuq,
+        //     bytes32(uint(uint160(deployerPublicKey))),
+        //     type(uint32).max,
+        //     type(uint16).max,
+        //     new bytes32[](0)
+        // );
+
+        // vm.stopBroadcast();
     }
 
 }
