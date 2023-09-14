@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import {Script, console } from "forge-std/Script.sol";
 
 import { QNSRegistry } from "../src/registry/QNSRegistry.sol";
-import { FIFSRegistrar } from "../src/registry/FIFSRegsitrar.sol";
+import { IQNS } from "../src/interfaces/IQNS.sol";
 
 import { BaseRegistrar } from "../src/registrars/BaseRegistrar.sol";
+import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
 
-import "../src/resolver/PublicResolver.sol";
+import { PublicResolver } from "../src/resolver/PublicResolver.sol";
+import { IResolver } from "../src/resolver/IResolver.sol";
+import { IWsResolver } from "../src/resolver/profiles/IWsResolver.sol";
 
 contract QNSScript is Script {
 
@@ -70,7 +75,6 @@ contract QNSScript is Script {
         newIdx = idx + len + 1;
     }
 
-
     function setUp() public {}
 
     function run() public {
@@ -78,7 +82,19 @@ contract QNSScript is Script {
         address deployerPublicKey = vm.envAddress("PUBLIC_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        QNSRegistry qnsRegistry = new QNSRegistry();
+        QNSRegistry qnsRegistryImpl = new QNSRegistry();
+
+        IQNS qnsRegistry = IQNS(
+            address(
+                new ERC1967Proxy(
+                    address(qnsRegistryImpl),
+                    abi.encodeWithSelector(
+                        QNSRegistry.initialize.selector,
+                        address(0)
+                    )
+                )
+            )
+        );
 
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
@@ -86,15 +102,35 @@ contract QNSScript is Script {
         inputs[2] = "uq.";
         bytes memory res = vm.ffi(inputs);
 
-        BaseRegistrar baseRegistrar = new BaseRegistrar(
-            qnsRegistry,
-            uint(namehash(res, 0))
+        BaseRegistrar baseRegistrarImpl = new BaseRegistrar();
+
+        IBaseRegistrar baseRegistrar = IBaseRegistrar(
+            address(
+                new ERC1967Proxy(
+                    address(baseRegistrarImpl),
+                    abi.encodeWithSelector(
+                        BaseRegistrar.initialize.selector,
+                        qnsRegistry,
+                        uint(namehash(res, 0))
+                    )
+                )
+            )
         );
 
-        PublicResolver publicResolver = new PublicResolver(
-            qnsRegistry, 
-            address(baseRegistrar), 
-            address(0)
+        PublicResolver publicResolverImpl = new PublicResolver();
+
+        IResolver publicResolver = IResolver(
+            address(
+                new ERC1967Proxy(
+                    address(publicResolverImpl),
+                    abi.encodeWithSelector(
+                        PublicResolver.initialize.selector,
+                        qnsRegistry,
+                        address(baseRegistrar),
+                        address(0)
+                    )
+                )
+            )
         );
 
         qnsRegistry.setSubnodeRecord(

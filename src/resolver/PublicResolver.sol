@@ -1,5 +1,10 @@
-// SPDX-Licqnse-Identifier: UNLICQNSED
+// SPDX-Licqnse-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 // solhint-disable-next-line
 import "./Multicallable.sol";
@@ -27,12 +32,14 @@ contract PublicResolver is
     PubkeyResolver,
     TextResolver,
     ExtendedResolver,
-    WsResolver {
+    WsResolver,
+    UUPSUpgradeable,
+    OwnableUpgradeable {
 
-    QNSRegistry immutable qns;
+    QNSRegistry public qns;
 
-    address immutable trustedETHController;
-    address immutable trustedReverseRegistrar;
+    address public trustedETHController;
+    address public trustedReverseRegistrar;
 
     /**
      * A mapping of operators. An address that is authorised for an address
@@ -66,15 +73,23 @@ contract PublicResolver is
         bool indexed approved
     );
 
-    constructor(
+    function initialize(
         QNSRegistry _qns,
         address _trustedETHController,
         address _trustedReverseRegistrar
-    ) {
+    ) public initializer {
+
+        __UUPSUpgradeable_init();
+        __Ownable_init();
+
         qns = _qns;
         trustedETHController = _trustedETHController;
         trustedReverseRegistrar = _trustedReverseRegistrar;
+
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
 
     /**
      * @dev See {IERC1155-setApprovalForAll}.

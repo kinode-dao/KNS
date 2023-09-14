@@ -58,4 +58,5 @@ interface IQNS {
         address owner,
         address operator
     ) external view returns (bool);
+
 }
