@@ -89,8 +89,7 @@ contract QNSScript is Script {
                 new ERC1967Proxy(
                     address(qnsRegistryImpl),
                     abi.encodeWithSelector(
-                        QNSRegistry.initialize.selector,
-                        address(0)
+                        QNSRegistry.initialize.selector
                     )
                 )
             )
