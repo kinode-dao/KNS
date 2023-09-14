@@ -90,6 +90,8 @@ contract PublicResolver is
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+    function getInitializedVersion() public view returns (uint8) 
+        { return  _getInitializedVersion(); }
 
     /**
      * @dev See {IERC1155-setApprovalForAll}.

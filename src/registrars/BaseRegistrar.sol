@@ -56,6 +56,9 @@ contract BaseRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUP
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+    function getInitializedVersion() public view returns (uint8) 
+        { return  _getInitializedVersion(); }
+
     function addController(address controller) external onlyController {
         controllers[controller] = true;
         emit ControllerAdded(controller);
@@ -203,5 +206,7 @@ contract BaseRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUP
     function _setReverseRecord(address resolver, uint256 id, bytes calldata name) internal {
 
     }
+
+
 
 }
