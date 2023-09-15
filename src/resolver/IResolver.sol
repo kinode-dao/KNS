@@ -85,4 +85,5 @@ interface IResolver is
     function setContent(bytes32 node, bytes32 hash) external;
 
     function setMultihash(bytes32 node, bytes calldata hash) external;
+    
 }
