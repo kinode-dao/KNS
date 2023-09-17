@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4;
 
-import "./IWsResolver.sol";
+import "../../interfaces/profiles/IWsResolver.sol";
 import "../ResolverBase.sol";
 
 error MustChooseStaticOrRouted();

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "../ResolverBase.sol";
-import "./IPubkeyResolver.sol";
+import "../../interfaces/profiles/IPubkeyResolver.sol";
 
 abstract contract PubkeyResolver is IPubkeyResolver, ResolverBase {
     struct PublicKey {

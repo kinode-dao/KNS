@@ -3,8 +3,8 @@ pragma solidity >=0.8.4;
 
 import "ens-contracts/dnssec-oracle/RRUtils.sol";
 import "../ResolverBase.sol";
-import "./IDNSRecordResolver.sol";
-import "./IDNSZoneResolver.sol";
+import "../../interfaces/profiles/IDNSRecordResolver.sol";
+import "../../interfaces/profiles/IDNSZoneResolver.sol";
 
 abstract contract DNSResolver is
     IDNSRecordResolver,

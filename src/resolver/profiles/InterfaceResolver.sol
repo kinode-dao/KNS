@@ -4,7 +4,7 @@ pragma solidity >=0.8.4;
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../ResolverBase.sol";
 import "./AddrResolver.sol";
-import "./IInterfaceResolver.sol";
+import "../../interfaces/profiles/IInterfaceResolver.sol";
 
 abstract contract InterfaceResolver is IInterfaceResolver, AddrResolver {
     mapping(uint64 => mapping(uint256 => mapping(bytes4 => address))) versionable_interfaces;

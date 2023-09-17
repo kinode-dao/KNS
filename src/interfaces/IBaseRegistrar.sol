@@ -1,7 +1,6 @@
 pragma solidity >=0.8.4;
 
 interface IBaseRegistrar {
-
     event ControllerAdded(address indexed controller);
     event ControllerRemoved(address indexed controller);
 
@@ -32,6 +31,4 @@ interface IBaseRegistrar {
     ) external view returns (
         bytes32 commitment
     );
-
-
 }

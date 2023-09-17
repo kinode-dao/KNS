@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-import "./IMulticallable.sol";
+import "../interfaces/IMulticallable.sol";
 
 abstract contract Multicallable is IMulticallable, ERC165 {
 

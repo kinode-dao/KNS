@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "../ResolverBase.sol";
-import "./INameResolver.sol";
+import "../../interfaces/profiles/INameResolver.sol";
 
 abstract contract NameResolver is INameResolver, ResolverBase {
     mapping(uint64 => mapping(uint256 => string)) versionable_names;

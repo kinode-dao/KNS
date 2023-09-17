@@ -1,7 +1,6 @@
 pragma solidity >=0.8.4;
 
 interface IQNS {
-
     // Logged when a node is created for the first time
     event NameRegistered(uint256 indexed node, bytes name, address owner);
 

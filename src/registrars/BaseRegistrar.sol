@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 import "../registry/QNSRegistry.sol";
 import "../lib/BytesUtils.sol";
 import "../interfaces/IBaseRegistrar.sol";
-import "../resolver/IResolver.sol";
+import "../interfaces/IResolver.sol";
 
 error CommitmentTooOld(bytes32 commitment);
 error CommitmentTooNew(bytes32 commitment);

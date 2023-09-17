@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "../ResolverBase.sol";
-import "./IContentHashResolver.sol";
+import "../../interfaces/profiles/IContentHashResolver.sol";
 
 abstract contract ContentHashResolver is IContentHashResolver, ResolverBase {
     mapping(uint64 => mapping(uint256 => bytes)) versionable_hashes;

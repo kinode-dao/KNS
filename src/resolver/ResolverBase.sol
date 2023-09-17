@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "./profiles/IVersionableResolver.sol";
+import "../interfaces/profiles/IVersionableResolver.sol";
 
 abstract contract ResolverBase is ERC165, IVersionableResolver {
     mapping(uint256 => uint64) public recordVersions;

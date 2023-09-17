@@ -2,8 +2,8 @@
 pragma solidity >=0.8.4;
 
 import "../ResolverBase.sol";
-import "./IAddrResolver.sol";
-import "./IAddressResolver.sol";
+import "../../interfaces/profiles/IAddrResolver.sol";
+import "../../interfaces/profiles/IAddressResolver.sol";
 
 abstract contract AddrResolver is
     IAddrResolver,
