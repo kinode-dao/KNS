@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "../../interfaces/profiles/IWsResolver.sol";
-import "../ResolverBase.sol";
+import "../../lib/ResolverBase.sol";
 
 error MustChooseStaticOrRouted();
 

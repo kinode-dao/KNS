@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 // solhint-disable-next-line
-import "./Multicallable.sol";
+import "../lib/Multicallable.sol";
 import "./profiles/WsResolver.sol";
 
 import { QNSRegistry } from "../registry/QNSRegistry.sol";

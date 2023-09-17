@@ -14,7 +14,7 @@ import { IProxyInteraction } from "../src/interfaces/IProxyInteraction.sol";
 import { QNSRegistry } from "../src/registry/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
-import { BaseRegistrar } from "../src/registrars/BaseRegistrar.sol";
+import { BaseRegistrar } from "../src/lib/BaseRegistrar.sol";
 import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
 
 import { PublicResolver } from "../src/resolver/PublicResolver.sol";
