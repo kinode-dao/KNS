@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { TestUtils } from "./Utils.sol";
 
-import { QNSRegistry } from "../src/registry/QNSRegistry.sol";
+import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
 import { BaseRegistrar } from "../src/lib/BaseRegistrar.sol";
 import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
 
-import { PublicResolver } from "../src/resolver/PublicResolver.sol";
+import { PublicResolver } from "../src/PublicResolver.sol";
 import { IResolver } from "../src/interfaces/IResolver.sol";
 
 contract QNSTest is TestUtils {

@@ -6,8 +6,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "forge-std/console.sol";
 
-import "../interfaces/IQNS.sol";
-import "../lib/BytesUtils.sol";
+import "./interfaces/IQNS.sol";
+import "./lib/BytesUtils.sol";
 
 contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
 

@@ -7,10 +7,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 // solhint-disable-next-line
-import "../lib/Multicallable.sol";
-import "./profiles/WsResolver.sol";
+import "./lib/Multicallable.sol";
+import "./lib/profiles/WsResolver.sol";
 
-import { QNSRegistry } from "../registry/QNSRegistry.sol";
+import { QNSRegistry } from "./QNSRegistry.sol";
 
 contract PublicResolver is
     Multicallable,
