@@ -27,12 +27,10 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
     mapping(address => mapping(address => bool)) public operators; 
 
     function initialize() public initializer {
-
         __UUPSUpgradeable_init();
         __Ownable_init();
 
         records[0].owner = msg.sender; 
-
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -119,5 +117,4 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
     function resolver(uint256 node) external view returns (address resolver) {}
     function setResolver(uint256 node, address resolver) external {}
     function setOwner(uint256 node, address owner) external {}
-
 }

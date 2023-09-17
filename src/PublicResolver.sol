@@ -60,14 +60,12 @@ contract PublicResolver is
         address _trustedETHController,
         address _trustedReverseRegistrar
     ) public initializer {
-
         __UUPSUpgradeable_init();
         __Ownable_init();
 
         qns = _qns;
         trustedETHController = _trustedETHController;
         trustedReverseRegistrar = _trustedReverseRegistrar;
-
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
