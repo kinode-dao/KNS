@@ -75,6 +75,10 @@ contract PublicResolver is
     function getInitializedVersion() public view returns (uint8) 
         { return  _getInitializedVersion(); }
 
+    // TODO the following ERC1155 logic is inherited form ENS' PublicResolver contract
+    //      we need to actually implement the rest of it. Need to see exactly where NFT
+    //      logic lives in ENS and move pieces around for our usecase.
+
     /**
      * @dev See {IERC1155-setApprovalForAll}.
      */

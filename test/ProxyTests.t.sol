@@ -17,7 +17,6 @@ import { IQNS } from "../src/interfaces/IQNS.sol";
 import { UqRegistrar } from "../src/UqRegistrar.sol";
 
 import { PublicResolver } from "../src/PublicResolver.sol";
-import { IResolver } from "../src/interfaces/IResolver.sol";
 
 contract UpgradeTester is Initializable, UUPSUpgradeable {
 

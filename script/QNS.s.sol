@@ -12,7 +12,6 @@ import { UqRegistrar } from "../src/UqRegistrar.sol";
 import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol"; // TODO what is this doing here
 
 import { PublicResolver } from "../src/PublicResolver.sol";
-import { IResolver } from "../src/interfaces/IResolver.sol";
 import { IWsResolver } from "../src/interfaces/profiles/IWsResolver.sol";
 
 contract QNSScript is Script {
@@ -118,7 +117,7 @@ contract QNSScript is Script {
 
         PublicResolver publicResolverImpl = new PublicResolver();
 
-        IResolver publicResolver = IResolver(
+        PublicResolver publicResolver = PublicResolver(
             address(
                 new ERC1967Proxy(
                     address(publicResolverImpl),

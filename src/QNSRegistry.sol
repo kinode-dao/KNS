@@ -46,7 +46,6 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
         address resolver,
         uint64  ttl
     ) public {
-
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
         uint node = uint(_makeNode(parentNode, labelhash));
@@ -60,7 +59,6 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
 
         if (resolver != address(0)) 
             emit NewResolver(node, r.resolver = resolver);
-
     }
 
     function setSubnodeRecord (
@@ -69,7 +67,6 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
         address resolver,
         uint64  ttl
     ) public {
-
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
         uint node = uint(_makeNode(parentNode, labelhash));
@@ -89,13 +86,10 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
 
         if (resolver != address(0))
             emit NewResolver(node, r.resolver = resolver);
-
     }
 
     function setApprovalForAll(address operator, bool approved) public {
-
         operators[msg.sender][operator] = approved;
-
     }
 
     function isApprovedForAll(
@@ -104,9 +98,7 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
     ) public view returns (
         bool approved
     ) {
-
         approved = operators[msg.sender][operator];
-
     }
 
     function _makeNode(
@@ -117,9 +109,7 @@ contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     function owner(uint256 node) external view returns (address owner) {
-
         owner = records[node].owner;
-
     }
 
     // TODO: May keep or delete these

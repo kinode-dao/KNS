@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./QNSRegistry.sol";
 import "./lib/BytesUtils.sol";
 import "./interfaces/IBaseRegistrar.sol";
-import "./interfaces/IResolver.sol";
+import "./interfaces/IMulticallable.sol";
 
 error CommitmentTooOld(bytes32 commitment);
 error CommitmentTooNew(bytes32 commitment);
@@ -92,7 +92,6 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
         bool reverseRegistrar,
         uint16 ownerControlledFuses
     ) public view returns(bytes32) {
-
         (,uint offset) = name.readLabel(0);
 
         if (offset < 9) 
@@ -125,7 +124,6 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
             revert CommitmentUnexpired(commit);
         else 
             commitments[commit] = block.timestamp;
-
     }
 
     function register (
@@ -137,7 +135,6 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
         bool reverseRecord,
         uint16 ownerControlledFuses
     ) public payable {
-
         uint id = uint(name.namehash(0));
 
         _consumeCommitment(
@@ -165,14 +162,12 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
 
         if (reverseRecord)
             _setReverseRecord(resolver, id, name);
-
     }
 
     function _consumeCommitment(
         uint256 domainId,
         bytes32 commitment
     ) internal {
-
         // must exist
         if (commitments[commitment] == 0)
             revert CommitmentDoesNotExist(commitment);
@@ -190,7 +185,6 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
             revert DomainNotAvailable(domainId);
 
         delete (commitments[commitment]);
-
     }
 
     function _setRecords(
@@ -198,15 +192,9 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
         uint256 id, 
         bytes[] calldata data
     ) internal {
-
-        IResolver(resolverAddress).multicallWithNodeCheck(id, data);
-
+        IMulticallable(resolverAddress).multicallWithNodeCheck(id, data);
     }
 
     function _setReverseRecord(address resolver, uint256 id, bytes calldata name) internal {
-
     }
-
-
-
 }
