@@ -8,30 +8,12 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 // solhint-disable-next-line
 import "./Multicallable.sol";
-import "./profiles/ABIResolver.sol";
-import "./profiles/AddrResolver.sol";
-import "./profiles/ContentHashResolver.sol";
-import "./profiles/DNSResolver.sol";
-import "./profiles/InterfaceResolver.sol";
-import "./profiles/NameResolver.sol";
-import "./profiles/PubkeyResolver.sol";
-import "./profiles/TextResolver.sol";
-import "./profiles/ExtendedResolver.sol";
 import "./profiles/WsResolver.sol";
 
 import { QNSRegistry } from "../registry/QNSRegistry.sol";
 
 contract PublicResolver is
     Multicallable,
-    ABIResolver,
-    AddrResolver,
-    ContentHashResolver,
-    DNSResolver,
-    InterfaceResolver,
-    NameResolver,
-    PubkeyResolver,
-    TextResolver,
-    ExtendedResolver,
     WsResolver,
     UUPSUpgradeable,
     OwnableUpgradeable {
@@ -158,14 +140,6 @@ contract PublicResolver is
         view
         override(
             Multicallable,
-            ABIResolver,
-            AddrResolver,
-            ContentHashResolver,
-            DNSResolver,
-            InterfaceResolver,
-            NameResolver,
-            PubkeyResolver,
-            TextResolver,
             WsResolver
         )
         returns (bool)

@@ -4,17 +4,6 @@ pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import "./profiles/IABIResolver.sol";
-import "./profiles/IAddressResolver.sol";
-import "./profiles/IAddrResolver.sol";
-import "./profiles/IContentHashResolver.sol";
-import "./profiles/IDNSRecordResolver.sol";
-import "./profiles/IDNSZoneResolver.sol";
-import "./profiles/IExtendedResolver.sol";
-import "./profiles/IInterfaceResolver.sol";
-import "./profiles/INameResolver.sol";
-import "./profiles/IPubkeyResolver.sol";
-import "./profiles/ITextResolver.sol";
 import "./profiles/IWsResolver.sol";
 
 /**
@@ -22,17 +11,6 @@ import "./profiles/IWsResolver.sol";
  */
 interface IResolver is
     IERC165,
-    IABIResolver,
-    IAddressResolver,
-    IAddrResolver,
-    IContentHashResolver,
-    IDNSRecordResolver,
-    IDNSZoneResolver,
-    IExtendedResolver,
-    IInterfaceResolver,
-    INameResolver,
-    IPubkeyResolver,
-    ITextResolver,
     IWsResolver
 {
     /* Deprecated events */
