@@ -12,7 +12,7 @@ import { BaseRegistrar } from "../src/registrars/BaseRegistrar.sol";
 import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
 
 import { PublicResolver } from "../src/resolver/PublicResolver.sol";
-import { IResolver } from "../src/resolver/IResolver.sol";
+import { IResolver } from "../src/interfaces/IResolver.sol";
 
 contract QNSTest is TestUtils {
 

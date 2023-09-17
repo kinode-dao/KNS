@@ -12,8 +12,8 @@ import { BaseRegistrar } from "../src/registrars/BaseRegistrar.sol";
 import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
 
 import { PublicResolver } from "../src/resolver/PublicResolver.sol";
-import { IResolver } from "../src/resolver/IResolver.sol";
-import { IWsResolver } from "../src/resolver/profiles/IWsResolver.sol";
+import { IResolver } from "../src/interfaces/IResolver.sol";
+import { IWsResolver } from "../src/interfaces/profiles/IWsResolver.sol";
 
 contract QNSScript is Script {
 
