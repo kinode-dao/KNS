@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "forge-std/console.sol";
 
 import "../interfaces/IQNS.sol";
 import "../lib/BytesUtils.sol";
 
-contract QNSRegistry is IQNS {
+contract QNSRegistry is IQNS, UUPSUpgradeable, OwnableUpgradeable {
 
     using BytesUtils for bytes;
 
@@ -18,12 +21,24 @@ contract QNSRegistry is IQNS {
     }
 
     // token id to Record which contains owner
-    mapping (uint => Record) records;
+    mapping (uint => Record) public records;
 
     // TODO: ERC721 compliance
-    mapping(address => mapping(address => bool)) operators; 
+    mapping(address => mapping(address => bool)) public operators; 
 
-    constructor() { records[0].owner = msg.sender; }
+    function initialize() public initializer {
+
+        __UUPSUpgradeable_init();
+        __Ownable_init();
+
+        records[0].owner = msg.sender; 
+
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function getInitializedVersion() public view returns (uint8) 
+        { return  _getInitializedVersion(); }
 
     function setRecord(
         bytes calldata fqdn,

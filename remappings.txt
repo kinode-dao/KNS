@@ -1,3 +1,4 @@
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @ensdomains/buffer/=lib/buffer/
 ens-contracts/=lib/ens-contracts/contracts

@@ -1,4 +1,9 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../registry/QNSRegistry.sol";
 import "../lib/BytesUtils.sol";
@@ -14,12 +19,12 @@ error DomainTooShort();
 error DomainParentInvalid(bytes name);
 error ResolverDataInvalid();
 
-contract BaseRegistrar is IBaseRegistrar {
+contract BaseRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     using BytesUtils for bytes;
 
-    QNSRegistry public immutable qns;
-    uint        public immutable baseNode;
+    QNSRegistry public qns;
+    uint        public baseNode;
 
     uint public maxCommitmentAge; 
     uint public minCommitmentAge;
@@ -34,12 +39,25 @@ contract BaseRegistrar is IBaseRegistrar {
         { require(controllers[msg.sender]); _; }
 
 
-    constructor (QNSRegistry _qns, uint256 _baseNode) {
+    function initialize (
+        QNSRegistry _qns, 
+        uint256 _baseNode
+    ) public initializer {
+
+        __UUPSUpgradeable_init();
+        __Ownable_init();
+
         qns = _qns;
         baseNode = _baseNode;
         minCommitmentAge = 0;
         maxCommitmentAge = type(uint128).max;
+
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function getInitializedVersion() public view returns (uint8) 
+        { return  _getInitializedVersion(); }
 
     function addController(address controller) external onlyController {
         controllers[controller] = true;
@@ -188,5 +206,7 @@ contract BaseRegistrar is IBaseRegistrar {
     function _setReverseRecord(address resolver, uint256 id, bytes calldata name) internal {
 
     }
+
+
 
 }

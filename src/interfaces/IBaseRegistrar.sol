@@ -31,4 +31,17 @@ interface IBaseRegistrar {
     ) external view returns (
         bytes32 commitment
     );
+
+    function commit(bytes32 commitment) external;
+
+    function register(
+        bytes memory name,
+        address owner,
+        bytes32 secret,
+        address resolver,
+        bytes[] calldata resolverData,
+        bool reverseRegistrar,
+        uint16 ownerControlledFuses
+    ) external payable;
+
 }
