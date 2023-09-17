@@ -5,10 +5,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "../QNSRegistry.sol";
-import "../lib/BytesUtils.sol";
-import "../interfaces/IBaseRegistrar.sol";
-import "../interfaces/IResolver.sol";
+import "./QNSRegistry.sol";
+import "./lib/BytesUtils.sol";
+import "./interfaces/IBaseRegistrar.sol";
+import "./interfaces/IResolver.sol";
 
 error CommitmentTooOld(bytes32 commitment);
 error CommitmentTooNew(bytes32 commitment);
