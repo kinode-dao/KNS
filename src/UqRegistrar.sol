@@ -19,7 +19,7 @@ error DomainTooShort();
 error DomainParentInvalid(bytes name);
 error ResolverDataInvalid();
 
-contract BaseRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     using BytesUtils for bytes;
 

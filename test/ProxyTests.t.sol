@@ -14,8 +14,7 @@ import { IProxyInteraction } from "../src/interfaces/IProxyInteraction.sol";
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
-import { BaseRegistrar } from "../src/BaseRegistrar.sol";
-import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
+import { UqRegistrar } from "../src/UqRegistrar.sol";
 
 import { PublicResolver } from "../src/PublicResolver.sol";
 import { IResolver } from "../src/interfaces/IResolver.sol";
@@ -44,7 +43,7 @@ contract ProxyTests is TestUtils {
     IProxyInteraction public resolverProxy;
 
     QNSRegistry    public qnsRegistry;
-    BaseRegistrar  public baseRegistrar;
+    UqRegistrar  public baseRegistrar;
     PublicResolver public publicResolver;
 
     function setUp() public {
@@ -59,14 +58,14 @@ contract ProxyTests is TestUtils {
                         QNSRegistry.initialize.selector
         ))));
 
-        BaseRegistrar baseRegistrarImpl = new BaseRegistrar();
+        UqRegistrar baseRegistrarImpl = new UqRegistrar();
 
-        baseRegistrar = BaseRegistrar(
+        baseRegistrar = UqRegistrar(
             address(
                 new ERC1967Proxy(
                     address(baseRegistrarImpl),
                     abi.encodeWithSelector(
-                        BaseRegistrar.initialize.selector,
+                        UqRegistrar.initialize.selector,
                         qnsRegistry,
                         getNodeId("uq.")
         ))));

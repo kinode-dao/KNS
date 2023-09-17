@@ -8,8 +8,8 @@ import {Script, console } from "forge-std/Script.sol";
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
-import { BaseRegistrar } from "../src/BaseRegistrar.sol";
-import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
+import { UqRegistrar } from "../src/UqRegistrar.sol";
+import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol"; // TODO what is this doing here
 
 import { PublicResolver } from "../src/PublicResolver.sol";
 import { IResolver } from "../src/interfaces/IResolver.sol";
@@ -101,14 +101,14 @@ contract QNSScript is Script {
         inputs[2] = "uq.";
         bytes memory res = vm.ffi(inputs);
 
-        BaseRegistrar baseRegistrarImpl = new BaseRegistrar();
+        UqRegistrar baseRegistrarImpl = new UqRegistrar();
 
         IBaseRegistrar baseRegistrar = IBaseRegistrar(
             address(
                 new ERC1967Proxy(
                     address(baseRegistrarImpl),
                     abi.encodeWithSelector(
-                        BaseRegistrar.initialize.selector,
+                        UqRegistrar.initialize.selector,
                         qnsRegistry,
                         uint(namehash(res, 0))
                     )
