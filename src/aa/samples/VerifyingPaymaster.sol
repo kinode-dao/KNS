@@ -26,7 +26,10 @@ contract VerifyingPaymaster is BasePaymaster {
 
     uint256 private constant SIGNATURE_OFFSET = 84;
 
-    constructor(IEntryPoint _entryPoint, address _verifyingSigner) BasePaymaster(_entryPoint) {
+    constructor(
+        address _entryPoint, 
+        address _verifyingSigner
+    ) BasePaymaster(IEntryPoint(_entryPoint)) {
         verifyingSigner = _verifyingSigner;
     }
 
@@ -76,8 +79,14 @@ contract VerifyingPaymaster is BasePaymaster {
      * paymasterAndData[20:84] : abi.encode(validUntil, validAfter)
      * paymasterAndData[84:] : signature
      */
-    function _validatePaymasterUserOp(UserOperation calldata userOp, bytes32 /*userOpHash*/, uint256 requiredPreFund)
-    internal override returns (bytes memory context, uint256 validationData) {
+    function _validatePaymasterUserOp(
+        UserOperation calldata userOp, 
+        bytes32 /*userOpHash*/, 
+        uint256 requiredPreFund
+    ) internal override returns (
+        bytes memory context, 
+        uint256 validationData
+    ) {
         (requiredPreFund);
 
         (uint48 validUntil, uint48 validAfter, bytes calldata signature) = parsePaymasterAndData(userOp.paymasterAndData);

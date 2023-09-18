@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "./SimpleAccount.sol";
 
+import "forge-std/console.sol";
+
 /**
  * A sample factory contract for SimpleAccount
  * A UserOperations "initCode" holds the address of the factory, and a method call (to createAccount, in this sample factory).
@@ -15,8 +17,8 @@ import "./SimpleAccount.sol";
 contract SimpleAccountFactory {
     SimpleAccount public immutable accountImplementation;
 
-    constructor(IEntryPoint _entryPoint) {
-        accountImplementation = new SimpleAccount(_entryPoint);
+    constructor(address _entryPoint) {
+        accountImplementation = new SimpleAccount(IEntryPoint(_entryPoint));
     }
 
     /**
@@ -26,7 +28,9 @@ contract SimpleAccountFactory {
      * This method returns an existing account address so that entryPoint.getSenderAddress() would work even after account creation
      */
     function createAccount(address owner,uint256 salt) public returns (SimpleAccount ret) {
+
         address addr = getAddress(owner, salt);
+
         uint codeSize = addr.code.length;
         if (codeSize > 0) {
             return SimpleAccount(payable(addr));
@@ -35,6 +39,7 @@ contract SimpleAccountFactory {
                 address(accountImplementation),
                 abi.encodeCall(SimpleAccount.initialize, (owner))
             )));
+
     }
 
     /**
