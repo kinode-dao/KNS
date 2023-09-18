@@ -31,10 +31,10 @@ contract AAScript is Script {
         paymasterPriv = vm.deriveKey(mnemonic, 0);
         paymasterPub = vm.rememberKey(paymasterPriv);
 
-        // vm.etch(
-        //     vm.envAddress("AA_ENTRYPOINT"),
-        //     address(new EntryPoint()).code
-        // );
+        vm.etch(
+            vm.envAddress("AA_ENTRYPOINT"),
+            address(new EntryPoint()).code
+        );
 
         vm.etch(
             0x7fc98430eAEdbb6070B35B39D798725049088348, 
@@ -60,6 +60,7 @@ contract AAScript is Script {
         IStakeManager.DepositInfo memory depositInfo = entrypoint.getDepositInfo(pubk);
 
         console.log("walletAddr", walletAddr);
+        console.log("paymasterPub", paymasterPub);
 
         // vm.deal(walletAddr, 100 ether);
 
@@ -76,57 +77,53 @@ contract AAScript is Script {
                 )
             ),
             callData: "",
-            callGasLimit: 22017,
-            verificationGasLimit: 958666,
-            preVerificationGas: 115256,
-            maxFeePerGas: 1000105660,
+            callGasLimit: 30000,
+            verificationGasLimit: 2000000,
+            preVerificationGas: 600000,
+            maxFeePerGas: 1000000000,
             maxPriorityFeePerGas: 1000000000,
             paymasterAndData: "",
             signature: ""
         });
 
-        // VerifyingPaymaster verifyingPaymaster = new VerifyingPaymaster(
-        //     address(entrypoint),
-        //     paymasterPub
-        // );
+        VerifyingPaymaster verifyingPaymaster = new VerifyingPaymaster(
+            address(entrypoint),
+            paymasterPub
+        );
 
-        // bytes32 digest = ECDSA.toEthSignedMessageHash(
-        //     verifyingPaymaster.getHash(
-        //         userOp,
-        //         uint48(block.timestamp),
-        //         uint48(block.timestamp + 200000)
-        //     )
-        // );
+        bytes32 digest = ECDSA.toEthSignedMessageHash(
+            verifyingPaymaster.getHash(
+                userOp,
+                uint48(block.timestamp + 200000),
+                uint48(block.timestamp)
+            )
+        );
 
-        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(paymasterPriv, digest);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(paymasterPriv, digest);
 
-        // userOp.paymasterAndData = abi.encodePacked(
-        //     paymasterPub,
-        //     uint48(block.timestamp),
-        //     uint48(block.timestamp + 200000),
-        //     bytes.concat(r,s,bytes1(v))
-        // );
+        userOp.paymasterAndData = abi.encodePacked(
+            address(verifyingPaymaster),
+            abi.encode(
+                uint48(block.timestamp + 200000),
+                uint48(block.timestamp)
+            ),
+            bytes.concat(r,s,bytes1(v))
+        );
 
-        bytes32 digest = ECDSA.toEthSignedMessageHash(entrypoint.getUserOpHash(userOp));
+        digest = ECDSA.toEthSignedMessageHash(entrypoint.getUserOpHash(userOp));
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privk, digest);
+        (v, r, s) = vm.sign(privk, digest);
         userOp.signature = bytes.concat(r, s, bytes1(v));
 
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
+        entrypoint.depositTo{value: 1 ether}(address(verifyingPaymaster));
+
+        console.log("???", paymasterPub);
+
         entrypoint.handleOps(ops, pubk);
 
-        // console.log("deposit", di.deposit);
-        // console.log("staked", di.staked);
-        // console.log("stake", di.stake);
-        // console.log("unstakeDelaySec", di.unstakeDelaySec);
-        // console.log("withdrawTime", di.withdrawTime);
-        // console.log("simple account factory", address(simpleAccountFactory));
-
-        // // DepositPaymaster depositPaymasterr = new DepositPaymaster(entrypoint);
-
-        // vm.stopBroadcast();
 
     }
 

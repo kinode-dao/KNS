@@ -19,6 +19,8 @@ import "./Helpers.sol";
 import "./NonceManager.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import "forge-std/console.sol";
+
 contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard {
 
     using UserOperationLib for UserOperation;
@@ -445,6 +447,9 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard 
         address paymaster = mUserOp.paymaster;
         DepositInfo storage paymasterInfo = deposits[paymaster];
         uint256 deposit = paymasterInfo.deposit;
+
+        console.log("deposit", paymaster,  deposit, requiredPreFund);
+
         if (deposit < requiredPreFund) {
             revert FailedOp(opIndex, "AA31 paymaster deposit too low");
         }
@@ -475,6 +480,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard 
         // non-zero address means that the paymaster fails due to some signature check (which is ok only during estimation)
         address pmAggregator;
         (pmAggregator, outOfTimeRange) = _getValidationData(paymasterValidationData);
+        console.log("pmAgg", pmAggregator);
         if (pmAggregator != address(0)) {
             revert FailedOp(opIndex, "AA34 signature error");
         }
