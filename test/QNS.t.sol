@@ -8,8 +8,8 @@ import { TestUtils } from "./Utils.sol";
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
-import { UqRegistrar } from "../src/UqRegistrar.sol";
-import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol";
+// import { UqRegistrar } from "../src/UqRegistrar.sol";
+// import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol";
 
 contract QNSTest is TestUtils {
 

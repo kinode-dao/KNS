@@ -8,10 +8,10 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 import "./QNSRegistry.sol";
 import "./lib/BytesUtils.sol";
-import "./interfaces/IQNSRegistrar.sol";
+import "./interfaces/IQNSNFT.sol";
 import "./interfaces/IMulticallable.sol";
 
-contract UqNFT is IQNSRegistrar, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
     using BytesUtils for bytes;
 
     QNSRegistry public qns;
@@ -41,31 +41,19 @@ contract UqNFT is IQNSRegistrar, Initializable, ERC721Upgradeable, OwnableUpgrad
     function register (
         bytes calldata name,
         address owner,
-        address resolver
+        uint32 protocols
         // bytes[]calldata resolverData // TODO for setting resovler data and minting in one transaction
         // TODO signature for permissioned minting
-
     ) public payable {
         uint id = uint(name.namehash(0));
 
-        qns.setRecord(
+        qns.setProtocols(
             name, 
-            address(this), 
-            resolver
+            protocols
         );
 
         _mint(owner, id);
-
-        // TODO 
-        // _setRecord(id, resolverData);
     }
-    // function _setRecords(
-    //     address resolverAddress, 
-    //     uint256 id, 
-    //     bytes[] calldata data
-    // ) internal {
-    //     IMulticallable(resolverAddress).multicallWithNodeCheck(id, data);
-    // }
 
     // TODO we might need logic before/after transfer to unset the resolver data
 }

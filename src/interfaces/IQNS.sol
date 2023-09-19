@@ -4,22 +4,22 @@ pragma solidity >=0.8.4;
 uint32 constant WEBSOCKETS = 1;
 
 interface IQNS {
-    // uint32 const WEBSOCKETS = 1;
-
     // QNS node data
     struct Record {
+        // contract that controls ownership logic of QNS id
         address nft;
-        uint32 protocols; // uint32 lets us use 32 different protocols...I think that's good enough? TODO
+        // room for 32 protocols
+        uint32 protocols;
     }
 
-    // Websocket data
+    // Websocket data associated with a QNS node
     struct WsRecord {
         bytes32 publicKey;
         uint48 ipAndPort;
         bytes32[] routers; // TODO maybe string[] instead?
     }
 
-    // Logged whenever a QNS node's protocol information is updated.
+    // Logged whenever a QNS adds/drops support for a protocol
     event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
 
     // Logged whenever a QNS node's websocket information is updated.
@@ -30,13 +30,12 @@ interface IQNS {
         bytes32[] routers // TODO maybe string?
     );
 
-    function setRecord(
-        bytes calldata node,
-        address nft,
-        address resolver
+    function setProtocols(
+        bytes calldata fqdn,
+        uint32 protocols
     ) external;
 
-    function setWs(
+    function setWsRecord(
         uint256 node,
         bytes32 _publicKey,
         uint32 _ip,

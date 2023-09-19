@@ -8,6 +8,8 @@ import "../interfaces/IMulticallable.sol";
 
 abstract contract Multicallable is IMulticallable, ERC165 {
 
+    // NOTE: this implementation forces us to put all node ids as the 
+    // first variable in every method signature...might not need this...
     function _multicall(
         uint256 nodeId,
         bytes[] calldata data

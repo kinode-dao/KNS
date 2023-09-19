@@ -14,24 +14,24 @@ import { IProxyInteraction } from "../src/interfaces/IProxyInteraction.sol";
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
-import { UqRegistrar } from "../src/UqRegistrar.sol";
+// import { UqRegistrar } from "../src/UqRegistrar.sol";
 
 contract UpgradeTester is Initializable, UUPSUpgradeable {
 
-//     function initialize () public initializer {
-//         __UUPSUpgradeable_init();
-//     }
+    function initialize () public initializer {
+        __UUPSUpgradeable_init();
+    }
 
-//     function _authorizeUpgrade(address newImplementation) internal override {}
+    function _authorizeUpgrade(address newImplementation) internal override {}
 
-//     function upgraded () public pure returns (bool) {
-//         return true;
-//     }
+    function upgraded () public pure returns (bool) {
+        return true;
+    }
 
-//     function getInitializedVersion() public view returns (uint8) 
-//         { return  _getInitializedVersion(); }
+    function getInitializedVersion() public view returns (uint8) 
+        { return  _getInitializedVersion(); }
 
-// }
+}
 
 // contract ProxyTests is TestUtils {
 
@@ -121,4 +121,4 @@ contract UpgradeTester is Initializable, UUPSUpgradeable {
 
 //     }
 
-}
+// }

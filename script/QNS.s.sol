@@ -8,10 +8,10 @@ import {Script, console } from "forge-std/Script.sol";
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
-import { UqRegistrar } from "../src/UqRegistrar.sol";
-import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol"; // TODO what is this doing here
+// import { UqRegistrar } from "../src/UqRegistrar.sol";
+// import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol"; // TODO what is this doing here
 
-import { IWsResolver } from "../src/interfaces/profiles/IWsResolver.sol";
+// import { IWsResolver } from "../src/interfaces/profiles/IWsResolver.sol";
 
 contract QNSScript is Script {
     // TODO all of this will change drastically

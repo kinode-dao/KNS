@@ -16,19 +16,18 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     using BytesUtils for bytes;
 
     // Has pointers to NFT contract (ownership) and protocols
-    mapping (uint => Record) public records;
+    mapping (uint256 => Record) public records;
 
     // Websocket information
     mapping(uint256 => WsRecord) ws_records;
 
     // TODO do we need to include a storage slot here for upgradability? something something...
 
-
     function initialize() public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
 
-        records[0].owner = msg.sender; // TODO probably not correct 
+        records[0].nft = msg.sender; // TODO double check this
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -37,21 +36,20 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         _getInitializedVersion();
     }
 
-    /**
-     * Sets the NFT and protocol information associated with the QNS name
-     * @param fqdn fully qualified domain name to register
-     * @param _protocols bitmap of which protocols this node supports
-     */
-    function setRecord (
+    //
+    // externals
+    //
+
+    function setProtocols (
         bytes calldata fqdn,
         uint32 _protocols
         // continuation calls?
     ) public {
-        (uint node, uint parentNode) = _getNodeAndParent();
+        (uint node, uint parentNode) = _getNodeAndParent(fqdn);
 
         // only parent NFT contract can setRecords
         //      E.g. only .uq's NFT contract can setRecords for my-name.uq
-        // OR if ERC721(nft).ownerOf(node) == msg.sender THEN...
+        // TODO OR if ERC721(nft).ownerOf(node) == msg.sender THEN...
         address parentOwner = records[uint(parentNode)].nft;
         require(parentOwner == msg.sender);
 
@@ -66,21 +64,13 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         emit ProtocolsChanged(node, fqdn, _protocols);
     }
 
-    /**
-     * Sets the Ws information associated with the QNS node.
-     * @param node The node to update.
-     * @param _publicKey The networking key of the QNS node
-     * @param _ip The IP address of the QNS node (0 if indirect node)
-     * @param _port The port of the QNS node (0 if indirect node)
-     * @param _routers The allowed routers of the QNS node (empty if direct node)
-     */
-    function setWs(
+    function setWsRecord(
         uint256 node,
         bytes32 _publicKey,
         uint32 _ip,
         uint16 _port,
         bytes32[] calldata _routers
-    ) external virtual authorised(node) {
+    ) external virtual { // authorised(node) // TODO authorized modifier
 
         if ((_ip != 0 || _port != 0) && _routers.length != 0) {
             revert MustChooseStaticOrRouted();
@@ -99,22 +89,25 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         emit WsChanged(node, _publicKey, _ipAndPort, _routers);
     }
 
-    /**
-     * Returns the Ws routing information associated with the QNS node.
-     * @param node The ENS node to query
-     * @return record The record information from the resolver
-     */
+    //
+    // views
+    //
+
     function ws(
         uint256 node
     ) external view virtual override returns (WsRecord memory) {
         return ws_records[node];
     }
 
+    //
+    // internals
+    //
 
-    function _getNodeAndParent() internal view returns (uint node, uint parentNode) {
-        (bytes32 labelhash, uint256 offset) = msg.data.readLabel(0);
-        parentNode = msg.data.namehash(offset);
-        node = _makeNode(parentNode, labelhash);
+    function _getNodeAndParent(bytes memory fqdn) internal pure returns (uint256 node, uint256 parentNode) {
+        (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
+        bytes32 parentNode = fqdn.namehash(offset);
+        uint node = uint256(_makeNode(parentNode, labelhash));
+        return (node, uint256(parentNode));
     }
 
     function _makeNode(
@@ -127,6 +120,4 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     function combineIpAndPort(uint32 ip, uint16 port) internal pure returns (uint48) {
         return uint48((uint48(ip) << 16) | port);
     }
-
-    // TODO might want functions to change resolver...though actually I think just one permanent but upgradable resolver is best...TODO
 }

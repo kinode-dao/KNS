@@ -4,6 +4,6 @@ pragma solidity >=0.8.4;
 
 // TODO not sure we even need this contract...
 // Basically we want this interface to say "hey this is an NFT and can be used for QNS"
-interface IQNSRegistrar {
+interface IQNSNFT {
     function baseNode() external view returns (uint); // TODO what
 }
