@@ -5,67 +5,124 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { TestUtils } from "./Utils.sol";
 
-import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
-
-// import { UqRegistrar } from "../src/UqRegistrar.sol";
-// import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol";
+import { QNSRegistry } from "../src/QNSRegistry.sol";
+import { UqNFT } from "../src/UqNFT.sol";
+import "forge-std/console.sol";
 
 contract QNSTest is TestUtils {
+    // events
+    event NewTld(uint256 indexed node, bytes name, address nft);
 
-    // IQNS public qnsRegistry;
-    // IQNSRegistrar baseRegistrar;
-    // PublicResolver publicResolver;
+    // addresses
+    address public deployer = address(2);
+    address public alice = address(3);
+    address public bob = address(4);
+    address public charlie = address(5);
 
-    // function setUp() public {
+    // contracts
+    QNSRegistry public qnsRegistry;
+    UqNFT public uqNft;
 
-    //     QNSRegistry qnsRegistryImpl = new QNSRegistry();
+    function setUp() public {
 
-    //     qnsRegistry = IQNS(
-    //         address(
-    //             new ERC1967Proxy(
-    //                 address(qnsRegistryImpl),
-    //                 abi.encodeWithSelector(
-    //                     QNSRegistry.initialize.selector,
-    //                     address(0)
-    //                 )
-    //             )
-    //         )
-    //     );
+        vm.prank(deployer);
+        QNSRegistry qnsRegistryImpl = new QNSRegistry();
+        
+        vm.prank(deployer);
+        qnsRegistry = QNSRegistry(
+            address(
+                new ERC1967Proxy(
+                    address(qnsRegistryImpl),
+                    abi.encodeWithSelector(
+                        QNSRegistry.initialize.selector
+                    )
+                )
+            )
+        );
 
-    //     UqRegistrar baseRegistrarImpl = new UqRegistrar();
+        vm.prank(deployer);
+        UqNFT uqNftImpl = new UqNFT();
 
-    //     baseRegistrar = IQNSRegistrar(
-    //         address(
-    //             new ERC1967Proxy(
-    //                 address(baseRegistrarImpl),
-    //                 abi.encodeWithSelector(
-    //                     UqRegistrar.initialize.selector,
-    //                     qnsRegistry,
-    //                     getDNSWire("uq.")
-    //                 )
-    //             )
-    //         )
-    //     );
+        vm.prank(deployer);
+        uqNft = UqNFT(
+            address(
+                new ERC1967Proxy(
+                    address(uqNftImpl),
+                    abi.encodeWithSelector(
+                        UqNFT.initialize.selector,
+                        qnsRegistry,
+                        getNodeId("uq")
+                    )
+                )
+            )
+        );
 
-    //     PublicResolver publicResolverImpl = new PublicResolver();
+        vm.prank(deployer);
+        vm.expectEmit(true, false, false, true);
+        emit NewTld(getNodeId("uq"), getDNSWire("uq"), address(uqNft));
+        qnsRegistry.newTld(
+            getDNSWire("uq"),
+            address(uqNft)
+        );
 
-    //     publicResolver = PublicResolver(
-    //         address(
-    //             new ERC1967Proxy(
-    //                 address(publicResolverImpl),
-    //                 abi.encodeWithSelector(
-    //                     PublicResolver.initialize.selector,
-    //                     qnsRegistry,
-    //                     address(baseRegistrar),
-    //                     address(0)
-    //                 )
-    //             )
-    //         )
-    //     );
+        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("uq."));
 
-    // }
+        assertEq(actualNft, address(uqNft));
+        assertEq(actualProtocols, 0);
+    }
 
-    // function testQNS () public { }
+    function test_newTldFailsWhenNotOwner () public {
+        vm.prank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        qnsRegistry.newTld(
+            getDNSWire("alices-tld"),
+            address(9001)
+        );
+    }
 
+    function test_newTldFailsWhenUsingSubdomain() public {
+        vm.prank(deployer);
+        vm.expectRevert("QNSRegistry: cannot register subdomain using newTld");
+        qnsRegistry.newTld(
+            getDNSWire("a.b"),
+            address(9001)
+        );
+    }
+
+    function test_newTld () public {
+        vm.prank(deployer);
+        vm.expectEmit(true, false, false, true);
+        emit NewTld(getNodeId("new-tld"), getDNSWire("new-tld"), address(9001));
+        qnsRegistry.newTld(
+            getDNSWire("new-tld"),
+            address(9001)
+        );
+
+        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("new-tld"));
+        assertEq(actualNft, address(9001));
+        assertEq(actualProtocols, 0);
+    }
+
+    function test_setProtocolsFailsWhenIsNotParent () public {
+        // vm.expectRevert();
+        // vm.prank(alice);
+    }
+    
+    function test_setProtocols () public {
+        // check records
+        // check event was emitted
+    }
+
+    function test_setWsRecordFailsWhenNotAuthorized () public {
+        vm.prank(charlie);
+    }
+
+    function test_setWsRecordFailsWhenNotStaticOrRouted () public {
+    }
+
+    function test_setWsRecord () public {
+        // check ws_records
+        // check event was emitted
+    }
 }

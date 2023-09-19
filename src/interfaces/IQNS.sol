@@ -22,6 +22,9 @@ interface IQNS {
     // Logged whenever a QNS adds/drops support for a protocol
     event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
 
+    // Logged whenever a QNS node is created.
+    event NewTld(uint256 indexed node, bytes name, address nft);
+
     // Logged whenever a QNS node's websocket information is updated.
     event WsChanged(
         uint256 indexed node,

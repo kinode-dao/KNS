@@ -32,25 +32,38 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    function getInitializedVersion() public view returns (uint8) { return
-        _getInitializedVersion();
+    function getInitializedVersion() public view returns (uint8) {
+        return _getInitializedVersion();
     }
 
     //
     // externals
     //
 
+    // TODO this should accept an 
+    function newTld(bytes calldata fqdn, address nft) external onlyOwner {
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
+        require(parentNode == 0, "QNSRegistry: cannot register subdomain using newTld");
+
+        records[node] = Record({
+            nft: nft,
+            protocols: 0
+        });
+
+        emit NewTld(node, fqdn, nft);
+    }
+
     function setProtocols (
         bytes calldata fqdn,
         uint32 _protocols
         // continuation calls?
     ) public {
-        (uint node, uint parentNode) = _getNodeAndParent(fqdn);
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
         // only parent NFT contract can setRecords
         //      E.g. only .uq's NFT contract can setRecords for my-name.uq
         // TODO OR if ERC721(nft).ownerOf(node) == msg.sender THEN...
-        address parentOwner = records[uint(parentNode)].nft;
+        address parentOwner = records[uint256(parentNode)].nft;
         require(parentOwner == msg.sender);
 
         records[node] = Record({
@@ -71,11 +84,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         uint16 _port,
         bytes32[] calldata _routers
     ) external virtual { // authorised(node) // TODO authorized modifier
-
         if ((_ip != 0 || _port != 0) && _routers.length != 0) {
-            revert MustChooseStaticOrRouted();
-        }
-        if (_ip == 0 && _port == 0 && _routers.length == 0) {
             revert MustChooseStaticOrRouted();
         }
 
@@ -103,10 +112,15 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     // internals
     //
 
-    function _getNodeAndParent(bytes memory fqdn) internal pure returns (uint256 node, uint256 parentNode) {
+    function _getNode(bytes memory fqdn) internal pure returns (uint256) {
+
+    }
+
+    // TODO does this actually work? what if it's a.b.c. not just b.c.?
+    function _getNodeAndParent(bytes memory fqdn) public pure returns (uint256 node, uint256 parentNode) { // TODO internal
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
-        uint node = uint256(_makeNode(parentNode, labelhash));
+        uint256 node = uint256(_makeNode(parentNode, labelhash));
         return (node, uint256(parentNode));
     }
 

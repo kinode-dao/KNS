@@ -15,7 +15,7 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     using BytesUtils for bytes;
 
     QNSRegistry public qns;
-    uint        public baseNode;
+    uint        public baseNode; // TODO not clear that we need this
 
     function initialize (
         QNSRegistry _qns, 
@@ -30,7 +30,6 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
         baseNode = _baseNode;
     }
 
-    // TODO what is this
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // TODO what is this
