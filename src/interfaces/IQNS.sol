@@ -3,11 +3,9 @@ pragma solidity >=0.8.4;
 interface IQNS {
     // QNS node data
     struct Record {
-        address owner; // TODO this should be NFT contract
+        address owner;
         address resolver;
         address approval; // TODO delete this
-        uint32  fuses; // TODO delete this
-        uint64  ttl; // TODO delete this
     }
 
     // Logged when a node is created for the first time
@@ -28,26 +26,6 @@ interface IQNS {
     function setRecord(
         bytes calldata node,
         address owner,
-        address resolver,
-        uint64 ttl
+        address resolver
     ) external;
-
-    function setSubnodeRecord(
-        bytes calldata node,
-        address owner,
-        address resolver,
-        uint64 ttl
-    ) external;
-
-    function setResolver(uint256 node, address resolver) external;
-
-    function setOwner(uint256 node, address owner) external;
-
-    function setTTL(uint256 node, uint64 ttl) external;
-
-    function resolver(uint256 node) external view returns (address);
-
-    function ttl(uint256 node) external view returns (uint64);
-
-    function recordExists(uint256 node) external view returns (bool);
 }

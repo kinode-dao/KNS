@@ -50,8 +50,7 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
     function setRecord (
         bytes calldata fqdn,
         address owner,
-        address resolver,
-        uint64  ttl
+        address resolver
     ) public {
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
@@ -61,7 +60,6 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
         // need to test to make sure we understand this logic correctly
         address parentOwner = records[uint(parentNode)].owner;
 
-        // TODO: use fuses to know if node can be operated on by parent owner
         require(parentOwner == msg.sender || _operators[parentOwner][msg.sender]);
 
         Record storage r = records[uint(node)];
@@ -79,8 +77,6 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
         records[node] = Record({
             owner: owner,
             resolver: resolver,
-            ttl: ttl,
-            fuses: 0, // TODO what
             approval: address(0)
         });
         // TODO how does this logic work if tokens have an expiration?
@@ -216,8 +212,6 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
             _balances[to] += 1;
         }
         records[tokenId].owner = to;
-
-        // TODO probably need to change ttl and fuses in the record
 
         emit Transfer(from, to, tokenId);
     }

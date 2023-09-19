@@ -9,14 +9,14 @@ import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { IQNS } from "../src/interfaces/IQNS.sol";
 
 import { UqRegistrar } from "../src/UqRegistrar.sol";
-import { IBaseRegistrar } from "../src/interfaces/IBaseRegistrar.sol";
+import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol";
 
 import { PublicResolver } from "../src/PublicResolver.sol";
 
 contract QNSTest is TestUtils {
 
     IQNS public qnsRegistry;
-    IBaseRegistrar baseRegistrar;
+    IQNSRegistrar baseRegistrar;
     PublicResolver publicResolver;
 
     function setUp() public {
@@ -37,7 +37,7 @@ contract QNSTest is TestUtils {
 
         UqRegistrar baseRegistrarImpl = new UqRegistrar();
 
-        baseRegistrar = IBaseRegistrar(
+        baseRegistrar = IQNSRegistrar(
             address(
                 new ERC1967Proxy(
                     address(baseRegistrarImpl),
