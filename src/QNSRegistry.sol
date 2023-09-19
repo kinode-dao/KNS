@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./interfaces/IQNS.sol";
 import "./lib/BytesUtils.sol";
@@ -60,11 +61,14 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     ) public {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
-        // only parent NFT contract can setRecords
-        //      E.g. only .uq's NFT contract can setRecords for my-name.uq
-        // TODO OR if ERC721(nft).ownerOf(node) == msg.sender THEN...
         address parentOwner = records[uint256(parentNode)].nft;
-        require(parentOwner == msg.sender);
+        require(
+            parentOwner == msg.sender,
+            "QNSRegistry: only parent NFT contract can setRecords for a subdomain"
+        );
+
+        // TODO require that the NFT contract has minted the node
+        require(IERC721(parentOwner).ownerOf(node) != address(0));
 
         records[node] = Record({
             // TODO I think this is correct...might want to let them specify something for subdomains?

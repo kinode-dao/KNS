@@ -105,8 +105,15 @@ contract QNSTest is TestUtils {
     }
 
     function test_setProtocolsFailsWhenIsNotParent () public {
-        // vm.expectRevert();
-        // vm.prank(alice);
+        vm.prank(alice);
+        vm.expectRevert("QNSRegistry: only parent NFT contract can setRecords for a subdomain");
+        qnsRegistry.setProtocols(getDNSWire("test.uq"), 0);
+    }
+
+    function test_setProtocolsFailsWhenNftNotMinted() public {
+        vm.prank(address(uqNft));
+        vm.expectRevert("ERC721: invalid token ID");
+        qnsRegistry.setProtocols(getDNSWire("test.uq"), 0);
     }
     
     function test_setProtocols () public {
