@@ -47,7 +47,7 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
     function getInitializedVersion() public view returns (uint8) 
         { return  _getInitializedVersion(); }
 
-    function setRecord(
+    function setRecord (
         bytes calldata fqdn,
         address owner,
         address resolver,
@@ -57,27 +57,8 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
         bytes32 parentNode = fqdn.namehash(offset);
         uint node = uint(_makeNode(parentNode, labelhash));
 
-        Record storage r = records[node];
-
-        require(r.owner == msg.sender || _operators[r.owner][msg.sender]);
-
-        if (owner != address(0)) 
-            emit Transfer(node, r.owner = owner);
-
-        if (resolver != address(0)) 
-            emit NewResolver(node, r.resolver = resolver);
-    }
-
-    function setSubnodeRecord (
-        bytes calldata fqdn,
-        address owner,
-        address resolver,
-        uint64  ttl
-    ) public {
-        (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
-        bytes32 parentNode = fqdn.namehash(offset);
-        uint node = uint(_makeNode(parentNode, labelhash));
-
+        // TODO there might be an issue here with registering uq. or just .
+        // need to test to make sure we understand this logic correctly
         address parentOwner = records[uint(parentNode)].owner;
 
         // TODO: use fuses to know if node can be operated on by parent owner
@@ -85,16 +66,28 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
 
         Record storage r = records[uint(node)];
 
-        // TODO THIS IS ALL FILLER LOGIC
-        if (r.owner == address(0) && r.resolver == address(0) && r.fuses == 0 && r.ttl == 0)
-            emit NameRegistered(node, fqdn, owner);
+        require(!_exists(node), "ERC721: token already minted");
 
-        // TODO actually mint the NFT!
-        if (owner != address(0))
-            emit Transfer(node, r.owner = owner);
+        unchecked {
+            // Will not overflow unless all 2**256 token ids are minted to the same owner.
+            // Given that tokens are minted one by one, it is impossible in practice that
+            // this ever happens. Might change if we allow batch minting.
+            // The ERC fails to describe this case.
+            _balances[owner] += 1;
+        }
 
-        if (resolver != address(0))
-            emit NewResolver(node, r.resolver = resolver);
+        records[node] = Record({
+            owner: owner,
+            resolver: resolver,
+            ttl: ttl,
+            fuses: 0, // TODO what
+            approval: address(0)
+        });
+        // TODO how does this logic work if tokens have an expiration?
+        // I don't think that setRecord is always a mint in that case....TODO
+        emit Transfer(address(0), owner, node);
+        emit NewResolver(node, r.resolver = resolver);
+        emit NameRegistered(node, fqdn, owner);
     }
 
     function _makeNode(
@@ -102,10 +95,6 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
         bytes32 labelhash
     ) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(node, labelhash));
-    }
-
-    function owner(uint256 node) external view returns (address owner) {
-        owner = records[node].owner;
     }
 
     // TODO: May keep or delete these

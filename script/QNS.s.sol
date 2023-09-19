@@ -109,7 +109,7 @@ contract QNSScript is Script {
                     abi.encodeWithSelector(
                         UqRegistrar.initialize.selector,
                         qnsRegistry,
-                        uint(namehash(res, 0))
+                        uint(namehash(res, 0)) // TODO I don't think this is correct!!!! I think the basenode is just `.` not `uq.`
                     )
                 )
             )

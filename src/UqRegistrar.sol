@@ -24,7 +24,7 @@ contract UqRegistrar is IBaseRegistrar, Initializable, OwnableUpgradeable, UUPSU
     using BytesUtils for bytes;
 
     QNSRegistry public qns;
-    uint        public baseNode;
+    uint        public baseNode; // TODO what is this? I think this should be `.` not `uq.`
 
     uint public maxCommitmentAge; 
     uint public minCommitmentAge;
