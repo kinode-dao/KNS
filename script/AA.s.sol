@@ -25,26 +25,13 @@ contract AAScript is Script {
     uint paymasterPriv;
     address paymasterPub;
 
-
     function run() public {
 
         paymasterPriv = vm.deriveKey(mnemonic, 0);
         paymasterPub = vm.rememberKey(paymasterPriv);
 
-        vm.etch(
-            vm.envAddress("AA_ENTRYPOINT"),
-            address(new EntryPoint()).code
-        );
-
-        vm.etch(
-            0x7fc98430eAEdbb6070B35B39D798725049088348, 
-            address(new SenderCreator()).code
-        );
-
         uint privk = vm.envUint("SNAKE");
         address payable pubk  = payable(vm.rememberKey(privk));
-
-        console.log("pubkb", pubk, pubk.balance, block.chainid);
 
         vm.startBroadcast(privk);
 
@@ -58,12 +45,6 @@ contract AAScript is Script {
         entrypoint.depositTo{value: 1 ether}(walletAddr);
 
         IStakeManager.DepositInfo memory depositInfo = entrypoint.getDepositInfo(pubk);
-
-        console.log("walletAddr", walletAddr);
-        console.log("paymasterPub", paymasterPub);
-
-        // vm.deal(walletAddr, 100 ether);
-
 
         UserOperation memory userOp = UserOperation({
             sender: walletAddr,
@@ -85,6 +66,7 @@ contract AAScript is Script {
             paymasterAndData: "",
             signature: ""
         });
+
 
         VerifyingPaymaster verifyingPaymaster = new VerifyingPaymaster(
             address(entrypoint),
@@ -120,10 +102,7 @@ contract AAScript is Script {
 
         entrypoint.depositTo{value: 1 ether}(address(verifyingPaymaster));
 
-        console.log("???", paymasterPub);
-
         entrypoint.handleOps(ops, pubk);
-
 
     }
 

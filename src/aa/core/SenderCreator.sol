@@ -15,11 +15,7 @@ contract SenderCreator {
      * @return sender the returned address of the created account, or zero address on failure.
      */
     function createSender(bytes calldata initCode) external returns (address sender) {
-        console.log("yes");
         address factory = address(bytes20(initCode[0 : 20]));
-
-        console.log("factory", factory);
-
         bytes memory initCallData = initCode[20 :];
         bool success;
         /* solhint-disable no-inline-assembly */

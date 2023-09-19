@@ -38,33 +38,26 @@ contract VerifyingPaymaster is BasePaymaster {
 
     mapping(address => uint256) public senderNonce;
 
-    function pack(UserOperation calldata userOp) internal view returns (bytes memory ret) {
+    function pack(UserOperation calldata userOp) internal pure returns (bytes memory ret) {
 
-        console.log("PACK~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log(userOp.sender, userOp.nonce);
-        console.logBytes(userOp.initCode);
-        console.logBytes(userOp.callData);
-        console.log(
-            userOp.callGasLimit, 
-            userOp.verificationGasLimit, 
-            userOp.preVerificationGas, 
-            userOp.maxFeePerGas
-        );
-        console.log(userOp.maxPriorityFeePerGas);
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~");
         // lighter signature scheme. must match UserOp.ts#packUserOp
-        bytes calldata pnd = userOp.paymasterAndData;
-        // copy directly the userOp from calldata up to (but not including) the paymasterAndData.
-        // this encoding depends on the ABI encoding of calldata, but is much lighter to copy
-        // than referencing each field separately.
-        assembly {
-            let ofs := userOp
-            let len := sub(sub(pnd.offset, ofs), 32)
-            ret := mload(0x40)
-            mstore(0x40, add(ret, add(len, 32)))
-            mstore(ret, len)
-            calldatacopy(add(ret, 32), ofs, len)
-        }
+        address sender = userOp.sender;
+        uint256 nonce = userOp.nonce;
+        bytes32 hashInitCode = calldataKeccak(userOp.initCode);
+        bytes32 hashCallData = calldataKeccak(userOp.callData);
+        uint256 callGasLimit = userOp.callGasLimit;
+        uint256 verificationGasLimit = userOp.verificationGasLimit;
+        uint256 preVerificationGas = userOp.preVerificationGas;
+        uint256 maxFeePerGas = userOp.maxFeePerGas;
+        uint256 maxPriorityFeePerGas = userOp.maxPriorityFeePerGas;
+
+        return abi.encode(
+            sender, nonce,
+            hashInitCode, hashCallData,
+            callGasLimit, verificationGasLimit, preVerificationGas,
+            maxFeePerGas, maxPriorityFeePerGas
+        );
+        
     }
 
     /**
@@ -78,15 +71,8 @@ contract VerifyingPaymaster is BasePaymaster {
     public view returns (bytes32) {
         //can't use userOp.hash(), since it contains also the paymasterAndData itself.
 
-        console.log("itsahere");
-
-        bytes memory packed = pack(userOp);
-        console.logBytes(packed);
-
-
         return keccak256(abi.encode(
-                // pack(userOp),
-                packed,
+                pack(userOp),
                 block.chainid,
                 address(this),
                 senderNonce[userOp.getSender()],
@@ -115,38 +101,23 @@ contract VerifyingPaymaster is BasePaymaster {
         (uint48 validUntil, uint48 validAfter, bytes calldata signature) = parsePaymasterAndData(userOp.paymasterAndData);
         //ECDSA library supports both 64 and 65-byte long signatures.
         // we only "require" it here so that the revert reason on invalid signature will be of "VerifyingPaymaster", and not "ECDSA
-        console.log("len", signature.length);
         require(signature.length == 64 || signature.length == 65, "VerifyingPaymaster: invalid signature length in paymasterAndData");
-
-        console.log(
-            "1", 
-            validUntil, 
-            validAfter
-        );
 
         bytes32 hash = ECDSA.toEthSignedMessageHash(getHash(userOp, validUntil, validAfter));
         senderNonce[userOp.getSender()]++;
-
-        console.log("2");
-
-        console.log("verifyingSigner", verifyingSigner);
-        console.log("ECDSA", ECDSA.recover(hash, signature));
 
         //don't revert on signature failure: return SIG_VALIDATION_FAILED
         if (verifyingSigner != ECDSA.recover(hash, signature)) {
             return ("",_packValidationData(true,validUntil,validAfter));
         }
 
-        console.log("3");
-
         //no need for other on-chain validation: entire UserOp should have been checked
         // by the external service prior to signing it.
         return ("",_packValidationData(false,validUntil,validAfter));
 
-        console.log("4");
     }
 
-    function parsePaymasterAndData(bytes calldata paymasterAndData) public view returns(uint48 validUntil, uint48 validAfter, bytes calldata signature) {
+    function parsePaymasterAndData(bytes calldata paymasterAndData) public pure returns(uint48 validUntil, uint48 validAfter, bytes calldata signature) {
         (validUntil, validAfter) = abi.decode(paymasterAndData[VALID_TIMESTAMP_OFFSET:SIGNATURE_OFFSET],(uint48, uint48));
         signature = paymasterAndData[SIGNATURE_OFFSET:];
     }
