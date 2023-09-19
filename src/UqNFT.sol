@@ -11,25 +11,11 @@ import "./lib/BytesUtils.sol";
 import "./interfaces/IQNSRegistrar.sol";
 import "./interfaces/IMulticallable.sol";
 
-error CommitmentTooOld(bytes32 commitment);
-error CommitmentTooNew(bytes32 commitment);
-error CommitmentUnexpired(bytes32 commitment);
-error CommitmentDoesNotExist(bytes32 commitment);
-error DomainNotAvailable(uint256 domainId);
-error DomainTooShort();
-error DomainParentInvalid(bytes name);
-error ResolverDataInvalid();
-
-contract UqRegistrar is IQNSRegistrar, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable { // , ,  {
-
+contract UqNFT is IQNSRegistrar, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
     using BytesUtils for bytes;
 
     QNSRegistry public qns;
-    uint        public baseNode; // TODO what is this? I think this should be `.` not `uq.`
-
-    // TODO what
-    // modifier live() 
-    //     { require(qns.ownerOf(baseNode) == address(this)); _; }
+    uint        public baseNode;
 
     function initialize (
         QNSRegistry _qns, 

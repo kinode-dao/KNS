@@ -11,7 +11,6 @@ import { IQNS } from "../src/interfaces/IQNS.sol";
 import { UqRegistrar } from "../src/UqRegistrar.sol";
 import { IQNSRegistrar } from "../src/interfaces/IQNSRegistrar.sol"; // TODO what is this doing here
 
-import { PublicResolver } from "../src/PublicResolver.sol";
 import { IWsResolver } from "../src/interfaces/profiles/IWsResolver.sol";
 
 contract QNSScript is Script {

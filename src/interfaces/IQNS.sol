@@ -1,31 +1,50 @@
 pragma solidity >=0.8.4;
 
+// Record types
+uint32 constant WEBSOCKETS = 1;
+
 interface IQNS {
+    // uint32 const WEBSOCKETS = 1;
+
     // QNS node data
     struct Record {
-        address owner;
-        address resolver;
-        address approval; // TODO delete this
+        address nft;
+        uint32 protocols; // uint32 lets us use 32 different protocols...I think that's good enough? TODO
     }
 
-    // Logged when a node is created for the first time
-    event NameRegistered(uint256 indexed node, bytes name, address owner);
+    // Websocket data
+    struct WsRecord {
+        bytes32 publicKey;
+        uint48 ipAndPort;
+        bytes32[] routers; // TODO maybe string[] instead?
+    }
 
-    // Logged when the owner of a node assigns a new owner to a subnode.
-    event NewOwner(uint256 indexed node, bytes32 indexed label, address owner);
+    // Logged whenever a QNS node's protocol information is updated.
+    event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
 
-    // Logged when the owner of a node transfers ownership to a new account.
-    event Transfer(uint256 indexed node, address owner);
-
-    // Logged when the resolver for a node changes.
-    event NewResolver(uint256 indexed node, address resolver);
-
-    // Logged when the TTL of a node changes
-    event NewTTL(uint256 indexed node, uint64 ttl);
+    // Logged whenever a QNS node's websocket information is updated.
+    event WsChanged(
+        uint256 indexed node,
+        bytes32 publicKey,
+        uint48 ipAndPort,
+        bytes32[] routers // TODO maybe string?
+    );
 
     function setRecord(
         bytes calldata node,
-        address owner,
+        address nft,
         address resolver
     ) external;
+
+    function setWs(
+        uint256 node,
+        bytes32 _publicKey,
+        uint32 _ip,
+        uint16 _port,
+        bytes32[] calldata _routers
+    ) external;
+
+    function ws(
+        uint256 node
+    ) external view returns (WsRecord memory);
 }
