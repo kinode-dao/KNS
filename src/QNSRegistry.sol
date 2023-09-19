@@ -85,9 +85,11 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
 
         Record storage r = records[uint(node)];
 
+        // TODO THIS IS ALL FILLER LOGIC
         if (r.owner == address(0) && r.resolver == address(0) && r.fuses == 0 && r.ttl == 0)
             emit NameRegistered(node, fqdn, owner);
 
+        // TODO actually mint the NFT!
         if (owner != address(0))
             emit Transfer(node, r.owner = owner);
 
@@ -122,9 +124,10 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
             super.supportsInterface(interfaceId);
     }
 
-
     // ERC721 functionns
     // NOTE: these are pretty much all copied & modified from OpenZeppelin's ERC721Upgradeable
+    // TODO: we could just override the ERC721Upgradeable functions but that means we have a bunch
+    //       of useless storage because we do things a little differently
 
     function balanceOf(address owner) public view virtual override returns (uint256) {
         require(owner != address(0), "ERC721: address zero is not a valid owner");
@@ -178,9 +181,15 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
         return _operators[owner][operator];
     }
 
+
+    function isOwnerOrApproved(address spender, uint256 tokenId) public view returns (bool) {
+        address owner = _ownerOf(tokenId);
+        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
+    }
+
     function transferFrom(address from, address to, uint256 tokenId) public virtual override {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        require(isOwnerOrApproved(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
 
         _transfer(from, to, tokenId);
     }
@@ -190,7 +199,7 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        require(isOwnerOrApproved(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
         _safeTransfer(from, to, tokenId, data);
     }
 
@@ -205,11 +214,6 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
 
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
         return _ownerOf(tokenId) != address(0);
-    }
-
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
-        address owner = _ownerOf(tokenId);
-        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
     }
 
     function _transfer(address from, address to, uint256 tokenId) internal virtual {

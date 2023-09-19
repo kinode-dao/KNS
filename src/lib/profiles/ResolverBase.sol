@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "../../interfaces/profiles/IVersionableResolver.sol";
 
 abstract contract ResolverBase is ERC165, IVersionableResolver {
+    // TODO what is this? How does a VersionableResolver work and why do we want it?
     mapping(uint256 => uint64) public recordVersions;
 
     function isAuthorised(uint256 node) internal view virtual returns (bool);
@@ -14,15 +15,16 @@ abstract contract ResolverBase is ERC165, IVersionableResolver {
         _;
     }
 
-    /**
-     * Increments the record version associated with an ENS node.
-     * May only be called by the owner of that node in the ENS registry.
-     * @param node The node to update.
-     */
-    function clearRecords(uint256 node) public virtual authorised(node) {
-        recordVersions[node]++;
-        emit VersionChanged(node, recordVersions[node]);
-    }
+    // TODO what is this?
+    // /**
+    //  * Increments the record version associated with an ENS node.
+    //  * May only be called by the owner of that node in the ENS registry.
+    //  * @param node The node to update.
+    //  */
+    // function clearRecords(uint256 node) public virtual authorised(node) {
+    //     recordVersions[node]++;
+    //     emit VersionChanged(node, recordVersions[node]);
+    // }
 
     function supportsInterface(
         bytes4 interfaceID
