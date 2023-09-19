@@ -7,14 +7,11 @@ QNS is a fork of ENS. Currently we have only one record type: `WsRecord`, which 
 ## Architecture
 QNS follows ENS' architecture with a few modifications to make it more efficient and eliminate cruft. For one, ENS' base layer only uses bytes32 to identify nodes, and then mints an ERC721/1155 token at higher levels. We use a node's uint value as the NFT id so it is usable throughout all layers. TODO more documentation here. Where are NFTs minted in ENS vs how are they minted here?
 
-### `QNSRegistry.sol`
-The core contract for QNS. It's logic is very simpel: it maintains a map of all domains to its their resolvers. While there may be more resolvers in the future, for now there is only the PublicResolver (should rename WsResolver?), which is responsible for resolving networking information on chain.
+### QNSRegistry
+This contract is responsible for storing all information related to uqbar protocols. Right now, we just have Websockets. We can support up to 31 more record types which can represent networking information or just general record information.
 
-### `PublicResolver.sol`
-Responsible for storing all Web Socket routing information for Uqbar's networking.
-
-### `UqRegistrar.sol`
-Logic that dictates how a user can register, own, and renew QNS names. Currently we have a commit/reveal scheme to prevent frontrunning. TODO we will also need to build an invite code system. TODO also need to add controller logic, which should handle registrations and renewals. Maybe we even remove the controller logic!
+### UqNFT
+A normal NFT that governs ownership of all subdomains of something, in this case, `.uq`. It is a normal ERC721 contract except it must handle all minting logic by calling `setProtocols` in the `QNSRegistry`, and the nft-ids must be the namehash of the name the ID represents. Since this will be permissioned, this is not a big deal and we will be able to audit and make sure each TLD NFT contract is implemented correctly.
 
 ## Testing and Scripts
 Before running scripts, build dnswire with
