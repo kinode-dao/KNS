@@ -3,11 +3,11 @@ pragma solidity >=0.8.4;
 interface IQNS {
     // QNS node data
     struct Record {
-        address owner;
+        address owner; // TODO this should be NFT contract
         address resolver;
-        address approval;
-        uint32  fuses;
-        uint64  ttl;
+        address approval; // TODO delete this
+        uint32  fuses; // TODO delete this
+        uint64  ttl; // TODO delete this
     }
 
     // Logged when a node is created for the first time

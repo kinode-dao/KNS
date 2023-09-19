@@ -97,13 +97,7 @@ contract QNSRegistry is IQNS, IERC721Upgradeable, IERC721MetadataUpgradeable, ER
         return keccak256(abi.encodePacked(node, labelhash));
     }
 
-    // TODO: May keep or delete these
-    function setTTL(uint256 node, uint64 ttl) public {}
-    function ttl(uint256 node) public view returns (uint64 ttl) {}
-    function recordExists(uint256 node) external view returns (bool exists) {}
-    function resolver(uint256 node) external view returns (address resolver) {}
-    function setResolver(uint256 node, address resolver) external {}
-    function setOwner(uint256 node, address owner) external {}
+    // TODO might want functions to change resolver...though actually I think just one permanent but upgradable resolver is best...TODO
 
     // ERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
