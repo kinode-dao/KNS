@@ -1,6 +1,15 @@
 pragma solidity >=0.8.4;
 
 interface IQNS {
+    // QNS node data
+    struct Record {
+        address owner;
+        address resolver;
+        address approval;
+        uint32  fuses;
+        uint64  ttl;
+    }
+
     // Logged when a node is created for the first time
     event NameRegistered(uint256 indexed node, bytes name, address owner);
 
@@ -15,13 +24,6 @@ interface IQNS {
 
     // Logged when the TTL of a node changes
     event NewTTL(uint256 indexed node, uint64 ttl);
-
-    // Logged when an operator is added or removed.
-    event ApprovalForAll(
-        address indexed owner,
-        address indexed operator,
-        bool approved
-    );
 
     function setRecord(
         bytes calldata node,
@@ -43,19 +45,9 @@ interface IQNS {
 
     function setTTL(uint256 node, uint64 ttl) external;
 
-    function setApprovalForAll(address operator, bool approved) external;
-
-    function owner(uint256 node) external view returns (address);
-
     function resolver(uint256 node) external view returns (address);
 
     function ttl(uint256 node) external view returns (uint64);
 
     function recordExists(uint256 node) external view returns (bool);
-
-    function isApprovedForAll(
-        address owner,
-        address operator
-    ) external view returns (bool);
-
 }
