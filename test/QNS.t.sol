@@ -37,7 +37,6 @@ contract QNSTest is TestUtils {
     bytes32 constant _PUBKEY = bytes32(0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F);
 
     function setUp() public {
-
         vm.prank(deployer);
         QNSRegistry qnsRegistryImpl = new QNSRegistry();
         
@@ -52,6 +51,8 @@ contract QNSTest is TestUtils {
                 )
             )
         );
+
+        assertEq(qnsRegistry.owner(), address(deployer));
 
         vm.prank(deployer);
         UqNFT uqNftImpl = new UqNFT();
@@ -69,6 +70,12 @@ contract QNSTest is TestUtils {
                 )
             )
         );
+
+        assertEq(uqNft.owner(), address(deployer));
+        // assertEq(uqNft.qns(), address(qnsRegistry)); // TODO not working
+        assertEq(uqNft.baseNode(), getNodeId("uq"));
+        assertEq(uqNft.name(), "Uqbar Name Service");
+        assertEq(uqNft.symbol(), "UQNS");
 
         vm.prank(deployer);
         vm.expectEmit(true, false, false, true);
