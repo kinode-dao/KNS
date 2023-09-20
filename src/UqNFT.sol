@@ -39,20 +39,14 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
 
     function register (
         bytes calldata name,
-        address owner,
-        uint32 protocols
-        // bytes[]calldata resolverData // TODO for setting resovler data and minting in one transaction
+        address owner
         // TODO signature for permissioned minting
     ) public payable {
         uint id = uint(name.namehash(0));
 
         _mint(owner, id);
 
-        qns.setProtocols(
-            name, 
-            protocols
-        );
-
+        qns.registerNode(name);
     }
 
     // TODO we might need logic before/after transfer to unset the resolver data

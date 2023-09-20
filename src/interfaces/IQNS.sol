@@ -20,7 +20,7 @@ interface IQNS {
     }
 
     // Logged whenever a QNS adds/drops support for a protocol
-    event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
+    event NodeRegistered(uint256 indexed node, bytes name);
 
     // Logged whenever a QNS node is created.
     event NewTld(uint256 indexed node, bytes name, address nft);
@@ -28,23 +28,23 @@ interface IQNS {
     // Logged whenever a QNS node's websocket information is updated.
     event WsChanged(
         uint256 indexed node,
+        uint32 indexed protocols,
         bytes32 publicKey,
         uint48 ipAndPort,
         bytes32[] routers // TODO maybe string?
     );
 
-    function setProtocols(
-        bytes calldata fqdn,
-        uint32 protocols
+    function registerNode (
+        bytes calldata fqdn
     ) external;
 
     function setWsRecord(
         // uint256 node, // TODO should be this but we're using fqdn now
         bytes calldata fqdn,
-        bytes32 _publicKey,
-        uint32 _ip,
-        uint16 _port,
-        bytes32[] calldata _routers
+        bytes32 publicKey,
+        uint32 ip,
+        uint16 port,
+        bytes32[] calldata routers
     ) external;
 
     function ws(

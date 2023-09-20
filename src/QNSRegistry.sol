@@ -13,7 +13,7 @@ error MustChooseStaticOrRouted();
 
 // TODO lets see what inspiration we can take from VersionableResolver? Not really sure what the point of it is but maybe...
 
-contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable { // TODO should be multicallable
+contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
     // Has pointers to NFT contract (ownership) and protocols
@@ -54,18 +54,16 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         emit NewTld(node, fqdn, nft);
     }
 
-    function setProtocols (
-        bytes calldata fqdn,
-        uint32 _protocols
-        // continuation calls?
-    ) public {
+    // this function is called once on mint by the NFT contract
+    function registerNode(
+        bytes calldata fqdn
+    ) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
         address nftContract = records[uint256(parentNode)].nft;
-        address owner = IERC721(nftContract).ownerOf(node);
         require(
-            msg.sender == nftContract || msg.sender == owner,
-            "QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain"
+            msg.sender == nftContract,
+            "QNSRegistry: only NFT contract can set a records for a subdomain"
         );
 
         // NOTE if we don't trust the nft contract, we also need to check this:
@@ -76,21 +74,20 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
             // this basically means that .uq handles ALL subdomaining. We should probably implement some logic
             // for that in the UqRegistrar contract. Also logic for specifying your own NFT if you want that
             nft: msg.sender,
-            protocols: _protocols
+            protocols: 0
         });
 
-        emit ProtocolsChanged(node, fqdn, _protocols);
+        emit NodeRegistered(node, fqdn);
     }
 
     function setWsRecord(
-        // uint256 node,
-        bytes calldata fqdn, // TODO get rid of this and use continuation calls ONLY
-        bytes32 _publicKey,
-        uint32 _ip,
-        uint16 _port,
-        bytes32[] calldata _routers
-    ) external virtual { // authorised(node) // TODO authorized modifier
-        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn); // TODO get rid of this
+        bytes calldata fqdn,
+        bytes32 publicKey,
+        uint32 ip,
+        uint16 port,
+        bytes32[] calldata routers
+    ) external virtual {
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
         address nftContract = records[uint256(parentNode)].nft;
         
@@ -102,18 +99,24 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         // NOTE if we don't trust the nft contract, we also need to check this:
         //      IERC721(nftContract).ownerOf(node) != address(0)
 
-        if ((_ip != 0 || _port != 0) && _routers.length != 0) {
+        require(publicKey != bytes32(0), "QNSRegistry: public key cannot be 0");
+
+        if ((ip == 0 || port == 0) && routers.length == 0) {
             revert MustChooseStaticOrRouted();
         }
 
-        uint48 _ipAndPort = combineIpAndPort(_ip, _port);
+        uint48 ipAndPort = combineIpAndPort(ip, port);
 
         ws_records[node] = WsRecord(
-            _publicKey,
-            _ipAndPort,
-            _routers
+            publicKey,
+            ipAndPort,
+            routers
         );
-        emit WsChanged(node, _publicKey, _ipAndPort, _routers);
+
+        Record storage record = records[node];
+        record.protocols = record.protocols | WEBSOCKETS;
+
+        emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
     }
 
     //
@@ -151,5 +154,15 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
 
     function combineIpAndPort(uint32 ip, uint16 port) internal pure returns (uint48) {
         return uint48((uint48(ip) << 16) | port);
+    }
+
+    //
+    // ERC165
+    //
+
+    function supportsInterface(bytes4 interfaceID) public view override returns (bool) {
+        return
+            interfaceID == type(IQNS).interfaceId ||
+            super.supportsInterface(interfaceID);
     }
 }
