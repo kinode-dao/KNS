@@ -10,9 +10,18 @@ import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { UqNFT } from "../src/UqNFT.sol";
 import "forge-std/console.sol";
 
+error MustChooseStaticOrRouted();
+
 contract QNSTest is TestUtils {
     // events
     event NewTld(uint256 indexed node, bytes name, address nft);
+    event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
+    event WsChanged(
+        uint256 indexed node,
+        bytes32 publicKey,
+        uint48 ipAndPort,
+        bytes32[] routers // TODO maybe string?
+    );
 
     // addresses
     address public deployer = address(2);
@@ -23,6 +32,9 @@ contract QNSTest is TestUtils {
     // contracts
     QNSRegistry public qnsRegistry;
     UqNFT public uqNft;
+
+    // constants
+    bytes32 constant _PUBKEY = bytes32(0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F);
 
     function setUp() public {
 
@@ -106,7 +118,7 @@ contract QNSTest is TestUtils {
 
     function test_setProtocolsFailsWhenIsNotParent () public {
         vm.prank(alice);
-        vm.expectRevert("QNSRegistry: only parent NFT contract can setRecords for a subdomain");
+        vm.expectRevert("ERC721: invalid token ID");
         qnsRegistry.setProtocols(getDNSWire("test.uq"), 0);
     }
 
@@ -117,19 +129,72 @@ contract QNSTest is TestUtils {
     }
     
     function test_setProtocols () public {
-        // check records
-        // check event was emitted
+        vm.prank(alice);
+        vm.expectEmit(true, false, false, true);
+        emit ProtocolsChanged(getNodeId("alice.uq"), getDNSWire("alice.uq"), 1);
+        uqNft.register(getDNSWire("alice.uq"), alice, 1);
+        
+        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
+        assertEq(actualNft, address(uqNft));
+        assertEq(actualProtocols, 1);
     }
 
-    function test_setWsRecordFailsWhenNotAuthorized () public {
-        vm.prank(charlie);
+    function test_setWsRecordFailsWhenNotOwnerOrNft () public {
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, 1);
+        
+        vm.prank(bob);
+        vm.expectRevert("QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain");
+        qnsRegistry.setWsRecord(
+            getDNSWire("alice.uq"),
+            bytes32(0),
+            9004,
+            9005,
+            new bytes32[](0)
+        );
     }
+
+    function test_setWsRecordFailsWhenNotMinted () public {
+        vm.prank(alice);
+        vm.expectRevert("ERC721: invalid token ID");
+        qnsRegistry.setWsRecord(
+            getDNSWire("alice.uq"),
+            bytes32(0),
+            9004,
+            9005,
+            new bytes32[](0)
+        );
+    }
+
 
     function test_setWsRecordFailsWhenNotStaticOrRouted () public {
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, 1);
+        
+        vm.prank(bob);
+        vm.expectRevert(); // TODO MustChooseStaticOrRouted
+        qnsRegistry.setWsRecord(
+            getDNSWire("alice.uq"),
+            bytes32(0),
+            0,
+            0,
+            new bytes32[](0)
+        );
     }
 
     function test_setWsRecord () public {
-        // check ws_records
-        // check event was emitted
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, 1);
+        
+        vm.prank(alice);
+        vm.expectEmit(true, false, false, true);
+        emit WsChanged(getNodeId("alice.uq"), _PUBKEY, 0, new bytes32[](5));
+        qnsRegistry.setWsRecord(
+            getDNSWire("alice.uq"),
+            _PUBKEY,
+            0,
+            0,
+            new bytes32[](5)
+        );
     }
 }

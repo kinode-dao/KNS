@@ -61,14 +61,15 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     ) public {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
-        address parentOwner = records[uint256(parentNode)].nft;
+        address nftContract = records[uint256(parentNode)].nft;
+        address owner = IERC721(nftContract).ownerOf(node);
         require(
-            parentOwner == msg.sender,
-            "QNSRegistry: only parent NFT contract can setRecords for a subdomain"
+            msg.sender == nftContract || msg.sender == owner,
+            "QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain"
         );
 
-        // TODO require that the NFT contract has minted the node
-        require(IERC721(parentOwner).ownerOf(node) != address(0));
+        // NOTE if we don't trust the nft contract, we also need to check this:
+        //      IERC721(nftContract).ownerOf(node) != address(0)
 
         records[node] = Record({
             // TODO I think this is correct...might want to let them specify something for subdomains?
@@ -82,12 +83,25 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     }
 
     function setWsRecord(
-        uint256 node,
+        // uint256 node,
+        bytes calldata fqdn, // TODO get rid of this and use continuation calls ONLY
         bytes32 _publicKey,
         uint32 _ip,
         uint16 _port,
         bytes32[] calldata _routers
     ) external virtual { // authorised(node) // TODO authorized modifier
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn); // TODO get rid of this
+
+        address nftContract = records[uint256(parentNode)].nft;
+        
+        require(
+            msg.sender == nftContract || msg.sender == IERC721(nftContract).ownerOf(node),
+            "QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain"
+        );
+
+        // NOTE if we don't trust the nft contract, we also need to check this:
+        //      IERC721(nftContract).ownerOf(node) != address(0)
+
         if ((_ip != 0 || _port != 0) && _routers.length != 0) {
             revert MustChooseStaticOrRouted();
         }

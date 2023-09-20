@@ -46,12 +46,13 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     ) public payable {
         uint id = uint(name.namehash(0));
 
+        _mint(owner, id);
+
         qns.setProtocols(
             name, 
             protocols
         );
 
-        _mint(owner, id);
     }
 
     // TODO we might need logic before/after transfer to unset the resolver data
