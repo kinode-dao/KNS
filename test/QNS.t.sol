@@ -238,22 +238,4 @@ contract QNSTest is TestUtils {
         vm.expectRevert("QNSRegistry: node does not support websockets");
         qnsRegistry.ws(getNodeId("alice.uq"));
     }
-
-    function test_cannotRegister3LTLDFromUqNftUsingRegister() public {
-        vm.prank(alice);
-        uqNft.register(getDNSWire("uq.uq"), alice);
-        
-        vm.prank(alice);
-        vm.expectRevert("UqNFT: only subdomains of baseNode can be registered");
-        uqNft.register(getDNSWire("sub.uq.uq"), alice);
-    }
-
-    function test_cannotRegister3LTLDDirectToRegistry() public {
-        vm.prank(alice);
-        uqNft.register(getDNSWire("alice.uq"), alice);
-        
-        vm.prank(alice);
-        vm.expectRevert("QNSRegistry: only parent domain owner can register subdomain contract");
-        qnsRegistry.registerSubdomainContract(getDNSWire("alice.uq"), address(uqNft));
-    }
 }

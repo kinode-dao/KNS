@@ -38,11 +38,15 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
         return  _getInitializedVersion();
     }
 
+    //
+    // externals
+    //
+
+    // TODO probably want two versions of this: a payable versions and an invite code version
     function register(
         bytes calldata name,
         address owner
-        // TODO signature for permissioned minting
-    ) public payable {
+    ) public {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
         require(
             parentNode == baseNode,
@@ -51,6 +55,24 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
 
         _safeMint(owner, node, "");
         qns.registerNode(name);
+    }
+
+    function allowSubdomains(
+        bytes calldata name,
+        address nft
+    ) public {
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
+        require(
+            parentNode == baseNode,
+            "UqNFT: only subdomains of baseNode can be registered"
+        );
+        require(
+            msg.sender == ownerOf(node),
+            "UqNFT: only owner of node can allow subdomains"
+        );
+
+        // TODO check that nft is actually an NFT? Use ERC165?
+        qns.registerSubdomainContract(name, nft);
     }
 
     //
