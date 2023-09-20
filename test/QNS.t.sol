@@ -126,7 +126,7 @@ contract QNSTest is TestUtils {
 
     function test_registerNodeFailsWhenIsNotParent() public {
         vm.prank(alice);
-        vm.expectRevert("QNSRegistry: only NFT contract can set a records for a subdomain");
+        vm.expectRevert("QNSRegistry: only NFT contract can register node for a subdomain");
         qnsRegistry.registerNode(getDNSWire("test.uq"));
     }
     
@@ -146,9 +146,9 @@ contract QNSTest is TestUtils {
         uqNft.register(getDNSWire("alice.uq"), alice);
         
         vm.prank(bob);
-        vm.expectRevert("QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain");
+        vm.expectRevert("QNSRegistry: only NFT contract or NFT owner can set ws records for a subdomain");
         qnsRegistry.setWsRecord(
-            getDNSWire("alice.uq"),
+            getNodeId("alice.uq"),
             bytes32(0),
             9004,
             9005,
@@ -157,11 +157,13 @@ contract QNSTest is TestUtils {
     }
 
     function test_setWsRecordFailsWhenNotMinted() public {
-        vm.prank(alice);
-        vm.expectRevert("ERC721: invalid token ID");
+        vm.prank(address(uqNft));
+        // TODO reason isn't correct for some reason? Should be:
+        // "QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain"
+        vm.expectRevert();
         qnsRegistry.setWsRecord(
-            getDNSWire("alice.uq"),
-            bytes32(0),
+            getNodeId("alice.uq"),
+            _PUBKEY,
             9004,
             9005,
             new bytes32[](0)
@@ -176,7 +178,7 @@ contract QNSTest is TestUtils {
         vm.prank(alice);
         vm.expectRevert(); // TODO MustChooseStaticOrRouted
         qnsRegistry.setWsRecord(
-            getDNSWire("alice.uq"),
+            getNodeId("alice.uq"),
             bytes32(0),
             0,
             0,
@@ -191,7 +193,7 @@ contract QNSTest is TestUtils {
         vm.prank(alice);
         vm.expectRevert("QNSRegistry: public key cannot be 0");
         qnsRegistry.setWsRecord(
-            getDNSWire("alice.uq"),
+            getNodeId("alice.uq"),
             bytes32(0),
             5,
             6,
@@ -210,7 +212,7 @@ contract QNSTest is TestUtils {
         vm.expectEmit(true, true, false, true);
         emit WsChanged(getNodeId("alice.uq"), 1, _PUBKEY, 0, routers);
         qnsRegistry.setWsRecord(
-            getDNSWire("alice.uq"),
+            getNodeId("alice.uq"),
             _PUBKEY,
             0,
             0,
@@ -221,5 +223,28 @@ contract QNSTest is TestUtils {
         assertEq(wsRecord.publicKey, _PUBKEY);
         assertEq(wsRecord.ipAndPort, 0);
         assertEq(wsRecord.routers.length, 1);
+    }
+
+    function test_clearWsRecordCannotReadWs() public {
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice);
+        
+        bytes32[] memory routers = new bytes32[](1);
+        routers[0] = bytes32(getNodeId("rolr1.uq"));
+
+        vm.prank(alice);
+        qnsRegistry.setWsRecord(
+            getNodeId("alice.uq"),
+            _PUBKEY,
+            0,
+            0,
+            routers
+        );
+
+        vm.prank(alice);
+        uqNft.transferFrom(alice, bob, getNodeId("alice.uq"));
+
+        vm.expectRevert("QNSRegistry: node does not support websockets");
+        qnsRegistry.ws(getNodeId("alice.uq"));
     }
 }

@@ -63,7 +63,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         address nftContract = records[uint256(parentNode)].nft;
         require(
             msg.sender == nftContract,
-            "QNSRegistry: only NFT contract can set a records for a subdomain"
+            "QNSRegistry: only NFT contract can register node for a subdomain"
         );
 
         // NOTE if we don't trust the nft contract, we also need to check this:
@@ -73,7 +73,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
             // TODO I think this is correct...might want to let them specify something for subdomains?
             // this basically means that .uq handles ALL subdomaining. We should probably implement some logic
             // for that in the UqRegistrar contract. Also logic for specifying your own NFT if you want that
-            nft: msg.sender,
+            nft: nftContract,
             protocols: 0
         });
 
@@ -81,19 +81,17 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     }
 
     function setWsRecord(
-        bytes calldata fqdn,
+        uint256 node,
         bytes32 publicKey,
         uint32 ip,
         uint16 port,
         bytes32[] calldata routers
-    ) external virtual {
-        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
-
-        address nftContract = records[uint256(parentNode)].nft;
+    ) external {
+        address nftContract = records[uint256(node)].nft;
         
         require(
             msg.sender == nftContract || msg.sender == IERC721(nftContract).ownerOf(node),
-            "QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain"
+            "QNSRegistry: only NFT contract or NFT owner can set ws records for a subdomain"
         );
 
         // NOTE if we don't trust the nft contract, we also need to check this:
@@ -119,6 +117,19 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
     }
 
+    function clearProtocol(uint256 node, uint32 protocols) external {
+        address nftContract = records[uint256(node)].nft;
+        
+        require(
+            // TODO ownerOf reverts when a token hasn't minted so nftContract has to handle all changes
+            msg.sender == nftContract, // || msg.sender == IERC721(nftContract).ownerOf(node),
+            "QNSRegistry: only NFT contract or NFT owner can clear records for a subdomain"
+        );
+        
+        Record storage record = records[node];
+        record.protocols = record.protocols & ~protocols; // TODO is this right
+    }
+
     //
     // views
     //
@@ -126,6 +137,10 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     function ws(
         uint256 node
     ) external view virtual override returns (WsRecord memory) {
+        require(
+            records[node].protocols & WEBSOCKETS != 0,
+            "QNSRegistry: node does not support websockets"
+        );
         return ws_records[node];
     }
 

@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 import "./QNSRegistry.sol";
 import "./lib/BytesUtils.sol";
+import "./interfaces/IQNS.sol";
 import "./interfaces/IQNSNFT.sol";
 import "./interfaces/IMulticallable.sol";
 
@@ -44,10 +45,17 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     ) public payable {
         uint id = uint(name.namehash(0));
 
-        _mint(owner, id);
+        _safeMint(owner, id, "");
 
         qns.registerNode(name);
     }
 
-    // TODO we might need logic before/after transfer to unset the resolver data
+    //
+    // overrides
+    //
+
+    function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize) internal override {
+        if (from == address(0)) return; // ignore minting
+        qns.clearProtocol(firstTokenId, WEBSOCKETS);
+    }
 }

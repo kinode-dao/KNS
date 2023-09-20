@@ -39,8 +39,7 @@ interface IQNS {
     ) external;
 
     function setWsRecord(
-        // uint256 node, // TODO should be this but we're using fqdn now
-        bytes calldata fqdn,
+        uint256 node,
         bytes32 publicKey,
         uint32 ip,
         uint16 port,
