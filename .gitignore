@@ -1,5 +1,8 @@
 # Compiler files
+artifacts/
+cache_hardhat/
 cache/
+typechain/
 out/
 
 # Ignores development broadcast logs
@@ -14,3 +17,4 @@ docs/
 .env
 
 target/
+node_modules/
