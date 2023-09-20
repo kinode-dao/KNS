@@ -28,7 +28,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         __UUPSUpgradeable_init();
         __Ownable_init();
 
-        records[0].nft = msg.sender; // TODO double check this
+        records[0].owner = msg.sender; // TODO double check this
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -41,17 +41,20 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     // externals
     //
 
-    // TODO this should accept an 
-    function newTld(bytes calldata fqdn, address nft) external onlyOwner {
+    function registerSubdomainContract(bytes calldata fqdn, address nft) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
-        require(parentNode == 0, "QNSRegistry: cannot register subdomain using newTld");
+        address owner = records[uint256(parentNode)].owner;
+        require(
+            msg.sender == owner,
+            "QNSRegistry: only parent domain owner can register subdomain contract"
+        );
 
         records[node] = Record({
-            nft: nft,
+            owner: nft,
             protocols: 0
         });
 
-        emit NewTld(node, fqdn, nft);
+        emit NewSubdomainContract(node, fqdn, nft);
     }
 
     // this function is called once on mint by the NFT contract
@@ -60,20 +63,20 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     ) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
-        address nftContract = records[uint256(parentNode)].nft;
+        address parentOwner = records[uint256(parentNode)].owner;
         require(
-            msg.sender == nftContract,
+            msg.sender == parentOwner,
             "QNSRegistry: only NFT contract can register node for a subdomain"
         );
 
-        // NOTE if we don't trust the nft contract, we also need to check this:
-        //      IERC721(nftContract).ownerOf(node) != address(0)
+        // NOTE if we don't trust the owner contract, we also need to check this:
+        //      IERC721(parentOwner).ownerOf(node) != address(0)
 
         records[node] = Record({
             // TODO I think this is correct...might want to let them specify something for subdomains?
             // this basically means that .uq handles ALL subdomaining. We should probably implement some logic
             // for that in the UqRegistrar contract. Also logic for specifying your own NFT if you want that
-            nft: nftContract,
+            owner: msg.sender,
             protocols: 0
         });
 
@@ -87,15 +90,15 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         uint16 port,
         bytes32[] calldata routers
     ) external {
-        address nftContract = records[uint256(node)].nft;
+        address parentOwner = records[uint256(node)].owner;
         
         require(
-            msg.sender == nftContract || msg.sender == IERC721(nftContract).ownerOf(node),
+            msg.sender == parentOwner || msg.sender == IERC721(parentOwner).ownerOf(node),
             "QNSRegistry: only NFT contract or NFT owner can set ws records for a subdomain"
         );
 
-        // NOTE if we don't trust the nft contract, we also need to check this:
-        //      IERC721(nftContract).ownerOf(node) != address(0)
+        // NOTE if we don't trust parentOwner contract, we also need to check this:
+        //      IERC721(parentOwner).ownerOf(node) != address(0)
 
         require(publicKey != bytes32(0), "QNSRegistry: public key cannot be 0");
 
@@ -118,11 +121,11 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     }
 
     function clearProtocol(uint256 node, uint32 protocols) external {
-        address nftContract = records[uint256(node)].nft;
+        address parentOwner = records[uint256(node)].owner;
         
         require(
-            // TODO ownerOf reverts when a token hasn't minted so nftContract has to handle all changes
-            msg.sender == nftContract, // || msg.sender == IERC721(nftContract).ownerOf(node),
+            // TODO ownerOf reverts when a token hasn't minted so parentOwner has to handle all changes
+            msg.sender == parentOwner, // || msg.sender == IERC721(parentOwner).ownerOf(node),
             "QNSRegistry: only NFT contract or NFT owner can clear records for a subdomain"
         );
         
@@ -147,10 +150,6 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     //
     // internals
     //
-
-    function _getNode(bytes memory fqdn) internal pure returns (uint256) {
-
-    }
 
     // TODO does this actually work? what if it's a.b.c. not just b.c.?
     function _getNodeAndParent(bytes memory fqdn) public pure returns (uint256 node, uint256 parentNode) { // TODO internal

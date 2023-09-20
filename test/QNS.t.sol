@@ -14,7 +14,7 @@ error MustChooseStaticOrRouted();
 
 contract QNSTest is TestUtils {
     // events
-    event NewTld(uint256 indexed node, bytes name, address nft);
+    event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
     event NodeRegistered(uint256 indexed node, bytes name);
     event WsChanged(
         uint256 indexed node,
@@ -80,8 +80,8 @@ contract QNSTest is TestUtils {
 
         vm.prank(deployer);
         vm.expectEmit(true, false, false, true);
-        emit NewTld(getNodeId("uq"), getDNSWire("uq"), address(uqNft));
-        qnsRegistry.newTld(
+        emit NewSubdomainContract(getNodeId("uq"), getDNSWire("uq"), address(uqNft));
+        qnsRegistry.registerSubdomainContract(
             getDNSWire("uq"),
             address(uqNft)
         );
@@ -92,29 +92,20 @@ contract QNSTest is TestUtils {
         assertEq(actualProtocols, 0);
     }
 
-    function test_newTldFailsWhenNotOwner() public {
+    function test_registerSubdomainContractFailsWhenNotOwner() public {
         vm.prank(alice);
-        vm.expectRevert("Ownable: caller is not the owner");
-        qnsRegistry.newTld(
+        vm.expectRevert("QNSRegistry: only parent domain owner can register subdomain contract");
+        qnsRegistry.registerSubdomainContract(
             getDNSWire("alices-tld"),
             address(9001)
         );
     }
 
-    function test_newTldFailsWhenUsingSubdomain() public {
-        vm.prank(deployer);
-        vm.expectRevert("QNSRegistry: cannot register subdomain using newTld");
-        qnsRegistry.newTld(
-            getDNSWire("a.b"),
-            address(9001)
-        );
-    }
-
-    function test_newTld() public {
+    function test_registerSubdomainContract() public {
         vm.prank(deployer);
         vm.expectEmit(true, false, false, true);
-        emit NewTld(getNodeId("new-tld"), getDNSWire("new-tld"), address(9001));
-        qnsRegistry.newTld(
+        emit NewSubdomainContract(getNodeId("new-tld"), getDNSWire("new-tld"), address(9001));
+        qnsRegistry.registerSubdomainContract(
             getDNSWire("new-tld"),
             address(9001)
         );
@@ -246,5 +237,23 @@ contract QNSTest is TestUtils {
 
         vm.expectRevert("QNSRegistry: node does not support websockets");
         qnsRegistry.ws(getNodeId("alice.uq"));
+    }
+
+    function test_cannotRegister3LTLDFromUqNftUsingRegister() public {
+        vm.prank(alice);
+        uqNft.register(getDNSWire("uq.uq"), alice);
+        
+        vm.prank(alice);
+        vm.expectRevert("UqNFT: only subdomains of baseNode can be registered");
+        uqNft.register(getDNSWire("sub.uq.uq"), alice);
+    }
+
+    function test_cannotRegister3LTLDDirectToRegistry() public {
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice);
+        
+        vm.prank(alice);
+        vm.expectRevert("QNSRegistry: only parent domain owner can register subdomain contract");
+        qnsRegistry.registerSubdomainContract(getDNSWire("alice.uq"), address(uqNft));
     }
 }

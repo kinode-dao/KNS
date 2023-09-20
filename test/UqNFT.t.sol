@@ -14,7 +14,7 @@ error MustChooseStaticOrRouted();
 
 contract QNSTest is TestUtils {
     // events
-    event NewTld(uint256 indexed node, bytes name, address nft);
+    event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
     event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
     event WsChanged(
         uint256 indexed node,
@@ -79,8 +79,8 @@ contract QNSTest is TestUtils {
 
         vm.prank(deployer);
         vm.expectEmit(true, false, false, true);
-        emit NewTld(getNodeId("uq"), getDNSWire("uq"), address(uqNft));
-        qnsRegistry.newTld(
+        emit NewSubdomainContract(getNodeId("uq"), getDNSWire("uq"), address(uqNft));
+        qnsRegistry.registerSubdomainContract(
             getDNSWire("uq"),
             address(uqNft)
         );

@@ -7,7 +7,7 @@ interface IQNS {
     // QNS node data
     struct Record {
         // contract that controls ownership logic of QNS id
-        address nft;
+        address owner;
         // room for 32 protocols
         uint32 protocols;
     }
@@ -23,7 +23,7 @@ interface IQNS {
     event NodeRegistered(uint256 indexed node, bytes name);
 
     // Logged whenever a QNS node is created.
-    event NewTld(uint256 indexed node, bytes name, address nft);
+    event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
 
     // Logged whenever a QNS node's websocket information is updated.
     event WsChanged(
@@ -33,6 +33,11 @@ interface IQNS {
         uint48 ipAndPort,
         bytes32[] routers // TODO maybe string?
     );
+
+    function registerSubdomainContract(
+        bytes calldata fqdn,
+        address nft
+    ) external;
 
     function registerNode (
         bytes calldata fqdn

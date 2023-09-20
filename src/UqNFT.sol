@@ -16,7 +16,7 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     using BytesUtils for bytes;
 
     QNSRegistry public qns;
-    uint        public baseNode; // TODO not clear that we need this
+    uint        public baseNode;
 
     function initialize (
         QNSRegistry _qns, 
@@ -38,15 +38,18 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
         return  _getInitializedVersion();
     }
 
-    function register (
+    function register(
         bytes calldata name,
         address owner
         // TODO signature for permissioned minting
     ) public payable {
-        uint id = uint(name.namehash(0));
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
+        require(
+            parentNode == baseNode,
+            "UqNFT: only subdomains of baseNode can be registered"
+        );
 
-        _safeMint(owner, id, "");
-
+        _safeMint(owner, node, "");
         qns.registerNode(name);
     }
 
@@ -54,8 +57,27 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     // overrides
     //
 
+    // TODO make this optional
     function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize) internal override {
         if (from == address(0)) return; // ignore minting
         qns.clearProtocol(firstTokenId, WEBSOCKETS);
+    }
+
+    //
+    // internals
+    //
+
+    function _getNodeAndParent(bytes memory fqdn) public pure returns (uint256 node, uint256 parentNode) { // TODO internal
+        (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
+        bytes32 parentNode = fqdn.namehash(offset);
+        uint256 node = uint256(_makeNode(parentNode, labelhash));
+        return (node, uint256(parentNode));
+    }
+
+    function _makeNode(
+        bytes32 node,
+        bytes32 labelhash
+    ) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(node, labelhash));
     }
 }
