@@ -157,6 +157,8 @@ contract QNSTest is TestUtils {
 
         // allow subdomains on alice.uq
         vm.prank(alice);
+        vm.expectEmit(true, false, false, true);
+        emit NewSubdomainContract(getNodeId("alice.uq"), getDNSWire("alice.uq"), address(uqNft2));
         uqNft.allowSubdomains(getDNSWire("alice.uq"), address(uqNft2));
 
         // check all on-chain data about alice.uq is updated
