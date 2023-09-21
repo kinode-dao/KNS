@@ -10,6 +10,7 @@ import { AddressZero, callDataCost, rethrow } from './Utils'
 import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util'
 import { EntryPoint, /* EntryPointSimulations__factory */ } from '../typechain'
 import { Create2Factory } from './Create2Factory'
+import { VPSigner } from './VerifyingPaymaster'
 
 // import { TransactionRequest } from '@ethersproject/abstract-provider'
 // import { ethers } from 'hardhat'
@@ -130,7 +131,12 @@ export function fillUserOpDefaults (op: Partial<UserOperation>, defaults = Defau
 // sender - only in case of construction: fill sender from initCode.
 // callGasLimit: VERY crude estimation (by estimating call to account, and add rough entryPoint overhead
 // verificationGasLimit: hard-code default at 100k. should add "create2" cost
-export async function fillUserOp (op: Partial<UserOperation>, entryPoint?: EntryPoint, getNonceFunction = 'getNonce'): Promise<UserOperation> {
+export async function fillUserOp (
+  op: Partial<UserOperation>, 
+  entryPoint?: EntryPoint, 
+  getNonceFunction = 'getNonce',
+  paymaster?: VPSigner
+): Promise<UserOperation> {
 
   const op1 = { ...op }
   const provider = entryPoint?.provider
@@ -197,12 +203,29 @@ export async function fillUserOp (op: Partial<UserOperation>, entryPoint?: Entry
     // TODO: we don't add overhead, which is ~21000 for a single TX, but much lower in a batch.
     op2.preVerificationGas = callDataCost(packUserOp(op2, false))
   }
-  return op2
+
+  return paymaster 
+    ? paymaster.includePaymaster(op2) 
+    : op2
+
 }
   
-export async function fillAndSign (op: Partial<UserOperation>, signer: Wallet | Signer, entryPoint?: EntryPoint, getNonceFunction = 'getNonce'): Promise<UserOperation> {
+export async function fillAndSign (
+  op: Partial<UserOperation>, 
+  signer: Wallet | Signer, 
+  entryPoint?: EntryPoint, 
+  paymaster?: VPSigner,
+  getNonceFunction = 'getNonce'
+): Promise<UserOperation> {
+
+  const op2 = await fillUserOp(
+    op, 
+    entryPoint, 
+    getNonceFunction,
+    paymaster ?? undefined
+  )
+
   const provider = entryPoint?.provider
-  const op2 = await fillUserOp(op, entryPoint, getNonceFunction)
 
   const chainId = await provider!.getNetwork().then(net => net.chainId)
   const message = arrayify(getUserOpHash(op2, entryPoint!.address, chainId))

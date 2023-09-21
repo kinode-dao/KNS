@@ -16,6 +16,8 @@ import {
   SimpleAccount__factory
 } from '../typechain'
 
+import { VPSigner } from './VerifyingPaymaster'
+
 export type SendUserOp = (userOp: UserOperation) => Promise<TransactionResponse | undefined>
 
 export const debug = process.env.DEBUG != null
@@ -34,7 +36,7 @@ export function rpcUserOpSender (
 
   return async function (userOp) {
     if (debug) {
-      .log('sending eth_sendUserOperation', {
+      console.log('sending eth_sendUserOperation', {
         ...userOp,
         initCode: (userOp.initCode ?? '').length,
         callData: (userOp.callData ?? '').length
@@ -52,8 +54,6 @@ export function rpcUserOpSender (
       return [key, val]
     })
       .reduce((set, [k, v]) => ({ ...set, [k]: v }), {})
-
-    // console.log("cleanupserop", cleanUserOp);
 
     await provider.send('eth_sendUserOperation', [cleanUserOp, entryPointAddress]).catch(e => {
       throw e.error ?? e
@@ -191,7 +191,10 @@ export function localUserOpSender (entryPointAddress: string, signer: Signer, be
 export class AAProvider extends BaseProvider {
   private readonly entryPoint: EntryPoint
 
-  constructor (entryPointAddress: string, provider: Provider) {
+  constructor (
+    entryPointAddress: string, 
+    provider: Provider
+  ) {
     super(provider.getNetwork())
     this.entryPoint = EntryPoint__factory.connect(entryPointAddress, provider)
   }
@@ -221,6 +224,7 @@ export class AASigner extends Signer {
     readonly entryPointAddress: string, 
     readonly sendUserOp: SendUserOp, 
     readonly accountFactoryAddress: string, 
+    readonly salt = 0,
     readonly provider = signer.provider
   ) {
     super()
@@ -241,7 +245,7 @@ export class AASigner extends Signer {
     this._isPhantom = false
   }
 
-  connect (provider: Provider): Signer {
+  connect (_provider: Provider): Signer {
     throw new Error('connect not implemented')
   }
 
@@ -250,11 +254,11 @@ export class AASigner extends Signer {
     return this._account!.address
   }
 
-  async signMessage (message: Bytes | string): Promise<string> {
+  async signMessage (_message: Bytes | string): Promise<string> {
     throw new Error('signMessage: unsupported by AA')
   }
 
-  async signTransaction (transaction: Deferrable<TransactionRequest>): Promise<string> {
+  async signTransaction (_transaction: Deferrable<TransactionRequest>): Promise<string> {
     throw new Error('signMessage: unsupported by AA')
   }
 
@@ -342,7 +346,10 @@ export class AASigner extends Signer {
     return resp
   }
 
-  async sendTransaction (transaction: Deferrable<TransactionRequest>): Promise<TransactionResponse> {
+  async sendTransaction (
+    transaction: Deferrable<TransactionRequest>,
+    paymaster?: VPSigner
+  ): Promise<TransactionResponse> {
     const userOp = await this._createUserOperation(transaction)
     // get response BEFORE sending request: the response waits for events, which might be triggered before the actual send returns.
     const reponse = await this.userEventResponse(userOp)
@@ -352,14 +359,15 @@ export class AASigner extends Signer {
 
   async syncAccount (): Promise<void> {
     if (this._account == null) {
-      const thing = await this.signer.getAddress()
-      const address = await getAccountAddress(thing, this.accountFactory)
+      const address = await getAccountAddress(
+        await this.signer.getAddress(), 
+        this.accountFactory,
+        this.salt
+      )
       this._account = SimpleAccount__factory.connect(address, this.signer)
     }
 
     this._chainId = this.provider?.getNetwork().then(net => net.chainId)
-
-    console.log("chain id", await this._chainId)
 
     // once an account is deployed, it can no longer be a phantom.
     // but until then, we need to re-check
@@ -381,30 +389,18 @@ export class AASigner extends Signer {
 
   async _createUserOperation (transaction: Deferrable<TransactionRequest>): Promise<UserOperation> {
 
-    console.log("create user op")
     const tx: TransactionRequest = await resolveProperties(transaction)
-    console.log("tx", tx)
     await this.syncAccount()
-    console.log("synced")
 
+    // if account is not created, set the init code
     let initCode: BytesLike | undefined
     if (this._isPhantom)
       initCode = getAccountInitCode(await this.signer.getAddress(), this.accountFactory)
 
-    console.log("initCode", initCode)
-
-    console.log("tx", tx.to, tx.value, tx.data)
-
     const execFromEntryPoint = await this._account!
       .populateTransaction.execute(tx.to!, tx.value ?? 0, tx.data ?? "0x")
 
-    console.log("execFrom", execFromEntryPoint)
-
     let { gasPrice, maxPriorityFeePerGas, maxFeePerGas } = tx
-
-    console.log("tx", tx)
-
-    console.log("Gas price", gasPrice, maxPriorityFeePerGas, maxFeePerGas)
 
     // gasPrice is legacy, and overrides eip1559 values:
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
