@@ -7,6 +7,7 @@ import { Script, console } from "forge-std/Script.sol";
 
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { UqNFT } from "../src/UqNFT.sol";
+import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
 
 contract QNSScript is Script {
     function run() public {
@@ -32,6 +33,7 @@ contract QNSScript is Script {
         inputs[1] = "--to-hex";
         inputs[2] = "uq";
         bytes memory baseNode = vm.ffi(inputs);
+        console.logBytes(baseNode);
 
         UqNFT uqNftImpl = new UqNFT();
         UqNFT uqNft = UqNFT(
@@ -40,8 +42,7 @@ contract QNSScript is Script {
                     address(uqNftImpl),
                     abi.encodeWithSelector(
                         UqNFT.initialize.selector,
-                        qnsRegistry,
-                        baseNode
+                        qnsRegistry
                     )
                 )
             )
@@ -49,7 +50,7 @@ contract QNSScript is Script {
 
         qnsRegistry.registerSubdomainContract(
             baseNode,
-            address(uqNft)
+            IQNSNFT(uqNft)
         );
     }
 }

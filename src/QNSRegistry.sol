@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./interfaces/IQNS.sol";
+import "./interfaces/IQNSNFT.sol";
 import "./lib/BytesUtils.sol";
 
 error MustChooseStaticOrRouted();
@@ -41,8 +42,11 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     // externals
     //
 
-    function registerSubdomainContract(bytes calldata fqdn, address nft) external {
+    function registerSubdomainContract(bytes calldata fqdn, IQNSNFT nft) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
+        
+        nft.setBaseNode(node);
+        
         address owner = records[uint256(parentNode)].owner;
         require(
             msg.sender == owner,
@@ -50,11 +54,11 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         );
 
         records[node] = Record({
-            owner: nft,
+            owner: address(nft),
             protocols: 0
         });
 
-        emit NewSubdomainContract(node, fqdn, nft);
+        emit NewSubdomainContract(node, fqdn, address(nft));
     }
 
     // this function is called once on mint by the NFT contract
@@ -151,12 +155,11 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     // internals
     //
 
-    // TODO does this actually work? what if it's a.b.c. not just b.c.?
-    function _getNodeAndParent(bytes memory fqdn) public pure returns (uint256 node, uint256 parentNode) { // TODO internal
+    function _getNodeAndParent(bytes memory fqdn) public pure returns (uint256, uint256) { // TODO internal
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
-        uint256 node = uint256(_makeNode(parentNode, labelhash));
-        return (node, uint256(parentNode));
+        bytes32 node = _makeNode(parentNode, labelhash);
+        return (uint256(node), uint256(parentNode));
     }
 
     function _makeNode(

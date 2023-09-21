@@ -11,7 +11,7 @@ QNS follows ENS' architecture with a few modifications to make it more efficient
 This contract is responsible for storing all information related to uqbar protocols. Right now, we just have Websockets. We can support up to 31 more record types which can represent networking information or just general record information.
 
 ### UqNFT
-A normal NFT that governs ownership of all subdomains of something, in this case, `.uq`. It is a normal ERC721 contract except it must handle all minting logic by calling `setProtocols` in the `QNSRegistry`, and the nft-ids must be the namehash of the name the ID represents. Since this will be permissioned, this is not a big deal and we will be able to audit and make sure each TLD NFT contract is implemented correctly.
+A normal NFT that governs ownership of all subdomains of something, in this case, `.uq`. It is a normal ERC721 contract except it must handle all minting logic by calling `setProtocols` in the `QNSRegistry`, and the nft-ids must be the namehash of the name the ID represents. Since this will be permissioned, this is not a big deal and we will be able to audit and make sure each TLD NFT contract is implemented correctly. TODO upon further thought I think it's actually a good idea to make this more rigid and tigter, you don't know what might go wrong.
 
 # Deployment Notes
 ## Scripts
@@ -36,17 +36,17 @@ forge verify-contract \
     --watch \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0x368D79c95888bf09199451d397561f2575FBcBe5 \
+    0x8889E951EcF2B55A150705411A7Bf1fc1Ea01C52 \
     src/QNSRegistry.sol:QNSRegistry
 
 forge verify-contract \
     --chain-id 420 \
     --num-of-optimizations 200 \
     --watch \
-    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x368D79c95888bf09199451d397561f2575FBcBe5 0x8129fc1c) \
+    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x8889E951EcF2B55A150705411A7Bf1fc1Ea01C52 0x8129fc1c) \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0xBb6C999650d4832be7F72A5D35E02E0214BEBbB0 \
+    0xb598fe1771DB7EcF2AeD06f082dE1030CA0BF1DA \
     lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 
 forge verify-contract \
@@ -55,16 +55,16 @@ forge verify-contract \
     --watch \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0xD21c24f919f079361224D0f4E67B95F65fC65495 \
+    0x40DC2975CB6d751D2f44501B868bb89290aD8f8D \
     src/UqNFT.sol:UqNFT
 
 forge verify-contract \
     --chain-id 420 \
     --num-of-optimizations 200 \
     --watch \
-    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0xD21c24f919f079361224D0f4E67B95F65fC65495 0xcd6dc687000000000000000000000000bb6c999650d4832be7f72a5d35e02e0214bebbb0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000040275710000000000000000000000000000000000000000000000000000000000) \
+    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x40DC2975CB6d751D2f44501B868bb89290aD8f8D 0xc4d66de8000000000000000000000000b598fe1771db7ecf2aed06f082de1030ca0bf1da) \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0xCA2745A297427d2829EA7bd693F3D9d03Eb788f6 \
+    0x7F98DC18f2e2349D18C90879B2677b7CC868c3ff \
     lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 ```

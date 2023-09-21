@@ -1,5 +1,8 @@
 pragma solidity >=0.8.4;
 
+import { IQNSNFT } from "./IQNSNFT.sol";
+
+
 // Record types
 uint32 constant WEBSOCKETS = 1;
 
@@ -36,7 +39,7 @@ interface IQNS {
 
     function registerSubdomainContract(
         bytes calldata fqdn,
-        address nft
+        IQNSNFT nft
     ) external;
 
     function registerNode (

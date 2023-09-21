@@ -16,11 +16,10 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     using BytesUtils for bytes;
 
     QNSRegistry public qns;
-    uint        public baseNode;
+    uint256     public baseNode;
 
     function initialize (
-        QNSRegistry _qns, 
-        uint256 _baseNode
+        QNSRegistry _qns
     ) public initializer {
 
         __UUPSUpgradeable_init();
@@ -28,7 +27,6 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
         __ERC721_init("Uqbar Name Service", "UQNS");
 
         qns = _qns;
-        baseNode = _baseNode;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -41,6 +39,12 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     //
     // externals
     //
+
+    function setBaseNode(uint256 _baseNode) external override {
+        require(msg.sender == address(qns), "UqNFT: only QNS can set baseNode");
+        require(baseNode == 0, "UqNFT: baseNode already set");
+        baseNode = _baseNode;
+    }
 
     // TODO probably want two versions of this: a payable versions and an invite code version
     function register(
@@ -59,7 +63,7 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
 
     function allowSubdomains(
         bytes calldata name,
-        address nft
+        IQNSNFT nft
     ) public {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
         require(

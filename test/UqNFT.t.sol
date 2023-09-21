@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { TestUtils } from "./Utils.sol";
 
 import { IQNS } from "../src/interfaces/IQNS.sol";
+import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
 import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { UqNFT } from "../src/UqNFT.sol";
 import "forge-std/console.sol";
@@ -65,8 +66,7 @@ contract QNSTest is TestUtils {
                     address(uqNftImpl),
                     abi.encodeWithSelector(
                         UqNFT.initialize.selector,
-                        qnsRegistry,
-                        getNodeId("uq")
+                        qnsRegistry
                     )
                 )
             )
@@ -74,7 +74,6 @@ contract QNSTest is TestUtils {
 
         assertEq(uqNft.owner(), address(deployer));
         // assertEq(uqNft.qns(), address(qnsRegistry)); // TODO not working
-        assertEq(uqNft.baseNode(), getNodeId("uq"));
         assertEq(uqNft.name(), "Uqbar Name Service");
         assertEq(uqNft.symbol(), "UQNS");
 
@@ -83,13 +82,48 @@ contract QNSTest is TestUtils {
         emit NewSubdomainContract(getNodeId("uq"), getDNSWire("uq"), address(uqNft));
         qnsRegistry.registerSubdomainContract(
             getDNSWire("uq"),
-            address(uqNft)
+            IQNSNFT(uqNft)
         );
+
+        assertEq(uqNft.baseNode(), getNodeId("uq"));
 
         (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("uq."));
 
         assertEq(actualNft, address(uqNft));
         assertEq(actualProtocols, 0);
+
+        // used for registration tests
+        vm.prank(deployer);
+        UqNFT uqNft2Impl = new UqNFT();
+
+        vm.prank(deployer);
+        uqNft2 = UqNFT(
+            address(
+                new ERC1967Proxy(
+                    address(uqNft2Impl),
+                    abi.encodeWithSelector(
+                        UqNFT.initialize.selector,
+                        qnsRegistry
+                    )
+                )
+            )
+        );
+    }
+
+    //
+    // setBaseNode tests
+    //
+
+    function test_setBaseNodeFailsIfNotQNS() public {
+        vm.prank(alice);
+        vm.expectRevert("UqNFT: only QNS can set baseNode");
+        uqNft2.setBaseNode(getNodeId("uq"));
+    }
+
+    function test_setBaseNodeFailsIfAlreadySet() public {
+        vm.prank(address(qnsRegistry));
+        vm.expectRevert("UqNFT: baseNode already set");
+        uqNft.setBaseNode(getNodeId("uq"));
     }
 
     //
@@ -111,7 +145,7 @@ contract QNSTest is TestUtils {
         
         vm.prank(alice);
         vm.expectRevert("QNSRegistry: only parent domain owner can register subdomain contract");
-        qnsRegistry.registerSubdomainContract(getDNSWire("alice.uq"), address(uqNft));
+        qnsRegistry.registerSubdomainContract(getDNSWire("alice.uq"), IQNSNFT(uqNft2));
     }
 
     function test_allowSubdomainsFailsWhenNot2LTLD() public {
@@ -120,7 +154,7 @@ contract QNSTest is TestUtils {
 
         vm.prank(alice);
         vm.expectRevert("UqNFT: only subdomains of baseNode can be registered");
-        uqNft.allowSubdomains(getDNSWire("sub.alice.uq"), address(uqNft));
+        uqNft.allowSubdomains(getDNSWire("sub.alice.uq"), IQNSNFT(uqNft));
     }
 
     function test_allowSubdomainsFailsWhenNotOwner() public {
@@ -129,28 +163,10 @@ contract QNSTest is TestUtils {
 
         vm.prank(bob);
         vm.expectRevert("UqNFT: only owner of node can allow subdomains");
-        uqNft.allowSubdomains(getDNSWire("alice.uq"), address(uqNft));
+        uqNft.allowSubdomains(getDNSWire("alice.uq"), IQNSNFT(uqNft));
     }
 
     function test_allowSubdomains() public {
-        // deploy contract to manage subdomains
-        vm.prank(deployer);
-        UqNFT uqNft2Impl = new UqNFT();
-
-        vm.prank(deployer);
-        uqNft2 = UqNFT(
-            address(
-                new ERC1967Proxy(
-                    address(uqNft2Impl),
-                    abi.encodeWithSelector(
-                        UqNFT.initialize.selector,
-                        qnsRegistry,
-                        getNodeId("alice.uq")
-                    )
-                )
-            )
-        );
-
         // register alice.uq
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
@@ -159,7 +175,7 @@ contract QNSTest is TestUtils {
         vm.prank(alice);
         vm.expectEmit(true, false, false, true);
         emit NewSubdomainContract(getNodeId("alice.uq"), getDNSWire("alice.uq"), address(uqNft2));
-        uqNft.allowSubdomains(getDNSWire("alice.uq"), address(uqNft2));
+        uqNft.allowSubdomains(getDNSWire("alice.uq"), IQNSNFT(uqNft2));
 
         // check all on-chain data about alice.uq is updated
         (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
