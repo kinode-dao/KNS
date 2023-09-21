@@ -1,17 +1,20 @@
 # QNS
-Last updated Sept 17 2023
+Last updated Sept 21 2023
 
 ## QNS Overview
-QNS is a fork of ENS. Currently we have only one record type: `WsRecord`, which is used for setting networking keys, ip & port (if direct), and routers (if indirect). QNS also follows the UUPS upgradable pattern, which means we can add more record types in the future. For example, if we decided to add a way to network using TCP instead of WS, we could add a new record type. More interestingly, we could add a way to set a `.uq` name to point to a protocol spec, and that QNS id will be managed by a DAO. We could also add a record type that would point to an NFT representing, for example, your profile picture - and this gives all other nodes on the network an easy way to fetch your PFP for all applications. Some of the examples here we will likely implement in the near future.
+QNS is a fork of ENS which lets you map human readable names to different kinds of information called "records". Currently we have only one record type: `WsRecord`, which is used for setting Uqbar-related networking information: networking keys, ip & port (if direct), and routers (if indirect). QNS also follows the UUPS upgradable pattern, which means we can add more record types in the future. For example, if we decided to add a way to network using TCP instead of WS, we could add a new record type. More interestingly, we could add a way to set a `.uq` name to point to a protocol spec, and that QNS id will be managed by a DAO. We could also add a record type that would point to an NFT representing, for example, your profile picture - and this gives all other nodes on the network an easy way to fetch your PFP for all applications. Some of the examples here we will likely implement in the near future.
 
 ## Architecture
-QNS follows ENS' architecture with a few modifications to make it more efficient and eliminate cruft. For one, ENS' base layer only uses bytes32 to identify nodes, and then mints an ERC721/1155 token at higher levels. We use a node's uint value as the NFT id so it is usable throughout all layers. TODO more documentation here. Where are NFTs minted in ENS vs how are they minted here?
+QNS follows ENS' architecture with a few modifications to make it more efficient and eliminate cruft. For one, ENS' base layer only uses bytes32 to identify nodes, and then mints an ERC721/1155 token at higher levels. We use a node's uint value as the NFT id so it is usable throughout all layers. Also unlike ENS, no ownership logic is handled at the base layer, all of it is handled by the `UqNFT` system. These can be any normal ERC721 token, though they must implement a few extra functions described in `IQNSNFT.sol` 
 
 ### QNSRegistry
-This contract is responsible for storing all information related to uqbar protocols. Right now, we just have Websockets. We can support up to 31 more record types which can represent networking information or just general record information.
+This contract is responsible for storing all information related to uqbar protocols. Again, no ownership logic lives here. For on-chain information associated with a name, we just have Websockets for Uqbar networking. In the future we can add up to 31 more record types which can represent networking information or just general record information.
 
 ### UqNFT
-A normal NFT that governs ownership of all subdomains of something, in this case, `.uq`. It is a normal ERC721 contract except it must handle all minting logic by calling `setProtocols` in the `QNSRegistry`, and the nft-ids must be the namehash of the name the ID represents. Since this will be permissioned, this is not a big deal and we will be able to audit and make sure each TLD NFT contract is implemented correctly. TODO upon further thought I think it's actually a good idea to make this more rigid and tigter, you don't know what might go wrong.
+A normal NFT that governs ownership of all subdomains of a particular node. This is our implementation for handling all `.uq` names, but this contract can be used for other TLDs (like if we wanted to deploy a `.test` domain) and other subdomains like `alice.uq`, if desired. However, you can also use any ERC721 compliant token provided that it:
+- implements `baseNode()` which sets the domain it governs, in this case `.uq` though this contract can also be used to handle subdomains such as `example.uq`
+- implements `setBaseNode(uint256)` which is called by the `QNSRegistry` to set the base node it can govern
+- the nft-ids must be the namehash of the domain that the id represents
 
 # Deployment Notes
 ## Scripts
