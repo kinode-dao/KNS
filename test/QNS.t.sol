@@ -86,7 +86,7 @@ contract QNSTest is TestUtils {
             address(uqNft)
         );
 
-        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("uq."));
+        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("uq"));
 
         assertEq(actualNft, address(uqNft));
         assertEq(actualProtocols, 0);
