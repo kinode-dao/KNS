@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import "./QNSRegistry.sol";
 import "./lib/BytesUtils.sol";
@@ -12,15 +13,24 @@ import "./interfaces/IQNS.sol";
 import "./interfaces/IQNSNFT.sol";
 import "./interfaces/IMulticallable.sol";
 
-contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract UqNFT is
+    IQNSNFT,
+    Initializable,
+    ERC721Upgradeable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     using BytesUtils for bytes;
+    using ECDSAUpgradeable for bytes32;
 
     QNSRegistry public qns;
     uint        public baseNode;
+    address     public signer;
 
     function initialize (
         QNSRegistry _qns, 
-        uint256 _baseNode
+        uint256 _baseNode,
+        address _signer
     ) public initializer {
 
         __UUPSUpgradeable_init();
@@ -29,6 +39,7 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
 
         qns = _qns;
         baseNode = _baseNode;
+        signer = _signer;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -45,9 +56,19 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     // TODO probably want two versions of this: a payable versions and an invite code version
     function register(
         bytes calldata name,
-        address owner
+        address owner,
+        bytes calldata signature
     ) public {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
+
+        bytes32 ethSignedHash = bytes32("1").toEthSignedMessageHash();
+        // bytes32 ethSignedHash = bytes32(node).toEthSignedMessageHash();
+        address recovered = ethSignedHash.recover(signature);
+        require(
+            recovered == signer,
+            "UqNFT: invalid signature, cannot mint"
+        );
+
         require(
             parentNode == baseNode,
             "UqNFT: only subdomains of baseNode can be registered"
