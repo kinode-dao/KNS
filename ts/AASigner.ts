@@ -55,8 +55,6 @@ export function rpcUserOpSender (
     })
       .reduce((set, [k, v]) => ({ ...set, [k]: v }), {})
 
-    console.log("cleanuserop", cleanUserOp)
-
     await provider.send('eth_sendUserOperation', [cleanUserOp, entryPointAddress]).catch(e => {
       throw e.error ?? e
     })
@@ -402,8 +400,6 @@ export class AASigner extends Signer {
     if (this._isPhantom) initCode = 
       getAccountInitCode(await this.signer.getAddress(), this.accountFactory, this.salt)
 
-    console.log("this.isphantom", this.salt, this._isPhantom)
-
     const execFromEntryPoint = await this._account!
       .populateTransaction.execute(tx.to!, tx.value ?? 0, tx.data ?? "0x")
 
@@ -425,8 +421,6 @@ export class AASigner extends Signer {
       maxPriorityFeePerGas,
       maxFeePerGas
     }, this.signer, this.entryPoint, paymaster)
-
-    console.log("..")
 
     return userOp
   }

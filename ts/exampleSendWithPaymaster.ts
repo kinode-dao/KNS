@@ -55,8 +55,12 @@ import { VPSigner } from './VerifyingPaymaster'
     entrypointAddress as string, 
     sendUserOp, 
     accountFactoryAddress as string,
-    9943343422 // salt for create2 counterfactual address
+    9999999999 // salt for create2 counterfactual address
   )
+
+  const aaAddress = await eoaAASigner.getAddress()
+  if (await provider.getBalance(aaAddress) < parseEther('0.01'))
+    await eoaSigner.sendTransaction({ to: aaAddress, value: parseEther('0.01') })
 
   const verifyingPaymaster = VerifyingPaymaster__factory.connect(
     verifyingPaymasterAddress as string, 
@@ -70,7 +74,7 @@ import { VPSigner } from './VerifyingPaymaster'
 
   const entryPoint = EntryPoint__factory.connect(entrypointAddress as string, eoaSigner)
 
-  await verifyingPaymaster.addStake(10000, { value: parseEther('0.1') })
+  await verifyingPaymaster.addStake(86400, { value: parseEther('0.1') })
 
   const rcpt = await eoaAASigner.sendTransaction(
     { to: eoaPub, value: parseEther('0.0001') },
