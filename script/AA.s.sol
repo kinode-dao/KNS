@@ -42,9 +42,8 @@ contract AAScript is Script {
 
         address walletAddr = simpleAccountFactory.getAddress(pubk, 1);
 
-        entrypoint.depositTo{value: 1 ether}(walletAddr);
-
-        IStakeManager.DepositInfo memory depositInfo = entrypoint.getDepositInfo(pubk);
+        if (entrypoint.balanceOf(walletAddr) == 0)
+            entrypoint.depositTo{value: 1 ether}(walletAddr);
 
         UserOperation memory userOp = UserOperation({
             sender: walletAddr,
@@ -66,7 +65,6 @@ contract AAScript is Script {
             paymasterAndData: "",
             signature: ""
         });
-
 
         VerifyingPaymaster verifyingPaymaster = new VerifyingPaymaster(
             address(entrypoint),
@@ -106,4 +104,25 @@ contract AAScript is Script {
 
     }
 
+}
+
+contract DeployVerifyingPaymaster is Script {
+
+    function run () public {
+
+        uint256 paymasterPriv = vm.envUint("PRIV_PAYMASTER");
+        address paymasterPub = vm.envAddress("PUB_PAYMASTER");
+
+        IEntryPoint entrypoint = IEntryPoint(vm.envAddress("AA_ENTRYPOINT"));
+
+        vm.startBroadcast();
+
+        VerifyingPaymaster verifyingPaymaster = new VerifyingPaymaster(
+            address(entrypoint),
+            paymasterPub
+        );
+
+        vm.stopBroadcast();
+
+    }
 }
