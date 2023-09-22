@@ -12,8 +12,6 @@ import "../lib/BytesUtils.sol";
 
 error MustChooseStaticOrRouted();
 
-// TODO lets see what inspiration we can take from VersionableResolver? Not really sure what the point of it is but maybe...
-
 contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
@@ -26,13 +24,11 @@ contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrad
     // FOR TESTING: a new record type
     mapping(uint256 => bool) public new_records;
 
-    // TODO do we need to include a storage slot here for upgradability? something something...
-
     function initialize() public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
 
-        records[0].owner = msg.sender; // TODO double check this
+        records[0].owner = msg.sender;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -55,7 +51,7 @@ contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrad
             msg.sender == owner,
             "QNSRegistry: only parent domain owner can register subdomain contract"
         );
-        // TODO could check that nft implements IQNSNFT via ERC165
+
         records[node] = Record({
             owner: address(nft),
             protocols: 0
@@ -80,9 +76,6 @@ contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrad
         //      IERC721(parentOwner).ownerOf(node) != address(0)
 
         records[node] = Record({
-            // TODO I think this is correct...might want to let them specify something for subdomains?
-            // this basically means that .uq handles ALL subdomaining. We should probably implement some logic
-            // for that in the UqRegistrar contract. Also logic for specifying your own NFT if you want that
             owner: msg.sender,
             protocols: 0
         });
@@ -135,13 +128,12 @@ contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrad
         address parentOwner = records[uint256(node)].owner;
         
         require(
-            // TODO ownerOf reverts when a token hasn't minted so parentOwner has to handle all changes
-            msg.sender == parentOwner, // || msg.sender == IERC721(parentOwner).ownerOf(node),
+            msg.sender == parentOwner || msg.sender == IERC721(parentOwner).ownerOf(node),
             "QNSRegistry: only NFT contract or NFT owner can clear records for a subdomain"
         );
         
         Record storage record = records[node];
-        record.protocols = record.protocols & ~protocols; // TODO is this right
+        record.protocols = record.protocols & ~protocols;
     }
 
     //

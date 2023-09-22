@@ -21,7 +21,7 @@ contract QNSTest is TestUtils {
         uint256 indexed node,
         bytes32 publicKey,
         uint48 ipAndPort,
-        bytes32[] routers // TODO maybe string?
+        bytes32[] routers
     );
 
     // addresses

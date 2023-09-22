@@ -22,7 +22,7 @@ contract QNSTest is TestUtils {
         uint32 indexed protocols,
         bytes32 publicKey,
         uint48 ipAndPort,
-        bytes32[] routers // TODO maybe string?
+        bytes32[] routers
     );
 
     // addresses
@@ -257,7 +257,6 @@ contract QNSTest is TestUtils {
         assertEq(wsRecord.routers.length, 1);
     }
 
-    // TODO I don't like how records clear on transfer automatically
     function test_transferFromAndClearProtocols() public {
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
