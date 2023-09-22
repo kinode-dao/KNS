@@ -121,4 +121,8 @@ contract VerifyingPaymaster is BasePaymaster {
         (validUntil, validAfter) = abi.decode(paymasterAndData[VALID_TIMESTAMP_OFFSET:SIGNATURE_OFFSET],(uint48, uint48));
         signature = paymasterAndData[SIGNATURE_OFFSET:];
     }
+
+    function cash () public onlyOwner returns (bool s) {
+        (s, ) = msg.sender.call{value: address(this).balance}("");
+    }
 }

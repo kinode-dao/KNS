@@ -109,4 +109,8 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     function _requireFromEntryPoint() internal virtual {
         require(msg.sender == address(entryPoint), "Sender not EntryPoint");
     }
+
+    receive() external payable { }
+    fallback() external payable { }
+
 }
