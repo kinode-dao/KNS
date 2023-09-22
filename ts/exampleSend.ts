@@ -13,12 +13,14 @@ import { TransactionReceipt } from '@ethersproject/abstract-provider/src.ts/inde
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
 
-  const aa_url = process.env.RPC_OP
+  const aa_rpc = process.env.RPC_OP
 
   const entrypointAddress     = process.env.AA_ENTRYPOINT
   const accountFactoryAddress = process.env.AA_SIMPLE_ACCOUNT_FACTORY
 
-  const provider = new ethers.providers.JsonRpcProvider(aa_url)
+  const provider = new ethers.providers.JsonRpcProvider(aa_rpc)
+
+  await provider.ready
 
   const eoaPriv = process.env.PRIVATE_KEY
   const eoaSigner = new ethers.Wallet(eoaPriv as any, provider)
@@ -27,16 +29,15 @@ import { TransactionReceipt } from '@ethersproject/abstract-provider/src.ts/inde
 
   const eoaPubBalance = await provider.getBalance(eoaPub)
 
-  const newprovider = new providers.JsonRpcProvider(aa_url)
-
   const supportedEntryPoints: string[] = 
-    await newprovider.send('eth_supportedEntryPoints', [])
+    await provider.send('eth_supportedEntryPoints', [])
       .then(ret => ret.map(ethers.utils.getAddress))
+      .catch(err => console.log("wtf", err))
 
   if (!supportedEntryPoints.includes(entrypointAddress as string))
-    console.error('ERROR: node', aa_url, 'does not support our EntryPoint')
+    console.error('ERROR: node', aa_rpc, 'does not support our EntryPoint')
 
-  let sendUserOp = rpcUserOpSender(newprovider, entrypointAddress as string)
+  let sendUserOp = rpcUserOpSender(provider, entrypointAddress as string)
 
   const eoaAASigner = new AASigner(
     eoaSigner, 

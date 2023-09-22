@@ -113,8 +113,6 @@ export function fillUserOpDefaults (op: Partial<UserOperation>, defaults = Defau
       delete partial[key]
     }
   }
-
-  console.log("default", defaults)
   const filled = { ...defaults, ...partial }
   return filled
 }

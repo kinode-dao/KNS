@@ -55,6 +55,8 @@ export function rpcUserOpSender (
     })
       .reduce((set, [k, v]) => ({ ...set, [k]: v }), {})
 
+    console.log("cleanuserop", cleanUserOp)
+
     await provider.send('eth_sendUserOperation', [cleanUserOp, entryPointAddress]).catch(e => {
       throw e.error ?? e
     })
@@ -350,7 +352,7 @@ export class AASigner extends Signer {
     transaction: Deferrable<TransactionRequest>,
     paymaster?: VPSigner
   ): Promise<TransactionResponse> {
-    const userOp = await this._createUserOperation(transaction)
+    const userOp = await this._createUserOperation(transaction, paymaster)
     // get response BEFORE sending request: the response waits for events, which might be triggered before the actual send returns.
     const reponse = await this.userEventResponse(userOp)
     await this.sendUserOp(userOp)
@@ -387,15 +389,20 @@ export class AASigner extends Signer {
     return this._isPhantom
   }
 
-  async _createUserOperation (transaction: Deferrable<TransactionRequest>): Promise<UserOperation> {
+  async _createUserOperation (
+    transaction: Deferrable<TransactionRequest>,
+    paymaster?: VPSigner
+  ): Promise<UserOperation> {
 
     const tx: TransactionRequest = await resolveProperties(transaction)
     await this.syncAccount()
 
     // if account is not created, set the init code
     let initCode: BytesLike | undefined
-    if (this._isPhantom)
-      initCode = getAccountInitCode(await this.signer.getAddress(), this.accountFactory)
+    if (this._isPhantom) initCode = 
+      getAccountInitCode(await this.signer.getAddress(), this.accountFactory, this.salt)
+
+    console.log("this.isphantom", this.salt, this._isPhantom)
 
     const execFromEntryPoint = await this._account!
       .populateTransaction.execute(tx.to!, tx.value ?? 0, tx.data ?? "0x")
@@ -417,7 +424,9 @@ export class AASigner extends Signer {
       callGasLimit: tx.gasLimit,
       maxPriorityFeePerGas,
       maxFeePerGas
-    }, this.signer, this.entryPoint)
+    }, this.signer, this.entryPoint, paymaster)
+
+    console.log("..")
 
     return userOp
   }
