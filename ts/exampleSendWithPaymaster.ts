@@ -33,11 +33,7 @@ import { VPSigner } from './VerifyingPaymaster'
 
   const eoaPub = await eoaSigner.getAddress()
 
-  console.log("eoaPub", eoaPub)
-
   const eoaPubBalance = await provider.getBalance(eoaPub)
-
-  console.log("eoaPubBalance", eoaPubBalance)
 
   const newprovider = new providers.JsonRpcProvider(aa_url)
 
