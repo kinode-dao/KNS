@@ -11,8 +11,8 @@ interface IQNS {
     struct Record {
         // contract that controls ownership logic of QNS id
         address owner;
-        // room for 32 protocols
-        uint32 protocols;
+        // room for 96 protocols
+        uint96 protocols;
     }
 
     // Websocket data associated with a QNS node
@@ -22,16 +22,16 @@ interface IQNS {
         bytes32[] routers; // TODO maybe string[] instead?
     }
 
-    // Logged whenever a QNS adds/drops support for a protocol
+    // Logged whenever a QNS node is created
     event NodeRegistered(uint256 indexed node, bytes name);
 
-    // Logged whenever a QNS node is created.
+    // Logged whenever a QNS adds/drops support for subdomaining
     event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
 
     // Logged whenever a QNS node's websocket information is updated.
     event WsChanged(
         uint256 indexed node,
-        uint32 indexed protocols,
+        uint96 indexed protocols, // TODO do we need this?
         bytes32 publicKey,
         uint48 ipAndPort,
         bytes32[] routers // TODO maybe string?

@@ -87,7 +87,7 @@ contract QNSTest is TestUtils {
 
         assertEq(uqNft.baseNode(), getNodeId("uq"));
 
-        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("uq."));
+        (address actualNft, uint96 actualProtocols) = qnsRegistry.records(getNodeId("uq."));
 
         assertEq(actualNft, address(uqNft));
         assertEq(actualProtocols, 0);
@@ -178,7 +178,7 @@ contract QNSTest is TestUtils {
         uqNft.allowSubdomains(getDNSWire("alice.uq"), IQNSNFT(uqNft2));
 
         // check all on-chain data about alice.uq is updated
-        (address actualNft, uint32 actualProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
+        (address actualNft, uint96 actualProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
         assertEq(actualNft, address(uqNft2));
         assertEq(actualProtocols, 0);
         assertEq(uqNft2.baseNode(), getNodeId("alice.uq"));
@@ -187,7 +187,7 @@ contract QNSTest is TestUtils {
         vm.prank(alice);
         uqNft2.register(getDNSWire("sub.alice.uq"), alice);
 
-        (address actualSubNft, uint32 actualSubProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
+        (address actualSubNft, uint96 actualSubProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
         assertEq(actualSubNft, address(uqNft2));
         assertEq(actualSubProtocols, 0);
     }

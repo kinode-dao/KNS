@@ -133,6 +133,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         
         Record storage record = records[node];
         record.protocols = record.protocols & ~protocols;
+        // TODO this should emit an event
     }
 
     //
