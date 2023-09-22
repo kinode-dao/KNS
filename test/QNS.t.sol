@@ -212,7 +212,28 @@ contract QNSTest is TestUtils {
         );
     }
 
-    function test_setWsRecord() public {
+    function test_setWsRecordDirect() public {
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice);
+
+        vm.prank(alice);
+        vm.expectEmit(true, true, false, true);
+        emit WsChanged(getNodeId("alice.uq"), 1, _PUBKEY, 65537, new bytes32[](0));
+        qnsRegistry.setWsRecord(
+            getNodeId("alice.uq"),
+            _PUBKEY,
+            1,
+            1,
+            new bytes32[](0)
+        );
+
+        IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
+        assertEq(wsRecord.publicKey, _PUBKEY);
+        assertEq(wsRecord.ipAndPort, 65537);
+        assertEq(wsRecord.routers.length, 0);
+    }
+
+    function test_setWsRecordIndirect() public {
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
         
