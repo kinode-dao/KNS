@@ -12,7 +12,7 @@ import "./lib/BytesUtils.sol";
 
 error MustChooseStaticOrRouted();
 
-// TODO lets see what inspiration we can take from VersionableResolver? Not really sure what the point of it is but maybe...
+// TODO lets see what inspiration we can take from VersionableResolver?
 
 contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
@@ -29,7 +29,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         __UUPSUpgradeable_init();
         __Ownable_init();
 
-        records[0].owner = msg.sender; // TODO double check this
+        records[0].owner = msg.sender;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -77,9 +77,8 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         //      IERC721(parentOwner).ownerOf(node) != address(0)
 
         records[node] = Record({
-            // TODO I think this is correct...might want to let them specify something for subdomains?
-            // this basically means that .uq handles ALL subdomaining. We should probably implement some logic
-            // for that in the UqRegistrar contract. Also logic for specifying your own NFT if you want that
+            // NOTE: domain is under the control of the parent NFT contract
+            // until registerSubdomainContract is called
             owner: msg.sender,
             protocols: 0
         });
@@ -128,13 +127,12 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         address parentOwner = records[uint256(node)].owner;
         
         require(
-            // TODO ownerOf reverts when a token hasn't minted so parentOwner has to handle all changes
             msg.sender == parentOwner || msg.sender == IERC721(parentOwner).ownerOf(node),
             "QNSRegistry: only NFT contract or NFT owner can clear records for a subdomain"
         );
         
         Record storage record = records[node];
-        record.protocols = record.protocols & ~protocols; // TODO is this right
+        record.protocols = record.protocols & ~protocols;
     }
 
     //

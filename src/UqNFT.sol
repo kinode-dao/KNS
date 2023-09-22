@@ -31,7 +31,6 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    // TODO what is this
     function getInitializedVersion() public view returns (uint8) {
         return  _getInitializedVersion();
     }
@@ -91,7 +90,7 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     // internals
     //
 
-    function _getNodeAndParent(bytes memory fqdn) public pure returns (uint256 node, uint256 parentNode) { // TODO internal
+    function _getNodeAndParent(bytes memory fqdn) internal pure returns (uint256 node, uint256 parentNode) {
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
         uint256 node = uint256(_makeNode(parentNode, labelhash));
