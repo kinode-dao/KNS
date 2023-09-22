@@ -75,18 +75,16 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
             "UqNFT: only owner of node can allow subdomains"
         );
 
-        // TODO check that nft is actually an NFT? Use ERC165?
         qns.registerSubdomainContract(name, nft);
     }
 
-    //
-    // overrides
-    //
-
-    // TODO make this optional
-    function _beforeTokenTransfer(address from, address to, uint256 firstTokenId, uint256 batchSize) internal override {
-        if (from == address(0)) return; // ignore minting
-        qns.clearProtocol(firstTokenId, WEBSOCKETS);
+    function transferFromAndClearProtocols(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public {
+        qns.clearProtocols(tokenId, 0xFFFFFFFF);
+        safeTransferFrom(from, to, tokenId);
     }
 
     //

@@ -258,7 +258,7 @@ contract QNSTest is TestUtils {
     }
 
     // TODO I don't like how records clear on transfer automatically
-    function test_clearWsRecordCannotReadWs() public {
+    function test_transferFromAndClearProtocols() public {
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
         
@@ -275,7 +275,7 @@ contract QNSTest is TestUtils {
         );
 
         vm.prank(alice);
-        uqNft.transferFrom(alice, bob, getNodeId("alice.uq"));
+        uqNft.transferFromAndClearProtocols(alice, bob, getNodeId("alice.uq"));
 
         vm.expectRevert("QNSRegistry: node does not support websockets");
         qnsRegistry.ws(getNodeId("alice.uq"));

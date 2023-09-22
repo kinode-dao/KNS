@@ -124,12 +124,12 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
     }
 
-    function clearProtocol(uint256 node, uint32 protocols) external {
+    function clearProtocols(uint256 node, uint32 protocols) external {
         address parentOwner = records[uint256(node)].owner;
         
         require(
             // TODO ownerOf reverts when a token hasn't minted so parentOwner has to handle all changes
-            msg.sender == parentOwner, // || msg.sender == IERC721(parentOwner).ownerOf(node),
+            msg.sender == parentOwner || msg.sender == IERC721(parentOwner).ownerOf(node),
             "QNSRegistry: only NFT contract or NFT owner can clear records for a subdomain"
         );
         
