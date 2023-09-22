@@ -257,6 +257,7 @@ contract QNSTest is TestUtils {
         assertEq(wsRecord.routers.length, 1);
     }
 
+    // TODO I don't like how records clear on transfer automatically
     function test_clearWsRecordCannotReadWs() public {
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);

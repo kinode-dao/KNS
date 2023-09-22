@@ -6,15 +6,15 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "./interfaces/IQNS.sol";
-import "./interfaces/IQNSNFT.sol";
-import "./lib/BytesUtils.sol";
+import "../interfaces/IQNS.sol";
+import "../interfaces/IQNSNFT.sol";
+import "../lib/BytesUtils.sol";
 
 error MustChooseStaticOrRouted();
 
 // TODO lets see what inspiration we can take from VersionableResolver? Not really sure what the point of it is but maybe...
 
-contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
+contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
     // Has pointers to NFT contract (ownership) and protocols
@@ -22,6 +22,9 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
 
     // Websocket information
     mapping(uint256 => WsRecord) ws_records;
+
+    // FOR TESTING: a new record type
+    mapping(uint256 => bool) public new_records;
 
     // TODO do we need to include a storage slot here for upgradability? something something...
 
@@ -122,6 +125,10 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         record.protocols = record.protocols | WEBSOCKETS;
 
         emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
+    }
+
+    function setNewRecord(uint256 node) external {
+        new_records[node] = true;
     }
 
     function clearProtocol(uint256 node, uint32 protocols) external {
