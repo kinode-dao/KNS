@@ -105,9 +105,19 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
 
         require(publicKey != bytes32(0), "QNSRegistry: public key cannot be 0");
 
-        if ((ip == 0 || port == 0) && routers.length == 0) {
-            revert MustChooseStaticOrRouted();
+        for (uint256 i = 0; i < routers.length; i++) {
+            // TODO how bad is this gas-wise? I think on optimism we are fine for like 10 routers?
+            require(
+                records[uint256(routers[i])].protocols & WEBSOCKETS != 0 &&
+                ws_records[uint256(routers[i])].ipAndPort != 0,
+                "QNSRegistry: router does not support websockets"
+            );
         }
+
+        require(
+            (ip != 0 && port != 0) || routers.length != 0,
+            "QNSRegistry: must specify either static ip/port or routers"
+        );
 
         uint48 ipAndPort = combineIpAndPort(ip, port);
 

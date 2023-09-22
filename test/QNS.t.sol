@@ -11,8 +11,6 @@ import { QNSRegistry } from "../src/QNSRegistry.sol";
 import { UqNFT } from "../src/UqNFT.sol";
 import "forge-std/console.sol";
 
-error MustChooseStaticOrRouted();
-
 contract QNSTest is TestUtils {
     // events
     event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
@@ -187,10 +185,10 @@ contract QNSTest is TestUtils {
         uqNft.register(getDNSWire("alice.uq"), alice);
         
         vm.prank(alice);
-        vm.expectRevert(); // TODO MustChooseStaticOrRouted
+        vm.expectRevert("QNSRegistry: must specify either static ip/port or routers");
         qnsRegistry.setWsRecord(
             getNodeId("alice.uq"),
-            bytes32(0),
+            _PUBKEY,
             0,
             0,
             new bytes32[](0)
@@ -209,6 +207,70 @@ contract QNSTest is TestUtils {
             5,
             6,
             new bytes32[](0)
+        );
+    }
+
+    function test_setWsRecordFailsWhenRouterDoesNotSupportWebSockets() public {
+        vm.prank(deployer);
+        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer);
+        
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice);
+        
+        bytes32[] memory routers = new bytes32[](1);
+        routers[0] = bytes32(getNodeId("uqbar-router-1.uq"));
+        
+        vm.prank(alice);
+        vm.expectRevert("QNSRegistry: router does not support websockets");
+        qnsRegistry.setWsRecord(
+            getNodeId("alice.uq"),
+            _PUBKEY,
+            0,
+            0,
+            routers
+        );
+    }
+
+    function test_setWsRecordFailsWhenRouterHasNoIpAndPort() public {
+        vm.prank(deployer);
+        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer);
+        vm.prank(deployer);
+        qnsRegistry.setWsRecord(
+            getNodeId("uqbar-router-1.uq"),
+            _PUBKEY,
+            1,
+            1,
+            new bytes32[](0)
+        );
+
+        bytes32[] memory router2Routers = new bytes32[](1);
+        router2Routers[0] = bytes32(getNodeId("uqbar-router-1.uq"));
+
+        vm.prank(deployer);
+        uqNft.register(getDNSWire("uqbar-router-2.uq"), deployer);
+        vm.prank(deployer);
+        qnsRegistry.setWsRecord(
+            getNodeId("uqbar-router-2.uq"),
+            _PUBKEY,
+            0,
+            0,
+            router2Routers
+        );
+
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alice.uq"), alice);
+        
+        bytes32[] memory aliceRouters = new bytes32[](1);
+        aliceRouters[0] = bytes32(getNodeId("uqbar-router-2.uq"));
+        
+        vm.prank(alice);
+        vm.expectRevert("QNSRegistry: router does not support websockets");
+        qnsRegistry.setWsRecord(
+            getNodeId("alice.uq"),
+            _PUBKEY,
+            0,
+            0,
+            aliceRouters
         );
     }
 
@@ -235,11 +297,23 @@ contract QNSTest is TestUtils {
     }
 
     function test_setWsRecordIndirect() public {
+        // set up router
+        vm.prank(deployer);
+        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer);
+        vm.prank(deployer);
+        qnsRegistry.setWsRecord(
+            getNodeId("uqbar-router-1.uq"),
+            _PUBKEY,
+            9001,
+            9002,
+            new bytes32[](0)
+        );
+
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
         
         bytes32[] memory routers = new bytes32[](1);
-        routers[0] = bytes32(getNodeId("rolr1.uq"));
+        routers[0] = bytes32(getNodeId("uqbar-router-1.uq"));
 
         vm.prank(alice);
         // TODO why are these broken
@@ -263,16 +337,13 @@ contract QNSTest is TestUtils {
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
         
-        bytes32[] memory routers = new bytes32[](1);
-        routers[0] = bytes32(getNodeId("rolr1.uq"));
-
         vm.prank(alice);
         qnsRegistry.setWsRecord(
             getNodeId("alice.uq"),
             _PUBKEY,
-            0,
-            0,
-            routers
+            9001,
+            9002,
+            new bytes32[](0)
         );
 
         vm.prank(alice);

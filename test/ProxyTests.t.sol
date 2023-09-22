@@ -93,23 +93,20 @@ contract ProxyTests is TestUtils {
         vm.prank(alice);
         uqNft.register(getDNSWire("alice.uq"), alice);
         
-        bytes32[] memory routers = new bytes32[](1);
-        routers[0] = bytes32(getNodeId("rolr1.uq"));
-
         vm.prank(alice);
         qnsRegistry.setWsRecord(
             getNodeId("alice.uq"),
             _PUBKEY,
-            0,
-            0,
-            routers
+            1,
+            1,
+            new bytes32[](0)
         );
 
         // assert exists in old state
         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
         assertEq(wsRecord.publicKey, _PUBKEY);
-        assertEq(wsRecord.ipAndPort, 0);
-        assertEq(wsRecord.routers.length, 1);
+        assertEq(wsRecord.ipAndPort, 65537);
+        assertEq(wsRecord.routers.length, 0);
 
         // upgrade contract
         QNSRegistry2 qnsRegistry2 = new QNSRegistry2();
@@ -121,8 +118,8 @@ contract ProxyTests is TestUtils {
         // assert old state still exists
         IQNS.WsRecord memory newWsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
         assertEq(newWsRecord.publicKey, _PUBKEY);
-        assertEq(newWsRecord.ipAndPort, 0);
-        assertEq(newWsRecord.routers.length, 1);
+        assertEq(newWsRecord.ipAndPort, 65537);
+        assertEq(newWsRecord.routers.length, 0);
 
         // assert new state can be set
         QNSRegistry2(address(qnsRegistry)).setNewRecord(getNodeId("alice.uq"));
