@@ -19,7 +19,7 @@ interface IQNS {
     struct WsRecord {
         bytes32 publicKey;
         uint48 ipAndPort;
-        bytes32[] routers; // TODO maybe string[] instead?
+        bytes32[] routers;
     }
 
     // Logged whenever a QNS node is created
@@ -34,7 +34,7 @@ interface IQNS {
         uint96 indexed protocols, // TODO do we need this?
         bytes32 publicKey,
         uint48 ipAndPort,
-        bytes32[] routers // TODO maybe string?
+        bytes32[] routers
     );
 
     function registerSubdomainContract(

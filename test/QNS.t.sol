@@ -72,7 +72,7 @@ contract QNSTest is TestUtils {
         );
 
         assertEq(uqNft.owner(), address(deployer));
-        // assertEq(uqNft.qns(), address(qnsRegistry)); // TODO not working
+        assertEq(address(uqNft.qns()), address(qnsRegistry));
         assertEq(uqNft.name(), "Uqbar Name Service");
         assertEq(uqNft.symbol(), "UQNS");
 
@@ -167,8 +167,6 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordFailsWhenNotMinted() public {
         vm.prank(address(uqNft));
-        // TODO reason isn't correct for some reason? Should be:
-        // "QNSRegistry: only NFT contract or NFT owner can set a records for a subdomain"
         vm.expectRevert();
         qnsRegistry.setWsRecord(
             getNodeId("alice.uq"),
@@ -178,7 +176,6 @@ contract QNSTest is TestUtils {
             new bytes32[](0)
         );
     }
-
 
     function test_setWsRecordFailsWhenNotStaticOrRouted() public {
         vm.prank(alice);

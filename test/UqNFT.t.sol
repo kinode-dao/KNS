@@ -73,7 +73,7 @@ contract QNSTest is TestUtils {
         );
 
         assertEq(uqNft.owner(), address(deployer));
-        // assertEq(uqNft.qns(), address(qnsRegistry)); // TODO not working
+        assertEq(address(uqNft.qns()), address(qnsRegistry));
         assertEq(uqNft.name(), "Uqbar Name Service");
         assertEq(uqNft.symbol(), "UQNS");
 
