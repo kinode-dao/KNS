@@ -176,14 +176,18 @@ export async function fillUserOp (
   if (op1.callGasLimit == null && op.callData != null) {
 
     if (provider == null) throw new Error('must have entryPoint for callGasLimit estimate')
-    const gasEtimated = await provider.estimateGas({
+    const gasEstimated = await provider.estimateGas({
       from: entryPoint?.address,
       to: op1.sender,
       data: op1.callData
     })
 
     // estimateGas assumes direct call from entryPoint. add wrapper cost.
-    op1.callGasLimit = gasEtimated // .add(55000)
+    op1.callGasLimit = gasEstimated // .add(55000)
+
+    // TODO: how to esimate gas when the account does not exist
+    if (op1.nonce == 0) op1.callGasLimit = op1.callGasLimit.add(136288)
+
   }
   if (op1.maxFeePerGas == null) {
     if (provider == null) throw new Error('must have entryPoint to autofill maxFeePerGas')

@@ -5,9 +5,7 @@ import 'dotenv/config'
 import hre, { ethers } from 'hardhat'
 import { AASigner, rpcUserOpSender } from './AASigner'
 import { EntryPoint__factory, VerifyingPaymaster__factory } from '../typechain'
-import { arrayify, defaultAbiCoder, hexConcat, parseEther } from 'ethers/lib/utils'
-import { providers } from 'ethers'
-import { TransactionReceipt } from '@ethersproject/abstract-provider/src.ts/index';
+import { parseEther } from 'ethers/lib/utils'
 import { VPSigner } from './VerifyingPaymaster'
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -35,16 +33,14 @@ import { VPSigner } from './VerifyingPaymaster'
 
   const eoaPubBalance = await provider.getBalance(eoaPub)
 
-  const newprovider = new providers.JsonRpcProvider(aa_url)
-
   const supportedEntryPoints: string[] = 
-    await newprovider.send('eth_supportedEntryPoints', [])
+    await provider.send('eth_supportedEntryPoints', [])
       .then(ret => ret.map(ethers.utils.getAddress))
 
   if (!supportedEntryPoints.includes(entrypointAddress as string))
     console.error('ERROR: node', aa_url, 'does not support our EntryPoint')
 
-  let sendUserOp = rpcUserOpSender(newprovider, entrypointAddress as string)
+  let sendUserOp = rpcUserOpSender(provider, entrypointAddress as string)
 
   const eoaAASigner = new AASigner(
     eoaSigner, 
@@ -70,7 +66,8 @@ import { VPSigner } from './VerifyingPaymaster'
 
   const entryPoint = EntryPoint__factory.connect(entrypointAddress as string, eoaSigner)
 
-  await verifyingPaymaster.addStake(86400, { value: parseEther('0.1') })
+  if (await entryPoint.balanceOf(verifyingPaymasterAddress!) < parseEther('0.1'))
+    await verifyingPaymaster.addStake(86400, { value: parseEther('0.1') })
 
   const rcpt = await eoaAASigner.sendTransaction(
     { to: eoaPub, value: parseEther('0.0001') },
