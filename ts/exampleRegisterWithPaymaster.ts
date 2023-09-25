@@ -61,7 +61,7 @@ import { VPSigner } from "./VerifyingPaymaster"
 
   const paymasterBal = await entryPoint.balanceOf(verifyingPaymasterAddress as string)
   if (paymasterBal < parseEther('0.01'))
-    await entryPoint.depositTo(verifyingPaymasterAddress as string, { value: (parseEther(.01) - paymasterBal) })
+    await entryPoint.depositTo(verifyingPaymasterAddress as string, { value: (parseEther('.01').sub(paymasterBal)) })
   
   const uqNFT = UqNFT__factory.connect(process.env.UQNFT as string, eoaAASigner)
 
