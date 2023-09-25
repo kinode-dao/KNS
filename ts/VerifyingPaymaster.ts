@@ -1,10 +1,7 @@
 import { Bytes, Signer } from 'ethers'
 import { Deferrable } from '@ethersproject/properties'
 import { Provider, TransactionRequest } from '@ethersproject/providers'
-import { 
-    VerifyingPaymaster,
-    VerifyingPaymaster__factory 
-} from '../typechain'
+import { VerifyingPaymaster, VerifyingPaymaster__factory } from '../typechain'
 import { UserOperation } from "./UserOperation"
 import { arrayify, defaultAbiCoder, hexConcat } from 'ethers/lib/utils'
 

@@ -2,13 +2,10 @@
 // "yarn run runop [--network ...]"
 
 import 'dotenv/config'
-import hre, { ethers } from 'hardhat'
-import { objdump } from './Utils'
-import { AASigner, localUserOpSender, rpcUserOpSender } from './AASigner'
-import { TestCounter__factory, EntryPoint__factory } from '../typechain'
+import { ethers } from 'hardhat'
+import { AASigner, rpcUserOpSender } from './AASigner'
+import { EntryPoint__factory } from '../typechain'
 import { parseEther } from 'ethers/lib/utils'
-import { providers } from 'ethers'
-import { TransactionReceipt } from '@ethersproject/abstract-provider/src.ts/index';
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {

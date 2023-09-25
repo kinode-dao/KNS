@@ -1,21 +1,11 @@
 import * as typ from './solidityTypes'
-import {
-    arrayify,
-    defaultAbiCoder,
-    hexDataSlice,
-    keccak256
-  } from 'ethers/lib/utils'
-import { BigNumber, Contract, Signer, Wallet } from 'ethers'
+import { arrayify, defaultAbiCoder, hexDataSlice, keccak256 } from 'ethers/lib/utils'
 import { AddressZero, callDataCost, rethrow } from './Utils'
+import { BigNumber, Contract, Signer, Wallet } from 'ethers'
 import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util'
 import { EntryPoint, /* EntryPointSimulations__factory */ } from '../typechain'
 import { Create2Factory } from './Create2Factory'
 import { VPSigner } from './VerifyingPaymaster'
-
-// import { TransactionRequest } from '@ethersproject/abstract-provider'
-// import { ethers } from 'hardhat'
-// import EntryPointSimulationsJson from '../artifacts/contracts/core/EntryPointSimulations.sol/EntryPointSimulations.json'
-// import { IEntryPointSimulations } from '../typechain/contracts/core/EntryPointSimulations'
 
 export function packUserOp (op: UserOperation, forSignature = true): string {
   if (forSignature) {

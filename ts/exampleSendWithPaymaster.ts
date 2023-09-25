@@ -2,7 +2,7 @@
 // "yarn run runop [--network ...]"
 
 import 'dotenv/config'
-import hre, { ethers } from 'hardhat'
+import { ethers } from 'hardhat'
 import { AASigner, rpcUserOpSender } from './AASigner'
 import { EntryPoint__factory, VerifyingPaymaster__factory } from '../typechain'
 import { parseEther } from 'ethers/lib/utils'

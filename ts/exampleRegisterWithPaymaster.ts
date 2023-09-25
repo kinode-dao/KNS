@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import hre, { ethers } from 'hardhat'
+import { ethers } from 'hardhat'
 import { AASigner, rpcUserOpSender } from './AASigner'
 import { UqNFT__factory, EntryPoint__factory, VerifyingPaymaster__factory } from '../typechain'
 import { arrayify, parseEther } from 'ethers/lib/utils'
