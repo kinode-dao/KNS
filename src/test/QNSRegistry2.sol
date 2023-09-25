@@ -6,15 +6,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "./interfaces/IQNS.sol";
-import "./interfaces/IQNSNFT.sol";
-import "./lib/BytesUtils.sol";
+import "../interfaces/IQNS.sol";
+import "../interfaces/IQNSNFT.sol";
+import "../lib/BytesUtils.sol";
 
 error MustChooseStaticOrRouted();
 
-// TODO lets see what inspiration we can take from VersionableResolver?
-
-contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
+contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
     // Has pointers to NFT contract (ownership) and protocols
@@ -23,7 +21,8 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
     // Websocket information
     mapping(uint256 => WsRecord) ws_records;
 
-    // TODO do we need to include a storage slot here for upgradability? something something...
+    // FOR TESTING: a new record type
+    mapping(uint256 => bool) public new_records;
 
     function initialize() public initializer {
         __UUPSUpgradeable_init();
@@ -52,7 +51,7 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
             msg.sender == owner,
             "QNSRegistry: only parent domain owner can register subdomain contract"
         );
-        // TODO could check that nft implements IQNSNFT via ERC165
+
         records[node] = Record({
             owner: address(nft),
             protocols: 0
@@ -77,8 +76,6 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         //      IERC721(parentOwner).ownerOf(node) != address(0)
 
         records[node] = Record({
-            // NOTE: domain is under the control of the parent NFT contract
-            // until registerSubdomainContract is called
             owner: msg.sender,
             protocols: 0
         });
@@ -105,19 +102,9 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
 
         require(publicKey != bytes32(0), "QNSRegistry: public key cannot be 0");
 
-        for (uint256 i = 0; i < routers.length; i++) {
-            // TODO how bad is this gas-wise? I think on optimism we are fine for like 10 routers?
-            require(
-                records[uint256(routers[i])].protocols & WEBSOCKETS != 0 &&
-                ws_records[uint256(routers[i])].ipAndPort != 0,
-                "QNSRegistry: router does not support websockets"
-            );
+        if ((ip == 0 || port == 0) && routers.length == 0) {
+            revert MustChooseStaticOrRouted();
         }
-
-        require(
-            (ip != 0 && port != 0) || routers.length != 0,
-            "QNSRegistry: must specify either static ip/port or routers"
-        );
 
         uint48 ipAndPort = combineIpAndPort(ip, port);
 
@@ -133,7 +120,11 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
     }
 
-    function clearProtocols(uint256 node, uint32 protocols) external {
+    function setNewRecord(uint256 node) external {
+        new_records[node] = true;
+    }
+
+    function clearProtocol(uint256 node, uint32 protocols) external {
         address parentOwner = records[uint256(node)].owner;
         
         require(
@@ -143,7 +134,6 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         
         Record storage record = records[node];
         record.protocols = record.protocols & ~protocols;
-        // TODO this should emit an event
     }
 
     //

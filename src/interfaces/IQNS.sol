@@ -1,61 +1,60 @@
 pragma solidity >=0.8.4;
 
+import { IQNSNFT } from "./IQNSNFT.sol";
+
+
+// Record types
+uint32 constant WEBSOCKETS = 1;
+
 interface IQNS {
-    // Logged when a node is created for the first time
-    event NameRegistered(uint256 indexed node, bytes name, address owner);
+    // QNS node data
+    struct Record {
+        // contract that controls ownership logic of QNS id
+        address owner;
+        // room for 96 protocols
+        uint96 protocols;
+    }
 
-    // Logged when the owner of a node assigns a new owner to a subnode.
-    event NewOwner(uint256 indexed node, bytes32 indexed label, address owner);
+    // Websocket data associated with a QNS node
+    struct WsRecord {
+        bytes32 publicKey;
+        uint48 ipAndPort;
+        bytes32[] routers;
+    }
 
-    // Logged when the owner of a node transfers ownership to a new account.
-    event Transfer(uint256 indexed node, address owner);
+    // Logged whenever a QNS node is created
+    event NodeRegistered(uint256 indexed node, bytes name);
 
-    // Logged when the resolver for a node changes.
-    event NewResolver(uint256 indexed node, address resolver);
+    // Logged whenever a QNS adds/drops support for subdomaining
+    event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
 
-    // Logged when the TTL of a node changes
-    event NewTTL(uint256 indexed node, uint64 ttl);
-
-    // Logged when an operator is added or removed.
-    event ApprovalForAll(
-        address indexed owner,
-        address indexed operator,
-        bool approved
+    // Logged whenever a QNS node's websocket information is updated.
+    event WsChanged(
+        uint256 indexed node,
+        uint96 indexed protocols, // TODO do we need this?
+        bytes32 publicKey,
+        uint48 ipAndPort,
+        bytes32[] routers
     );
 
-    function setRecord(
-        bytes calldata node,
-        address owner,
-        address resolver,
-        uint64 ttl
+    function registerSubdomainContract(
+        bytes calldata fqdn,
+        IQNSNFT nft
     ) external;
 
-    function setSubnodeRecord(
-        bytes calldata node,
-        address owner,
-        address resolver,
-        uint64 ttl
+    function registerNode (
+        bytes calldata fqdn
     ) external;
 
-    function setResolver(uint256 node, address resolver) external;
+    function setWsRecord(
+        uint256 node,
+        bytes32 publicKey,
+        uint32 ip,
+        uint16 port,
+        bytes32[] calldata routers
+    ) external;
 
-    function setOwner(uint256 node, address owner) external;
-
-    function setTTL(uint256 node, uint64 ttl) external;
-
-    function setApprovalForAll(address operator, bool approved) external;
-
-    function owner(uint256 node) external view returns (address);
-
-    function resolver(uint256 node) external view returns (address);
-
-    function ttl(uint256 node) external view returns (uint64);
-
-    function recordExists(uint256 node) external view returns (bool);
-
-    function isApprovedForAll(
-        address owner,
-        address operator
-    ) external view returns (bool);
-
+    function ws(
+        uint256 node
+    ) external view returns (WsRecord memory);
 }

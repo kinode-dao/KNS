@@ -1,22 +1,23 @@
 # QNS
-Last updated Sept 17 2023
+Last updated Sept 21 2023
 
 ## QNS Overview
-QNS is a fork of ENS. Currently we have only one record type: `WsRecord`, which is used for setting networking keys, ip & port (if direct), and routers (if indirect). QNS also follows the UUPS upgradable pattern, which means we can add more record types in the future. For example, if we decided to add a way to network using TCP instead of WS, we could add a new record type. More interestingly, we could add a way to set a `.uq` name to point to a protocol spec, and that QNS id will be managed by a DAO. We could also add a record type that would point to an NFT representing, for example, your profile picture - and this gives all other nodes on the network an easy way to fetch your PFP for all applications. Some of the examples here we will likely implement in the near future.
+QNS is a fork of ENS which lets you map human readable names to different kinds of information called "records". Currently we have only one record type: `WsRecord`, which is used for setting Uqbar-related networking information: networking keys, ip & port (if direct), and routers (if indirect). QNS also follows the UUPS upgradable pattern, which means we can add more record types in the future. For example, if we decided to add a way to network using TCP instead of WS, we could add a new record type. More interestingly, we could add a way to set a `.uq` name to point to a protocol spec, and that QNS id will be managed by a DAO. We could also add a record type that would point to an NFT representing, for example, your profile picture - and this gives all other nodes on the network an easy way to fetch your PFP for all applications. Some of the examples here we will likely implement in the near future.
 
 ## Architecture
-QNS follows ENS' architecture with a few modifications to make it more efficient and eliminate cruft. For one, ENS' base layer only uses bytes32 to identify nodes, and then mints an ERC721/1155 token at higher levels. We use a node's uint value as the NFT id so it is usable throughout all layers. TODO more documentation here. Where are NFTs minted in ENS vs how are they minted here?
+QNS follows ENS' architecture with a few modifications to make it more efficient and eliminate cruft. For one, ENS' base layer only uses bytes32 to identify nodes, and then mints an ERC721/1155 token at higher levels. We use a node's uint value as the NFT id so it is usable throughout all layers. Also unlike ENS, no ownership logic is handled at the base layer, all of it is handled by the `UqNFT` system. These can be any normal ERC721 token, though they must implement a few extra functions described in `IQNSNFT.sol` 
 
-### `QNSRegistry.sol`
-The core contract for QNS. It's logic is very simpel: it maintains a map of all domains to its their resolvers. While there may be more resolvers in the future, for now there is only the PublicResolver (should rename WsResolver?), which is responsible for resolving networking information on chain.
+### QNSRegistry
+This contract is responsible for storing all information related to uqbar protocols. Again, no ownership logic lives here. For on-chain information associated with a name, we just have Websockets for Uqbar networking. In the future we can add up to 31 more record types which can represent networking information or just general record information.
 
-### `PublicResolver.sol`
-Responsible for storing all Web Socket routing information for Uqbar's networking.
+### UqNFT
+A normal NFT that governs ownership of all subdomains of a particular node. This is our implementation for handling all `.uq` names, but this contract can be used for other TLDs (like if we wanted to deploy a `.test` domain) and other subdomains like `alice.uq`, if desired. However, you can also use any ERC721 compliant token provided that it:
+- implements `baseNode()` which sets the domain it governs, in this case `.uq` though this contract can also be used to handle subdomains such as `example.uq`
+- implements `setBaseNode(uint256)` which is called by the `QNSRegistry` to set the base node it can govern
+- the nft-ids must be the namehash of the domain that the id represents
 
-### `UqRegistrar.sol`
-Logic that dictates how a user can register, own, and renew QNS names. Currently we have a commit/reveal scheme to prevent frontrunning. TODO we will also need to build an invite code system. TODO also need to add controller logic, which should handle registrations and renewals. Maybe we even remove the controller logic!
-
-## Testing and Scripts
+# Deployment Notes
+## Scripts
 Before running scripts, build dnswire with
 ```
 cd dnswire
@@ -27,4 +28,46 @@ Then you can run scripts, for example
 ganache-cli --server.ws --wallet.mnemonic "test test test test test test test test test test test test"
 
 forge script script/QNS.s.sol --rpc-url http://127.0.0.1:8545 --ffi --broadcast -vvvv
+```
+
+## Verification With Forge
+Obvious reminder to swap out the contract addresses and constructor arguments. Compiler version and optimizations may also change
+```
+forge verify-contract \
+    --chain-id 420 \
+    --num-of-optimizations 200 \
+    --watch \
+    --etherscan-api-key $ETHERSCAN_API_KEY \
+    --compiler-version v0.8.21+commit.d9974bed \
+    0x8889E951EcF2B55A150705411A7Bf1fc1Ea01C52 \
+    src/QNSRegistry.sol:QNSRegistry
+
+forge verify-contract \
+    --chain-id 420 \
+    --num-of-optimizations 200 \
+    --watch \
+    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x8889E951EcF2B55A150705411A7Bf1fc1Ea01C52 0x8129fc1c) \
+    --etherscan-api-key $ETHERSCAN_API_KEY \
+    --compiler-version v0.8.21+commit.d9974bed \
+    0xb598fe1771DB7EcF2AeD06f082dE1030CA0BF1DA \
+    lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
+
+forge verify-contract \
+    --chain-id 420 \
+    --num-of-optimizations 200 \
+    --watch \
+    --etherscan-api-key $ETHERSCAN_API_KEY \
+    --compiler-version v0.8.21+commit.d9974bed \
+    0x40DC2975CB6d751D2f44501B868bb89290aD8f8D \
+    src/UqNFT.sol:UqNFT
+
+forge verify-contract \
+    --chain-id 420 \
+    --num-of-optimizations 200 \
+    --watch \
+    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x40DC2975CB6d751D2f44501B868bb89290aD8f8D 0xc4d66de8000000000000000000000000b598fe1771db7ecf2aed06f082de1030ca0bf1da) \
+    --etherscan-api-key $ETHERSCAN_API_KEY \
+    --compiler-version v0.8.21+commit.d9974bed \
+    0x7F98DC18f2e2349D18C90879B2677b7CC868c3ff \
+    lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 ```
