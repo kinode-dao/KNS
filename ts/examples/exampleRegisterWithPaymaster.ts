@@ -1,9 +1,9 @@
 import 'dotenv/config'
 import { ethers } from 'hardhat'
-import { AASigner, rpcUserOpSender } from './AASigner'
-import { UqNFT__factory, EntryPoint__factory, VerifyingPaymaster__factory } from '../typechain'
+import { AASigner, rpcUserOpSender } from '../AASigner'
+import { UqNFT__factory, EntryPoint__factory, VerifyingPaymaster__factory } from '../../typechain'
 import { arrayify, parseEther } from 'ethers/lib/utils'
-import { VPSigner } from "./VerifyingPaymaster"
+import { VPSigner } from "../VerifyingPaymaster"
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
@@ -25,12 +25,6 @@ import { VPSigner } from "./VerifyingPaymaster"
 
   const paymasterPriv = process.env.PRIV_PAYMASTER
   const paymasterSigner = new ethers.Wallet(paymasterPriv as any, provider)
-
-  const eoaPub = await eoaSigner.getAddress()
-
-  const supportedEntryPoints: string[] =
-    await provider.send('eth_supportedEntryPoints', [])
-      .then(ret => ret.map(ethers.utils.getAddress))
 
   let sendUserOp = rpcUserOpSender(provider, entrypointAddress as string)
 

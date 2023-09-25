@@ -3,10 +3,10 @@
 
 import 'dotenv/config'
 import { ethers } from 'hardhat'
-import { AASigner, rpcUserOpSender } from './AASigner'
-import { EntryPoint__factory, VerifyingPaymaster__factory } from '../typechain'
+import { AASigner, rpcUserOpSender } from '../AASigner'
+import { EntryPoint__factory, VerifyingPaymaster__factory } from '../../typechain'
 import { parseEther } from 'ethers/lib/utils'
-import { VPSigner } from './VerifyingPaymaster'
+import { VPSigner } from '../VerifyingPaymaster'
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
@@ -30,8 +30,6 @@ import { VPSigner } from './VerifyingPaymaster'
   const paymasterSigner = new ethers.Wallet(paymasterPriv as any, provider)
 
   const eoaPub = await eoaSigner.getAddress()
-
-  const eoaPubBalance = await provider.getBalance(eoaPub)
 
   const supportedEntryPoints: string[] = 
     await provider.send('eth_supportedEntryPoints', [])

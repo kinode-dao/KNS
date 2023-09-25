@@ -3,8 +3,8 @@
 
 import 'dotenv/config'
 import { ethers } from 'hardhat'
-import { AASigner, rpcUserOpSender } from './AASigner'
-import { EntryPoint__factory } from '../typechain'
+import { AASigner, rpcUserOpSender } from '../AASigner'
+import { EntryPoint__factory } from '../../typechain'
 import { parseEther } from 'ethers/lib/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -23,8 +23,6 @@ import { parseEther } from 'ethers/lib/utils'
   const eoaSigner = new ethers.Wallet(eoaPriv as any, provider)
 
   const eoaPub = await eoaSigner.getAddress()
-
-  const eoaPubBalance = await provider.getBalance(eoaPub)
 
   const supportedEntryPoints: string[] = 
     await provider.send('eth_supportedEntryPoints', [])
