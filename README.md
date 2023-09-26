@@ -34,40 +34,40 @@ forge script script/QNS.s.sol --rpc-url http://127.0.0.1:8545 --ffi --broadcast 
 Obvious reminder to swap out the contract addresses and constructor arguments. Compiler version and optimizations may also change
 ```
 forge verify-contract \
-    --chain-id 420 \
+    --chain-id 11155111 \
     --num-of-optimizations 200 \
     --watch \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0x8889E951EcF2B55A150705411A7Bf1fc1Ea01C52 \
+    0x2AFC8D61c2Dc9a3B40D85F5207f40de81d4A86e7 \
     src/QNSRegistry.sol:QNSRegistry
 
 forge verify-contract \
-    --chain-id 420 \
+    --chain-id 11155111 \
     --num-of-optimizations 200 \
     --watch \
-    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x8889E951EcF2B55A150705411A7Bf1fc1Ea01C52 0x8129fc1c) \
+    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x2AFC8D61c2Dc9a3B40D85F5207f40de81d4A86e7 0x8129fc1c) \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0xb598fe1771DB7EcF2AeD06f082dE1030CA0BF1DA \
+    0x9e5ed0e7873E0d7f10eEb6dE72E87fE087A12776 \
     lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 
 forge verify-contract \
-    --chain-id 420 \
+    --chain-id 11155111 \
     --num-of-optimizations 200 \
     --watch \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0x40DC2975CB6d751D2f44501B868bb89290aD8f8D \
+    0xAf763608ad4E3ffEbbE5B5B0DCDe140d282C4457 \
     src/UqNFT.sol:UqNFT
 
 forge verify-contract \
-    --chain-id 420 \
+    --chain-id 11155111 \
     --num-of-optimizations 200 \
     --watch \
-    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0x40DC2975CB6d751D2f44501B868bb89290aD8f8D 0xc4d66de8000000000000000000000000b598fe1771db7ecf2aed06f082de1030ca0bf1da) \
+    --constructor-args $(cast abi-encode "constructor(address,bytes)" 0xAf763608ad4E3ffEbbE5B5B0DCDe140d282C4457 0xc4d66de80000000000000000000000009e5ed0e7873e0d7f10eeb6de72e87fe087a12776) \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0x7F98DC18f2e2349D18C90879B2677b7CC868c3ff \
+    0xA855B1F82127158bE35dF4a7867D9a3d7fc5166c \
     lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy
 ```
