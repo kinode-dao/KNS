@@ -16,13 +16,6 @@ error MustChooseStaticOrRouted();
 contract QNSTest is TestUtils {
     // events
     event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
-    event ProtocolsChanged(uint256 indexed node, bytes name, uint32 protocols);
-    event WsChanged(
-        uint256 indexed node,
-        bytes32 publicKey,
-        uint48 ipAndPort,
-        bytes32[] routers
-    );
 
     // addresses
     address public deployer = address(2);

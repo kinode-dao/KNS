@@ -106,18 +106,17 @@ contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrad
             revert MustChooseStaticOrRouted();
         }
 
-        uint48 ipAndPort = combineIpAndPort(ip, port);
-
         ws_records[node] = WsRecord(
             publicKey,
-            ipAndPort,
+            ip,
+            port,
             routers
         );
 
         Record storage record = records[node];
         record.protocols = record.protocols | WEBSOCKETS;
 
-        emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
+        emit WsChanged(node, record.protocols, publicKey, ip, port, routers);
     }
 
     function setNewRecord(uint256 node) external {
@@ -166,10 +165,6 @@ contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrad
         bytes32 labelhash
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(node, labelhash));
-    }
-
-    function combineIpAndPort(uint32 ip, uint16 port) internal pure returns (uint48) {
-        return uint48((uint48(ip) << 16) | port);
     }
 
     //

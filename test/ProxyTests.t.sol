@@ -105,7 +105,8 @@ contract ProxyTests is TestUtils {
         // assert exists in old state
         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
         assertEq(wsRecord.publicKey, _PUBKEY);
-        assertEq(wsRecord.ipAndPort, 65537);
+        assertEq(wsRecord.ip, 1);
+        assertEq(wsRecord.port, 1);
         assertEq(wsRecord.routers.length, 0);
 
         // upgrade contract
@@ -118,7 +119,8 @@ contract ProxyTests is TestUtils {
         // assert old state still exists
         IQNS.WsRecord memory newWsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
         assertEq(newWsRecord.publicKey, _PUBKEY);
-        assertEq(newWsRecord.ipAndPort, 65537);
+        assertEq(newWsRecord.ip, 1);
+        assertEq(newWsRecord.port, 1);
         assertEq(newWsRecord.routers.length, 0);
 
         // assert new state can be set

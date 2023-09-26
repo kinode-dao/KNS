@@ -109,7 +109,8 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
             // TODO how bad is this gas-wise? I think on optimism we are fine for like 10 routers?
             require(
                 records[uint256(routers[i])].protocols & WEBSOCKETS != 0 &&
-                ws_records[uint256(routers[i])].ipAndPort != 0,
+                ws_records[uint256(routers[i])].ip != 0 &&
+                ws_records[uint256(routers[i])].port != 0,
                 "QNSRegistry: router does not support websockets"
             );
         }
@@ -119,18 +120,17 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
             "QNSRegistry: must specify either static ip/port or routers"
         );
 
-        uint48 ipAndPort = combineIpAndPort(ip, port);
-
         ws_records[node] = WsRecord(
             publicKey,
-            ipAndPort,
+            ip,
+            port,
             routers
         );
 
         Record storage record = records[node];
         record.protocols = record.protocols | WEBSOCKETS;
 
-        emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
+        emit WsChanged(node, record.protocols, publicKey, ip, port, routers);
     }
 
     function clearProtocols(uint256 node, uint32 protocols) external {
@@ -176,10 +176,6 @@ contract QNSRegistry is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgrade
         bytes32 labelhash
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(node, labelhash));
-    }
-
-    function combineIpAndPort(uint32 ip, uint16 port) internal pure returns (uint48) {
-        return uint48((uint48(ip) << 16) | port);
     }
 
     //

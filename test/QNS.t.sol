@@ -19,7 +19,8 @@ contract QNSTest is TestUtils {
         uint256 indexed node,
         uint32 indexed protocols,
         bytes32 publicKey,
-        uint48 ipAndPort,
+        uint32 ip,
+        uint16 port,
         bytes32[] routers
     );
 
@@ -289,7 +290,8 @@ contract QNSTest is TestUtils {
 
         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
         assertEq(wsRecord.publicKey, _PUBKEY);
-        assertEq(wsRecord.ipAndPort, 65537);
+        assertEq(wsRecord.ip, 1);
+        assertEq(wsRecord.port, 1);
         assertEq(wsRecord.routers.length, 0);
     }
 
@@ -326,7 +328,8 @@ contract QNSTest is TestUtils {
 
         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alice.uq"));
         assertEq(wsRecord.publicKey, _PUBKEY);
-        assertEq(wsRecord.ipAndPort, 0);
+        assertEq(wsRecord.ip, 0);
+        assertEq(wsRecord.port, 0);
         assertEq(wsRecord.routers.length, 1);
     }
 

@@ -18,7 +18,8 @@ interface IQNS {
     // Websocket data associated with a QNS node
     struct WsRecord {
         bytes32 publicKey;
-        uint48 ipAndPort;
+        uint32 ip;
+        uint16 port;
         bytes32[] routers;
     }
 
@@ -33,7 +34,8 @@ interface IQNS {
         uint256 indexed node,
         uint96 indexed protocols, // TODO do we need this?
         bytes32 publicKey,
-        uint48 ipAndPort,
+        uint32 ip,
+        uint16 port,
         bytes32[] routers
     );
 
