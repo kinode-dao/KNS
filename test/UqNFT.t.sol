@@ -184,11 +184,15 @@ contract QNSTest is TestUtils {
         assertEq(uqNft2.baseNode(), getNodeId("alices-node.uq"));
 
         // try to register subdomain on alices-node.uq
-        vm.prank(alice);
-        uqNft2.register(getDNSWire("sub.alices-node.uq"), alice);
+        vm.prank(bob);
+        uqNft2.register(getDNSWire("bob.alices-node.uq"), bob);
 
         (address actualSubNft, uint96 actualSubProtocols) = qnsRegistry.records(getNodeId("alices-node.uq"));
         assertEq(actualSubNft, address(uqNft2));
         assertEq(actualSubProtocols, 0);
+
+        // assert ownership information is still correct
+        assertEq(bob, qnsRegistry.resolve(getDNSWire("bob.alices-node.uq")));
+        assertEq(alice, qnsRegistry.resolve(getDNSWire("alices-node.uq")));
     }
 }

@@ -369,6 +369,11 @@ contract QNSTest is TestUtils {
         qnsRegistry.resolve(getDNSWire("sub.alices-node.uq"));
     }
 
+    function test_resolveTLDFailsAlways() public {
+        vm.expectRevert();
+        qnsRegistry.resolve(getDNSWire("uq"));
+    }
+
     function test_resolve() public {
         vm.prank(alice);
         uqNft.register(getDNSWire("alices-node.uq"), alice);
