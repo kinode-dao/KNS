@@ -42,6 +42,10 @@ interface IQNS {
         bytes32[] routers
     );
 
+    //
+    // externals
+    //
+
     function registerSubdomainContract(
         bytes calldata fqdn,
         IQNSNFT nft
@@ -59,6 +63,10 @@ interface IQNS {
         bytes32[] calldata routers
     ) external;
 
+    //
+    // views
+    //
+
     function ws(
         uint256 node
     ) external view returns (WsRecord memory);
@@ -66,6 +74,4 @@ interface IQNS {
     function resolve(
         bytes calldata fqdn
     ) external view returns (address);
-
-    // TODO add ALL getters here
 }
