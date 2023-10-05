@@ -15,9 +15,10 @@ export class Create2Factory {
   static readonly deploymentGasLimit = 100000
   static readonly factoryDeploymentFee = (Create2Factory.deploymentGasPrice * Create2Factory.deploymentGasLimit).toString()
 
-  constructor (readonly provider: Provider,
-    readonly signer = (provider as ethers.providers.JsonRpcProvider).getSigner()) {
-  }
+  constructor (
+    readonly provider: Provider,
+    readonly signer = (provider as ethers.providers.JsonRpcProvider).getSigner()
+  ) { }
 
   /**
    * deploy a contract using our deterministic deployer.
@@ -27,7 +28,12 @@ export class Create2Factory {
    * @param salt specific salt for deployment
    * @param gasLimit gas limit or 'estimate' to use estimateGas. by default, calculate gas based on data size.
    */
-  async deploy (initCode: string | TransactionRequest, salt: BigNumberish = 0, gasLimit?: BigNumberish | 'estimate'): Promise<string> {
+  async deploy (
+    initCode: string | TransactionRequest, 
+    salt: BigNumberish = 0, 
+    gasLimit?: BigNumberish | 'estimate'
+  ): Promise<string> {
+
     await this.deployFactory()
     if (typeof initCode !== 'string') {
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
@@ -69,12 +75,17 @@ export class Create2Factory {
     return addr
   }
 
-  getDeployTransactionCallData (initCode: string, salt: BigNumberish = 0): string {
+  getDeployTransactionCallData (
+    initCode: string, 
+    salt: BigNumberish = 0
+  ): string {
+
     const saltBytes32 = hexZeroPad(hexlify(salt), 32)
     return hexConcat([
       saltBytes32,
       initCode
     ])
+
   }
 
   /**
@@ -83,14 +94,18 @@ export class Create2Factory {
    * @param initCode
    * @param salt
    */
-  static getDeployedAddress (initCode: string, salt: BigNumberish): string {
-    const saltBytes32 = hexZeroPad(hexlify(salt), 32)
+  static getDeployedAddress (
+    initCode: string, 
+    salt: BigNumberish
+  ): string {
+
     return '0x' + keccak256(hexConcat([
       '0xff',
       Create2Factory.contractAddress,
-      saltBytes32,
+      hexZeroPad(hexlify(salt), 32),
       keccak256(initCode)
     ])).slice(-40)
+
   }
 
   // deploy the factory, if not already deployed.

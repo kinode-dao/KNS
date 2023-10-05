@@ -10,48 +10,52 @@ import { VPSigner } from './VerifyingPaymaster'
 export function packUserOp (op: UserOperation, forSignature = true): string {
   if (forSignature) {
     return defaultAbiCoder.encode(
-      ['address', 'uint256', 'bytes32', 'bytes32',
-        'uint256', 'uint256', 'uint256', 'uint256', 'uint256',
+      [ 'address', 
+        'uint256', 
+        'bytes32', 
+        'bytes32',
+        'uint256', 
+        'uint256', 
+        'uint256', 
+        'uint256', 
+        'uint256',
         'bytes32'],
-      [op.sender, op.nonce, keccak256(op.initCode), keccak256(op.callData),
-        op.callGasLimit, op.verificationGasLimit, op.preVerificationGas, op.maxFeePerGas, op.maxPriorityFeePerGas,
+      [ op.sender, 
+        op.nonce, 
+        keccak256(op.initCode), 
+        keccak256(op.callData),
+        op.callGasLimit, 
+        op.verificationGasLimit, 
+        op.preVerificationGas, 
+        op.maxFeePerGas, 
+        op.maxPriorityFeePerGas,
         keccak256(op.paymasterAndData)])
   } else {
     // for the purpose of calculating gas cost encode also signature (and no keccak of bytes)
     return defaultAbiCoder.encode(
-      ['address', 'uint256', 'bytes', 'bytes',
-        'uint256', 'uint256', 'uint256', 'uint256', 'uint256',
-        'bytes', 'bytes'],
-      [op.sender, op.nonce, op.initCode, op.callData,
-        op.callGasLimit, op.verificationGasLimit, op.preVerificationGas, op.maxFeePerGas, op.maxPriorityFeePerGas,
-        op.paymasterAndData, op.signature])
+      [ 'address', 
+        'uint256', 
+        'bytes', 
+        'bytes',
+        'uint256', 
+        'uint256', 
+        'uint256', 
+        'uint256', 
+        'uint256',
+        'bytes', 
+        'bytes'],
+      [ op.sender, 
+        op.nonce, 
+        op.initCode, 
+        op.callData,
+        op.callGasLimit, 
+        op.verificationGasLimit, 
+        op.preVerificationGas, 
+        op.maxFeePerGas, 
+        op.maxPriorityFeePerGas,
+        op.paymasterAndData, 
+        op.signature])
   }
-}
-  
-export function packUserOp1 (op: UserOperation): string {
-  return defaultAbiCoder.encode([
-    'address', // sender
-    'uint256', // nonce
-    'bytes32', // initCode
-    'bytes32', // callData
-    'uint256', // callGasLimit
-    'uint256', // verificationGasLimit
-    'uint256', // preVerificationGas
-    'uint256', // maxFeePerGas
-    'uint256', // maxPriorityFeePerGas
-    'bytes32' // paymasterAndData
-  ], [
-    op.sender,
-    op.nonce,
-    keccak256(op.initCode),
-    keccak256(op.callData),
-    op.callGasLimit,
-    op.verificationGasLimit,
-    op.preVerificationGas,
-    op.maxFeePerGas,
-    op.maxPriorityFeePerGas,
-    keccak256(op.paymasterAndData)
-  ])
 }
   
 export function getUserOpHash (op: UserOperation, entryPoint: string, chainId: number): string {
@@ -95,16 +99,15 @@ export function signUserOp (op: UserOperation, signer: Wallet, entryPoint: strin
   
 export function fillUserOpDefaults (op: Partial<UserOperation>, defaults = DefaultsForUserOp): UserOperation {
   const partial: any = { ...op }
-  // we want "item:undefined" to be used from defaults, and not override defaults, so we must explicitly
-  // remove those so "merge" will succeed.
-  for (const key in partial) {
-    if (partial[key] == null) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete partial[key]
-    }
-  }
-  const filled = { ...defaults, ...partial }
-  return filled
+
+  // we want "item:undefined" to be used from defaults, and not override 
+  // defaults, so we must explicitly remove those so "merge" will succeed.
+  for (const key in partial)
+    if (partial[key] == null)
+      delete partial[key] // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+
+  return { ...defaults, ...partial }
+
 }
   
 // helper to fill structure:
@@ -130,21 +133,31 @@ export async function fillUserOp (
   const provider = entryPoint?.provider
 
   if (op.initCode != null) {
+
     const initAddr = hexDataSlice(op1.initCode!, 0, 20)
     const initCallData = hexDataSlice(op1.initCode!, 20)
-    if (op1.nonce == null) op1.nonce = 0
+
+    if (op1.nonce == null) 
+      op1.nonce = 0
+
     if (op1.sender == null) {
+
       // hack: if the init contract is our known deployer, then we know what the address would be, without a view call
       if (initAddr.toLowerCase() === Create2Factory.contractAddress.toLowerCase()) {
+
         const ctr = hexDataSlice(initCallData, 32)
         const salt = hexDataSlice(initCallData, 0, 32)
         op1.sender = Create2Factory.getDeployedAddress(ctr, salt)
+
       } else {
+
         console.log('\t== not our deployer. our=', Create2Factory.contractAddress, 'got', initAddr)
         if (provider == null) throw new Error('no entrypoint/provider')
         op1.sender = await entryPoint!.callStatic.getSenderAddress(op1.initCode!).catch(e => e.errorArgs.sender)
+
       }
     }
+
     if (op1.verificationGasLimit == null) {
 
       if (provider == null) throw new Error('no entrypoint/provider')
@@ -156,13 +169,18 @@ export async function fillUserOp (
       })
 
       op1.verificationGasLimit = BigNumber.from(DefaultsForUserOp.verificationGasLimit).add(initEstimate)
+
     }
+
   }
   if (op1.nonce == null) {
+
     if (provider == null) throw new Error('must have entryPoint to autofill nonce')
     const c = new Contract(op.sender!, [`function ${getNonceFunction}() view returns(uint256)`], provider)
     op1.nonce = await c[getNonceFunction]().catch(rethrow())
+
   }
+
   if (op1.callGasLimit == null && op.callData != null) {
 
     if (provider == null) throw new Error('must have entryPoint for callGasLimit estimate')
@@ -184,11 +202,11 @@ export async function fillUserOp (
     const block = await provider.getBlock('latest')
     op1.maxFeePerGas = block.baseFeePerGas!.add(op1.maxPriorityFeePerGas ?? DefaultsForUserOp.maxPriorityFeePerGas)
   }
-  // TODO: this is exactly what fillUserOp below should do - but it doesn't.
-  // adding this manually
-  if (op1.maxPriorityFeePerGas == null) {
+
+  // TODO: this is exactly what fillUserOp below should do - but it doesn't.  adding this manually
+  if (op1.maxPriorityFeePerGas == null) 
     op1.maxPriorityFeePerGas = DefaultsForUserOp.maxPriorityFeePerGas
-  }
+
   const op2 = fillUserOpDefaults(op1)
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
   if (op2.preVerificationGas.toString() === '0') {

@@ -5,6 +5,8 @@ import { UqNFT__factory, EntryPoint__factory, VerifyingPaymaster__factory } from
 import { arrayify, parseEther } from 'ethers/lib/utils'
 import { VPSigner } from "../VerifyingPaymaster"
 
+console.log("ethers", ethers.version);
+
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
 
@@ -36,39 +38,40 @@ import { VPSigner } from "../VerifyingPaymaster"
     111199
   )
 
-  const aaAddress = await eoaAASigner.getAddress()
+  console.log("eoaSigner", await eoaAASigner.getAddress())
 
-  // if (await provider.getBalance(aaAddress) < parseEther('0.01'))
-  //   await eoaSigner.sendTransaction({ to: aaAddress, value: parseEther('0.01') })
+  // const aaAddress = await eoaAASigner.getAddress()
 
-  const verifyingPaymaster = VerifyingPaymaster__factory.connect(
-    verifyingPaymasterAddress as string,
-    paymsaterOwnerSigner
-  )
+  // // if (await provider.getBalance(aaAddress) < parseEther('0.01'))
+  // //   await eoaSigner.sendTransaction({ to: aaAddress, value: parseEther('0.01') })
 
-  const entryPoint = EntryPoint__factory.connect(entrypointAddress as string, eoaSigner)
+  // const verifyingPaymaster = VerifyingPaymaster__factory.connect(
+  //   verifyingPaymasterAddress as string,
+  //   paymsaterOwnerSigner
+  // )
 
-  const vpSigner = new VPSigner(
-    paymasterSigner,
-    verifyingPaymasterAddress as string
-  )
+  // const entryPoint = EntryPoint__factory.connect(entrypointAddress as string, eoaSigner)
 
-  const paymasterBal = await entryPoint.balanceOf(verifyingPaymasterAddress as string)
-  if (paymasterBal < parseEther('0.01'))
-    await entryPoint.depositTo(verifyingPaymasterAddress as string, { value: (parseEther('.01').sub(paymasterBal)) })
+  // const vpSigner = new VPSigner(
+  //   paymasterSigner,
+  //   verifyingPaymasterAddress as string
+  // )
+
+  // const paymasterBal = await entryPoint.balanceOf(verifyingPaymasterAddress as string)
+  // if (paymasterBal < parseEther('0.01'))
+  //   await entryPoint.depositTo(verifyingPaymasterAddress as string, { value: (parseEther('.01').sub(paymasterBal)) })
   
-  const uqNFT = UqNFT__factory.connect(process.env.UQNFT as string, eoaAASigner)
+  // const uqNFT = UqNFT__factory.connect(process.env.UQNFT as string, eoaAASigner)
 
-  const name = domainToDNSWireFormat('dlls.uq').toString('hex')
-  const data = await uqNFT.populateTransaction.register(
-    arrayify('0x'+name), aaAddress
-  )
+  // const name = domainToDNSWireFormat('uqqqqq.uq').toString('hex')
+  // const data = await uqNFT.populateTransaction.register(
+  //   arrayify('0x'+name), aaAddress
+  // )
 
-  const rcpt = await eoaAASigner.sendTransaction(
-    { to: uqNFT.address, data: data.data },
-    // { to: aaAddress },
-    vpSigner
-  )
+  // const rcpt = await eoaAASigner.sendTransaction(
+  //   { to: uqNFT.address, data: data.data },
+  //   vpSigner
+  // )
 
 })()
 

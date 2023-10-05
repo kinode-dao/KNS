@@ -106,6 +106,24 @@ contract AAScript is Script {
 
 }
 
+contract DepositToPaymaster is Script {
+
+    function run () public {
+
+        IEntryPoint entrypoint = IEntryPoint(vm.envAddress("AA_ENTRYPOINT"));
+
+        address paymaster = vm.envAddress("AA_VERIFYING_PAYMASTER");
+
+        vm.startBroadcast();
+
+        entrypoint.depositTo{value: .1 ether}(paymaster);
+
+        vm.stopBroadcast();
+
+    }
+
+}
+
 contract DeployVerifyingPaymaster is Script {
 
     function run () public {

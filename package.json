@@ -17,9 +17,9 @@
     "test-dev": "npx hardhat test --network dev",
     "ci": "yarn compile && hardhat test && yarn run runop",
     "exampleSend": "npx hardhat run ts/exampleSend.ts ",
-    "exampleSendWithPaymaster": "npx hardhat run ts/exampleSendWithPaymaster.ts ",
-    "exampleRegister": "npx hardhat run ts/exampleRegister.ts ",
-    "exampleRegisterWithPaymaster": "npx hardhat run ts/exampleRegisterWithPaymaster.ts ",
+    "exampleSendWithPaymaster": "npx hardhat run ts/examples/exampleSendWithPaymaster.ts ",
+    "exampleRegister": "npx hardhat run ts/examples/exampleRegister.ts ",
+    "exampleRegisterWithPaymaster": "npx hardhat run ts/examples/exampleRegisterWithPaymaster.ts ",
     "runop-goerli": "AA_URL=https://account-abstraction-goerli.nethermind.io yarn runop --network goerli",
     "runop3": "npx hardhat run src/runop3.ts "
   },

@@ -49,15 +49,19 @@ export function rpcUserOpSender (
     const cleanUserOp = Object.keys(userOp).map(key => {
       let val = (userOp as any)[key]
       if (typeof val !== 'string' || !val.startsWith('0x')) {
+        console.log("VAL", val)
         val = hexValue(val)
       }
       return [key, val]
     })
       .reduce((set, [k, v]) => ({ ...set, [k]: v }), {})
 
-    await provider.send('eth_sendUserOperation', [cleanUserOp, entryPointAddress]).catch(e => {
-      throw e.error ?? e
-    })
+    console.log("clean user op", cleanUserOp)
+
+    await provider
+      .send('eth_sendUserOperation', [cleanUserOp, entryPointAddress])
+      .catch(e => { throw e.error ?? e })
+
     return undefined
   }
 }
