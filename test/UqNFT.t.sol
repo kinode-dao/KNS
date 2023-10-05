@@ -184,8 +184,8 @@ contract QNSTest is TestUtils {
         assertEq(uqNft2.baseNode(), getNodeId("alices-node.uq"));
 
         // try to register subdomain on alice.uq
-        vm.prank(alice);
-        uqNft2.register(getDNSWire("sub.alices-node.uq"), alice, new bytes[](0));
+        vm.prank(bob);
+        uqNft2.register(getDNSWire("bob.alices-node.uq"), bob, new bytes[](0));
 
         (address actualSubNft, uint96 actualSubProtocols) = qnsRegistry.records(getNodeId("alices-node.uq"));
         assertEq(actualSubNft, address(uqNft2));
