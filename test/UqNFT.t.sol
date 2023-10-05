@@ -132,16 +132,16 @@ contract QNSTest is TestUtils {
 
     function test_cannotRegister3LTLDFromUqNftUsingRegister() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("uq.uq"), alice);
+        uqNft.register(getDNSWire("uq.uq"), alice, new bytes[](0));
         
         vm.prank(alice);
         vm.expectRevert("UqNFT: only subdomains of baseNode can be registered");
-        uqNft.register(getDNSWire("sub.uq.uq"), alice);
+        uqNft.register(getDNSWire("sub.uq.uq"), alice, new bytes[](0));
     }
 
     function test_cannotRegister3LTLDDirectToRegistry() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alice.uq"), alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, new bytes[](0));
         
         vm.prank(alice);
         vm.expectRevert("QNSRegistry: only parent domain owner can register subdomain contract");
@@ -150,7 +150,7 @@ contract QNSTest is TestUtils {
 
     function test_allowSubdomainsFailsWhenNot2LTLD() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alice.uq"), alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, new bytes[](0));
 
         vm.prank(alice);
         vm.expectRevert("UqNFT: only subdomains of baseNode can be registered");
@@ -159,7 +159,7 @@ contract QNSTest is TestUtils {
 
     function test_allowSubdomainsFailsWhenNotOwner() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alice.uq"), alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, new bytes[](0));
 
         vm.prank(bob);
         vm.expectRevert("UqNFT: only owner of node can allow subdomains");
@@ -169,7 +169,7 @@ contract QNSTest is TestUtils {
     function test_allowSubdomains() public {
         // register alice.uq
         vm.prank(alice);
-        uqNft.register(getDNSWire("alice.uq"), alice);
+        uqNft.register(getDNSWire("alice.uq"), alice, new bytes[](0));
 
         // allow subdomains on alice.uq
         vm.prank(alice);
@@ -185,7 +185,7 @@ contract QNSTest is TestUtils {
 
         // try to register subdomain on alice.uq
         vm.prank(alice);
-        uqNft2.register(getDNSWire("sub.alice.uq"), alice);
+        uqNft2.register(getDNSWire("sub.alice.uq"), alice, new bytes[](0));
 
         (address actualSubNft, uint96 actualSubProtocols) = qnsRegistry.records(getNodeId("alice.uq"));
         assertEq(actualSubNft, address(uqNft2));

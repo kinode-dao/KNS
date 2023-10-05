@@ -9,10 +9,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../interfaces/IQNS.sol";
 import "../interfaces/IQNSNFT.sol";
 import "../lib/BytesUtils.sol";
+import "../lib/Multicallable.sol";
 
 error MustChooseStaticOrRouted();
 
-contract QNSRegistry2 is IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
+contract QNSRegistry2 is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
     // Has pointers to NFT contract (ownership) and protocols

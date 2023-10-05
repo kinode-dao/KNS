@@ -48,7 +48,8 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     // TODO probably want two versions of this: a payable versions and an invite code version
     function register(
         bytes calldata name,
-        address owner
+        address owner,
+        bytes[] calldata recordCallData
     ) public {
         // TODO check that name is >= 9 characters
         (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
@@ -59,6 +60,10 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
 
         _safeMint(owner, node, "");
         qns.registerNode(name);
+
+        if (recordCallData.length > 0) 
+            qns.multicallWithNodeCheck(node, recordCallData);
+
     }
 
     function allowSubdomains(
