@@ -39,7 +39,7 @@ forge verify-contract \
     --watch \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0x2AFC8D61c2Dc9a3B40D85F5207f40de81d4A86e7 \
+    0x6E02370188a75c996afA16Ea6F3Cc38796EeEeFc \
     src/QNSRegistry.sol:QNSRegistry
 
 forge verify-contract \
@@ -58,7 +58,7 @@ forge verify-contract \
     --watch \
     --etherscan-api-key $ETHERSCAN_API_KEY \
     --compiler-version v0.8.21+commit.d9974bed \
-    0xAf763608ad4E3ffEbbE5B5B0DCDe140d282C4457 \
+    0xf8d0Db16626Fd3AD12b27C7f4c97B8a080D098aB \
     src/UqNFT.sol:UqNFT
 
 forge verify-contract \
