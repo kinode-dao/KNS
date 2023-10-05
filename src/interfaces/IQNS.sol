@@ -11,7 +11,7 @@ interface IQNS is IMulticallable {
     // QNS node data
     struct Record {
         // contract that controls ownership logic of QNS id
-        address owner;
+        address ownershipResolver;
         // room for 96 protocols
         uint96 protocols;
     }
@@ -19,8 +19,9 @@ interface IQNS is IMulticallable {
     // Websocket data associated with a QNS node
     struct WsRecord {
         bytes32 publicKey;
-        uint48 ipAndPort;
-        bytes32[] routers; // TODO maybe string[] instead?
+        uint32 ip;
+        uint16 port;
+        bytes32[] routers;
     }
 
     // Logged whenever a QNS node is created
@@ -29,14 +30,22 @@ interface IQNS is IMulticallable {
     // Logged whenever a QNS adds/drops support for subdomaining
     event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
 
+    // Logged whenever a QNS node clears all protocols
+    event ProtocolsCleared(uint256 indexed node);
+
     // Logged whenever a QNS node's websocket information is updated.
     event WsChanged(
         uint256 indexed node,
         uint96 indexed protocols, // TODO do we need this?
         bytes32 publicKey,
-        uint48 ipAndPort,
-        bytes32[] routers // TODO maybe string?
+        uint32 ip,
+        uint16 port,
+        bytes32[] routers
     );
+
+    //
+    // externals
+    //
 
     function registerSubdomainContract(
         bytes calldata fqdn,
@@ -55,7 +64,15 @@ interface IQNS is IMulticallable {
         bytes32[] calldata routers
     ) external;
 
+    //
+    // views
+    //
+
     function ws(
         uint256 node
     ) external view returns (WsRecord memory);
+
+    function resolve(
+        bytes calldata fqdn
+    ) external view returns (address);
 }

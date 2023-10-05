@@ -30,7 +30,7 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         __UUPSUpgradeable_init();
         __Ownable_init();
 
-        records[0].owner = msg.sender;
+        records[0].ownershipResolver = msg.sender;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -48,14 +48,14 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         
         nft.setBaseNode(node);
         
-        address owner = records[uint256(parentNode)].owner;
+        address owner = records[uint256(parentNode)].ownershipResolver;
         require(
             msg.sender == owner,
             "QNSRegistry: only parent domain owner can register subdomain contract"
         );
         // TODO could check that nft implements IQNSNFT via ERC165
         records[node] = Record({
-            owner: address(nft),
+            ownershipResolver: address(nft),
             protocols: 0
         });
 
@@ -68,9 +68,9 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     ) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
-        address parentOwner = records[uint256(parentNode)].owner;
+        address resolver = records[uint256(parentNode)].ownershipResolver;
         require(
-            msg.sender == parentOwner,
+            msg.sender == resolver,
             "QNSRegistry: only NFT contract can register node for a subdomain"
         );
 
@@ -80,7 +80,7 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         records[node] = Record({
             // NOTE: domain is under the control of the parent NFT contract
             // until registerSubdomainContract is called
-            owner: msg.sender,
+            ownershipResolver: msg.sender,
             protocols: 0
         });
 
@@ -94,7 +94,7 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         uint16 port,
         bytes32[] calldata routers
     ) external {
-        address parentOwner = records[uint256(node)].owner;
+        address parentOwner = records[uint256(node)].ownershipResolver;
         
         require(
             msg.sender == parentOwner || msg.sender == IERC721(parentOwner).ownerOf(node),
@@ -110,7 +110,8 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
             // TODO how bad is this gas-wise? I think on optimism we are fine for like 10 routers?
             require(
                 records[uint256(routers[i])].protocols & WEBSOCKETS != 0 &&
-                ws_records[uint256(routers[i])].ipAndPort != 0,
+                ws_records[uint256(routers[i])].ip != 0 &&
+                ws_records[uint256(routers[i])].port != 0,
                 "QNSRegistry: router does not support websockets"
             );
         }
@@ -120,22 +121,21 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
             "QNSRegistry: must specify either static ip/port or routers"
         );
 
-        uint48 ipAndPort = combineIpAndPort(ip, port);
-
         ws_records[node] = WsRecord(
             publicKey,
-            ipAndPort,
+            ip,
+            port,
             routers
         );
 
         Record storage record = records[node];
         record.protocols = record.protocols | WEBSOCKETS;
 
-        emit WsChanged(node, record.protocols, publicKey, ipAndPort, routers);
+        emit WsChanged(node, record.protocols, publicKey, ip, port, routers);
     }
 
     function clearProtocols(uint256 node, uint32 protocols) external {
-        address parentOwner = records[uint256(node)].owner;
+        address parentOwner = records[uint256(node)].ownershipResolver;
         
         require(
             msg.sender == parentOwner || msg.sender == IERC721(parentOwner).ownerOf(node),
@@ -144,12 +144,20 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         
         Record storage record = records[node];
         record.protocols = record.protocols & ~protocols;
-        // TODO this should emit an event
+
+        emit ProtocolsCleared(node);
     }
 
     //
     // views
     //
+
+    function resolve(bytes memory fqdn) external view returns (address) {
+        (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
+
+        IERC721 nft = IERC721(records[parentNode].ownershipResolver);
+        return nft.ownerOf(node);
+    }
 
     function ws(
         uint256 node
@@ -177,10 +185,6 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         bytes32 labelhash
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(node, labelhash));
-    }
-
-    function combineIpAndPort(uint32 ip, uint16 port) internal pure returns (uint48) {
-        return uint48((uint48(ip) << 16) | port);
     }
 
     //

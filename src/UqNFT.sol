@@ -51,7 +51,9 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
         address owner,
         bytes[] calldata recordCallData
     ) public {
-        // TODO check that name is >= 9 characters
+        // uq is 2 characters, +1 empty byte at the end, +2 DNS labels
+        require(name.length >= 14, "UqNFT: name must be at least 9 characters long");
+
         (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
         require(
             parentNode == baseNode,
