@@ -91,7 +91,7 @@ contract ProxyTests is TestUtils {
 
     function testUpgradeQNSRegistry() external {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         vm.prank(alice);
         qnsRegistry.setWsRecord(

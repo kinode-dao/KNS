@@ -144,7 +144,7 @@ contract QNSTest is TestUtils {
         vm.prank(alice);
         vm.expectEmit(true, false, false, true);
         emit NodeRegistered(getNodeId("alices-node.uq"), getDNSWire("alices-node.uq"));
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         (address actualNft, uint96 actualProtocols) = qnsRegistry.records(getNodeId("alices-node.uq"));
         assertEq(actualNft, address(uqNft));
@@ -153,7 +153,7 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordFailsWhenNotOwnerOrNft() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         console.logBytes(getDNSWire("alices-node.uq"));
 
         vm.prank(bob);
@@ -181,7 +181,7 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordFailsWhenNotStaticOrRouted() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         vm.prank(alice);
         vm.expectRevert("QNSRegistry: must specify either static ip/port or routers");
@@ -196,7 +196,7 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordFailsWhenPubKeyIsZero() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
 
         vm.prank(alice);
         vm.expectRevert("QNSRegistry: public key cannot be 0");
@@ -211,10 +211,10 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordFailsWhenRouterDoesNotSupportWebSockets() public {
         vm.prank(deployer);
-        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer);
+        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer, new bytes[](0));
         
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         bytes32[] memory routers = new bytes32[](1);
         routers[0] = bytes32(getNodeId("uqbar-router-1.uq"));
@@ -232,7 +232,7 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordFailsWhenRouterHasNoIpAndPort() public {
         vm.prank(deployer);
-        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer);
+        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer, new bytes[](0));
         vm.prank(deployer);
         qnsRegistry.setWsRecord(
             getNodeId("uqbar-router-1.uq"),
@@ -246,7 +246,7 @@ contract QNSTest is TestUtils {
         router2Routers[0] = bytes32(getNodeId("uqbar-router-1.uq"));
 
         vm.prank(deployer);
-        uqNft.register(getDNSWire("uqbar-router-2.uq"), deployer);
+        uqNft.register(getDNSWire("uqbar-router-2.uq"), deployer, new bytes[](0));
         vm.prank(deployer);
         qnsRegistry.setWsRecord(
             getNodeId("uqbar-router-2.uq"),
@@ -257,7 +257,7 @@ contract QNSTest is TestUtils {
         );
 
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         bytes32[] memory aliceRouters = new bytes32[](1);
         aliceRouters[0] = bytes32(getNodeId("uqbar-router-2.uq"));
@@ -275,7 +275,7 @@ contract QNSTest is TestUtils {
 
     function test_setWsRecordDirect() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
 
         vm.prank(alice);
         // TODO why are these broken
@@ -299,7 +299,7 @@ contract QNSTest is TestUtils {
     function test_setWsRecordIndirect() public {
         // set up router
         vm.prank(deployer);
-        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer);
+        uqNft.register(getDNSWire("uqbar-router-1.uq"), deployer, new bytes[](0));
         vm.prank(deployer);
         qnsRegistry.setWsRecord(
             getNodeId("uqbar-router-1.uq"),
@@ -310,7 +310,7 @@ contract QNSTest is TestUtils {
         );
 
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         bytes32[] memory routers = new bytes32[](1);
         routers[0] = bytes32(getNodeId("uqbar-router-1.uq"));
@@ -336,7 +336,7 @@ contract QNSTest is TestUtils {
 
     function test_transferFromAndClearProtocols() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
         
         vm.prank(alice);
         qnsRegistry.setWsRecord(
@@ -363,7 +363,7 @@ contract QNSTest is TestUtils {
 
     function test_resolveFailsWhenNodeNotRegistered3LD() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
 
         vm.expectRevert("ERC721: invalid token ID");
         qnsRegistry.resolve(getDNSWire("sub.alices-node.uq"));
@@ -376,20 +376,20 @@ contract QNSTest is TestUtils {
 
     function test_resolve() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
 
         assertEq(qnsRegistry.resolve(getDNSWire("alices-node.uq")), alice);
     }
 
     function test_resolve3LD() public {
         vm.prank(alice);
-        uqNft.register(getDNSWire("alices-node.uq"), alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
 
         vm.prank(alice);
         uqNft.allowSubdomains(getDNSWire("alices-node.uq"), uqNft2);
 
         vm.prank(bob);
-        uqNft2.register(getDNSWire("bob.alices-node.uq"), bob);
+        uqNft2.register(getDNSWire("bob.alices-node.uq"), bob, new bytes[](0));
 
         assertEq(qnsRegistry.resolve(getDNSWire("bob.alices-node.uq")), bob);
     }

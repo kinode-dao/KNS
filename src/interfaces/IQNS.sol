@@ -1,12 +1,13 @@
 pragma solidity >=0.8.4;
 
 import { IQNSNFT } from "./IQNSNFT.sol";
+import { IMulticallable } from "./IMulticallable.sol";
 
 
 // Record types
 uint32 constant WEBSOCKETS = 1;
 
-interface IQNS {
+interface IQNS is IMulticallable {
     // QNS node data
     struct Record {
         // contract that controls ownership logic of QNS id
