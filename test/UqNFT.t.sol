@@ -16,6 +16,14 @@ error MustChooseStaticOrRouted();
 contract QNSTest is TestUtils {
     // events
     event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
+    event WsChanged(
+        uint256 indexed node,
+        uint96 indexed protocols,
+        bytes32 publicKey,
+        uint32 ip,
+        uint16 port,
+        bytes32[] routers
+    );
 
     // addresses
     address public deployer = address(2);
@@ -194,5 +202,65 @@ contract QNSTest is TestUtils {
         // assert ownership information is still correct
         assertEq(bob, qnsRegistry.resolve(getDNSWire("bob.alices-node.uq")));
         assertEq(alice, qnsRegistry.resolve(getDNSWire("alices-node.uq")));
+    }
+
+    function testRegisterWithSettingWebsockets () public {
+
+        bytes[] memory records = new bytes[](1);
+        records[0] = abi.encodeWithSelector(
+            IQNS.setWsRecord.selector,
+            getNodeId("alices-node.uq"),
+            bytes32("0x1"),
+            uint32(1),
+            uint16(1),
+            new bytes32[](0)
+        );
+
+        vm.prank(alice);
+        vm.expectEmit(true, false, false, false);
+        emit WsChanged(getNodeId("alices-node.uq"), uint96(1), bytes32("0x1"), uint32(1), uint16(1), new bytes32[](0));
+        uqNft.register(getDNSWire("alices-node.uq"), alice, records);
+        assertEq(alice, qnsRegistry.resolve(getDNSWire("alices-node.uq")));
+
+    }
+
+    function testMulticallDoesNotAllowAlterationsOfAnothersRecord () public {
+
+        uint alicesNodeId = getNodeId("alices-node.uq");
+        uint bobsNodeId = getNodeId("bobs-node.uq");
+
+        vm.prank(alice);
+        uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
+
+        bytes[] memory records = new bytes[](2);
+
+        records[0] = abi.encodeWithSelector(
+            IQNS.setWsRecord.selector,
+            bobsNodeId,
+            bytes32("0x1"),
+            uint32(1),
+            uint16(1),
+            new bytes32[](0)
+        );
+
+        records[1] = abi.encodeWithSelector(
+            IQNS.setWsRecord.selector,
+            alicesNodeId,
+            bytes32("0x1"),
+            uint32(1),
+            uint16(1),
+            new bytes32[](0)
+        );
+
+        vm.prank(bob);
+        vm.expectRevert();
+        uqNft.register(getDNSWire("bobs-node.uq"), bob, records);
+
+        bytes[] memory recordsForSuccess = new bytes[](1);
+        recordsForSuccess[0] = records[0];
+
+        uqNft.register(getDNSWire("bobs-node.uq"), bob, recordsForSuccess);
+        assertEq(bob, qnsRegistry.resolve(getDNSWire("bobs-node.uq")));
+
     }
 }
