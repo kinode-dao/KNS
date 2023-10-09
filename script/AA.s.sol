@@ -30,10 +30,10 @@ contract AAScript is Script {
         paymasterPriv = vm.deriveKey(mnemonic, 0);
         paymasterPub = vm.rememberKey(paymasterPriv);
 
-        uint privk = vm.envUint("SNAKE");
+        uint privk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address payable pubk  = payable(vm.rememberKey(privk));
 
-        vm.startBroadcast(privk);
+        vm.startBroadcast(pubk);
 
         IEntryPoint entrypoint = IEntryPoint(vm.envAddress("AA_ENTRYPOINT"));
 
@@ -98,7 +98,7 @@ contract AAScript is Script {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
-        entrypoint.depositTo{value: 1 ether}(address(verifyingPaymaster));
+        entrypoint.depositTo{value: .5 ether}(address(verifyingPaymaster));
 
         entrypoint.handleOps(ops, pubk);
 
@@ -106,19 +106,20 @@ contract AAScript is Script {
 
 }
 
-contract DepositToPaymaster is Script {
+contract DepositIntoEntrypointForPaymaster is Script {
 
     function run () public {
 
+        uint privk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address payable pubk  = payable(vm.rememberKey(privk));
+
         IEntryPoint entrypoint = IEntryPoint(vm.envAddress("AA_ENTRYPOINT"));
 
-        address paymaster = vm.envAddress("AA_VERIFYING_PAYMASTER");
+        address verifyingPaymaster = vm.envAddress("AA_VERIFYING_PAYMASTER");
 
-        vm.startBroadcast();
+        vm.startBroadcast(pubk);
 
-        entrypoint.depositTo{value: .1 ether}(paymaster);
-
-        vm.stopBroadcast();
+        entrypoint.depositTo{value: .5 ether}(address(verifyingPaymaster));
 
     }
 
@@ -131,9 +132,12 @@ contract DeployVerifyingPaymaster is Script {
         uint256 paymasterPriv = vm.envUint("PRIV_PAYMASTER");
         address paymasterPub = vm.envAddress("PUB_PAYMASTER");
 
+        uint privk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address payable pubk  = payable(vm.rememberKey(privk));
+
         IEntryPoint entrypoint = IEntryPoint(vm.envAddress("AA_ENTRYPOINT"));
 
-        vm.startBroadcast();
+        vm.startBroadcast(pubk);
 
         VerifyingPaymaster verifyingPaymaster = new VerifyingPaymaster(
             address(entrypoint),
