@@ -3,3 +3,4 @@
 @ensdomains/buffer/=lib/buffer/
 @gnosis.pm/safe-contracts/=/lib/safe-contracts/contracts
 ens-contracts/=lib/ens-contracts/contracts
+layer-zero/=lib/LayerZero/contracts
