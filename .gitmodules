@@ -19,3 +19,6 @@
 [submodule "lib/safe-contracts"]
 	path = lib/safe-contracts
 	url = https://github.com/safe-global/safe-contracts
+[submodule "lib/LayerZero"]
+	path = lib/LayerZero
+	url = https://github.com/LayerZero-Labs/LayerZero
