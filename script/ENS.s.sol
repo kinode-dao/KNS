@@ -9,20 +9,20 @@ import { IETHRegistrarController } from "ens-contracts/ethregistrar/IETHRegistra
 import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
 contract RegisterArgsAndScript is Script {
-    string name = "uqbartesting.eth";
-    address owner = msg.sender;
+    string name = "testuqbar.eth";
+    address owner = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
     uint256 duration = 31536000;
     bytes32 secret = keccak256("secret");
     address resolver = vm.envAddress("ENS_GOERLI_PUBLIC_RESOLVER");
     bytes[] data;
     bool reverse = false;
     uint16 fuses = 0;
+    IETHRegistrarController ethRegistrar =
+        IETHRegistrarController(vm.envAddress("ENS_GOERLI_ETH_CONTROLLER"));
+
 }
 
 contract MakeCommitmentForETHName is RegisterArgsAndScript {
-
-    IETHRegistrarController ethRegistrar = 
-        IETHRegistrarController(vm.envAddress("ENS_GOERLI_ETH_CONTROLLER"));
 
     function run() public {
 
@@ -41,9 +41,6 @@ contract MakeCommitmentForETHName is RegisterArgsAndScript {
 }
 
 contract RegisterETHNameFromCommitment is RegisterArgsAndScript {
-
-    IETHRegistrarController ethRegistrar = 
-        IETHRegistrarController(vm.envAddress("ENS_GOERLI_ETH_CONTROLLER"));
 
     function run() public {
 
