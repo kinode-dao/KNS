@@ -10,6 +10,12 @@ interface IQnsEnsExit {
         uint16 _entryChain
     ) external;
 
+    function setQnsRecords (
+        address owner,
+        bytes calldata fqdn,
+        bytes[] calldata data
+    ) external;
+
     function ping () external;
 
 }
