@@ -3,7 +3,7 @@ pragma solidity ~0.8.17;
 
 import { ILayerZeroEndpoint } from "layer-zero/interfaces/ILayerZeroEndpoint.sol";
 
-contract QnsEnsEntrypoint {
+contract QnsEnsEntry {
 
     ILayerZeroEndpoint public lz;
     uint16 public lzc;
