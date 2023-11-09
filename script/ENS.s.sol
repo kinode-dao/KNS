@@ -9,7 +9,7 @@ import { IETHRegistrarController } from "ens-contracts/ethregistrar/IETHRegistra
 import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
 contract RegisterArgsAndScript is Script {
-    string name = "testuqbar.eth";
+    string name = "uqtest";
     address owner = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
     uint256 duration = 31536000;
     bytes32 secret = keccak256("secret");
