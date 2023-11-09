@@ -4,7 +4,7 @@ pragma solidity ~0.8.17;
 import { ILayerZeroEndpoint } from "layer-zero/interfaces/ILayerZeroEndpoint.sol";
 import { ExcessivelySafeCall } from "./lib/ExcessivelySafeCall.sol";
 
-contract QnsEnsEndpoint {
+contract QnsEnsExit {
 
     ILayerZeroEndpoint public lz;
     uint16 public lzc;
