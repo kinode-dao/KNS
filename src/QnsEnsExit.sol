@@ -2,29 +2,42 @@
 pragma solidity ~0.8.17;
 
 import { ILayerZeroEndpoint } from "layer-zero/interfaces/ILayerZeroEndpoint.sol";
+
 import { ExcessivelySafeCall } from "./lib/ExcessivelySafeCall.sol";
 import { BytesUtils } from "./lib/BytesUtils.sol";
 import { IQnsEnsExit } from "./interfaces/IQnsEnsExit.sol";
-
+import { IQNS } from "./interfaces/IQNS.sol";
 
 contract QnsEnsExit is IQnsEnsExit {
 
+    error EthNameTooShort();
+    error NotEthName();
+
     using BytesUtils for bytes;
 
+    bytes32 constant DOT_ETH_HASH = 0xc65934a88d283a635602ca15e14e8b9a9a3d150eacacca3b07f4a85f5fdbface;
+
+    ILayerZeroEndpoint 
+            immutable public lz;
+    uint16  immutable public lzc;
     address immutable public qns;
+
     address immutable public owner;
-    ILayerZeroEndpoint public lz;
-    uint16 public lzc;
 
     mapping (uint16 => bytes) public trustedentries;
 
     modifier onlyowner () { require(msg.sender == owner); _; }
     modifier onlythis () { require(msg.sender == address(this)); _; }
 
-    constructor (address _lz, uint16 _lzc) {
+    constructor (
+        address _qns,
+        address _lz, 
+        uint16 _lzc
+    ) {
 
         owner = msg.sender;
 
+        qns = _qns;
         lz = ILayerZeroEndpoint(_lz);
         lzc = _lzc;
 
@@ -38,14 +51,25 @@ contract QnsEnsExit is IQnsEnsExit {
     }
 
     function setQnsRecords (
-        bytes calldata node,
         address owner,
+        bytes calldata fqdn,
         bytes[] calldata data
     ) external onlythis {
 
+        if (fqdn.length < 5) 
+            revert EthNameTooShort();
 
-        (uint256 node, uint256 parentNode) = _getParentAndChildNodes(name);
+        if (DOT_ETH_HASH != keccak256(fqdn[fqdn.length-5:fqdn.length]))
+            revert NotEthName();
 
+        IQNS(qns).registerNode(fqdn);
+
+    }
+
+    function simulate (bytes calldata _payload) external {
+
+        ExcessivelySafeCall.excessivelySafeCall
+            ( address(this), gasleft(), 150, _payload );
 
     }
 
