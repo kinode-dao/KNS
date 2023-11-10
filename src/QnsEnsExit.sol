@@ -64,6 +64,9 @@ contract QnsEnsExit is IQnsEnsExit {
 
         IQNS(qns).registerNode(fqdn);
 
+        if (data.length != 0) 
+            IQNS(qns).multicallWithNodeCheck(uint(fqdn.namehash(0)), data);
+
     }
 
     function simulate (bytes calldata _payload) external {
