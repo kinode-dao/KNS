@@ -73,9 +73,9 @@ contract QnsEnsEntry {
         if (owner != msg.sender) revert NotEnsOwner();
 
         bytes memory payload = abi.encodeWithSelector
-            (IQnsEnsExit.setQnsRecords.selector, fqdn, data);
+            (IQnsEnsExit.setQnsRecords.selector, msg.sender, fqdn, data);
 
-        lzSend(payload, msg.sender, new bytes(""));
+        lzSend(payload, bytes(""));
 
     }
 
