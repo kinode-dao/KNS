@@ -8,6 +8,8 @@ import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.s
 import { IETHRegistrarController } from "ens-contracts/ethregistrar/IETHRegistrarController.sol";
 import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
+import { BytesUtils } from "../src/lib/BytesUtils.sol";
+
 import { IQNS } from "../src/interfaces/IQNS.sol";
 import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
 import { QnsEnsExit } from "../src/QnsEnsExit.sol";
@@ -80,10 +82,21 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
 
         inputs[2] = "uqtest.eth";
         bytes memory testuqbar = vm.ffi(inputs);
+        uint256 testuqbarnode = uint(BytesUtils.namehash(testuqbar, 0));
+
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeWithSelector(
+            IQNS.setWsRecord.selector,
+            testuqbarnode, 
+            keccak256("yes"), 
+            type(uint32).max, 
+            type(uint16).max, 
+            new bytes32[](0)
+        );
 
         entry.setQnsRecords(
             testuqbar,
-            new bytes[](0)
+            data
         );
 
         vm.stopBroadcast();
