@@ -8,6 +8,8 @@ import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.s
 import { IETHRegistrarController } from "ens-contracts/ethregistrar/IETHRegistrarController.sol";
 import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
+import { IQNS } from "../src/interfaces/IQNS.sol";
+import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
 import { QnsEnsExit } from "../src/QnsEnsExit.sol";
 import { QnsEnsEntry } from "../src/QnsEnsEntry.sol";
 
@@ -15,39 +17,47 @@ contract EnvironmentAndScript is Script {
 
     uint ENTRY_RPC = vm.createFork(vm.envString("RPC_GOERLI"));
     uint EXIT_RPC = vm.createFork(vm.envString("RPC_SEPOLIA"));
+    uint PRIVKEY = vm.envUint("PRIVATE_KEY");
+    IQNS qns = IQNS(vm.envAddress("QNS_TEST_QNS_REGISTRY"));
+    QnsEnsExit exit = QnsEnsExit(vm.envAddress("QNS_SEPOLIA_ENS_EXIT"));
+    QnsEnsEntry entry = QnsEnsEntry(payable(vm.envAddress("QNS_GOERLI_ENS_ENTRY")));
+    address ensregistry = vm.envAddress("ENS_GOERLI_REGISTRY");
+    address ensnamewrapper = vm.envAddress("ENS_GOERLI_NAME_WRAPPER");
 
 }
 
-contract DeployENSEntry is EnvironmentAndScript {
+contract DeployENSEntry is EnvironmentAndScript 
+    { function run() public { } }
 
-    function run() public { }
-
-}
-
-contract DeployENSExit is EnvironmentAndScript {
-
-    function run() public { }
-
-}
+contract DeployENSExit is EnvironmentAndScript 
+    { function run() public { } }
 
 contract DeployEnsEntryExitPair is EnvironmentAndScript {
-
-    QnsEnsExit exit;
-    QnsEnsEntry entry;
 
     function run() public {
 
         vm.selectFork(EXIT_RPC);
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        vm.startBroadcast(PRIVKEY);
         exit = new QnsEnsExit(
+            address(qns),
             vm.envAddress("LZ_EP_SEPOLIA"),
             uint16(vm.envUint("LZ_CID_SEPOLIA"))
         );
 
+        string[] memory inputs = new string[](3);
+        inputs[0] = "./dnswire/target/debug/dnswire";
+        inputs[1] = "--to-hex";
+        inputs[2] = "eth";
+        bytes memory eth = vm.ffi(inputs);
+
+        qns.registerSubdomainContract(eth, IQNSNFT(address(exit)));
+
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        vm.startBroadcast(PRIVKEY);
         entry = new QnsEnsEntry(
+            ensregistry,
+            ensnamewrapper,
             vm.envAddress("LZ_EP_GOERLI"),
             uint16(vm.envUint("LZ_CID_GOERLI")),
             address(exit),
@@ -57,7 +67,7 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
 
         vm.stopBroadcast();
         vm.selectFork(EXIT_RPC);
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        vm.startBroadcast(PRIVKEY);
         exit.setEntry(
             address(entry), 
             uint16(vm.envUint("LZ_CID_GOERLI"))
@@ -65,10 +75,53 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
 
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        vm.startBroadcast(PRIVKEY);
         entry.ping();
 
+        inputs[2] = "uqtest.eth";
+        bytes memory testuqbar = vm.ffi(inputs);
+
+        entry.setQnsRecords(
+            testuqbar,
+            new bytes[](0)
+        );
+
         vm.stopBroadcast();
+
+    }
+}
+
+contract CashQnsEnsEntry is EnvironmentAndScript {
+    function run () public {
+        vm.selectFork(ENTRY_RPC);
+        vm.startBroadcast(PRIVKEY);
+        entry.cash();
+    }
+}
+
+contract SimulateQnsEnsExit is EnvironmentAndScript {
+    function run () public {
+
+        vm.selectFork(EXIT_RPC);
+
+        address from = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
+        vm.startPrank(from);
+
+        exit = new QnsEnsExit(
+            address(qns),
+            vm.envAddress("LZ_EP_SEPOLIA"),
+            uint16(vm.envUint("LZ_CID_SEPOLIA"))
+        );
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "./dnswire/target/debug/dnswire";
+        inputs[1] = "--to-hex";
+        inputs[2] = "eth";
+        bytes memory eth = vm.ffi(inputs);
+
+        qns.registerSubdomainContract(eth, IQNSNFT(address(exit)));
+
+        exit.simulate(vm.envBytes("PAYLOAD"));
 
     }
 }
