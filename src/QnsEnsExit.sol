@@ -24,6 +24,8 @@ contract QnsEnsExit is IQnsEnsExit {
 
     address immutable public owner;
 
+    mapping (uint => address) public ensowners;
+
     mapping (uint16 => bytes) public trustedentries;
 
     modifier onlyowner () { require(msg.sender == owner); _; }
@@ -43,11 +45,8 @@ contract QnsEnsExit is IQnsEnsExit {
 
     }
 
-    function setEntry (address _entry, uint16 _entrychain) public {
-        require(msg.sender == owner);
-
-        trustedentries[_entrychain] = 
-            abi.encodePacked(_entry, address(this));
+    function setEntry (address _entry, uint16 _entrychain) public onlyowner {
+        trustedentries[_entrychain] = abi.encodePacked(_entry, address(this));
     }
 
     function setQnsRecords (
@@ -55,6 +54,7 @@ contract QnsEnsExit is IQnsEnsExit {
         bytes calldata fqdn,
         bytes[] calldata data
     ) external onlythis {
+
 
         if (fqdn.length < 5) 
             revert EthNameTooShort();
@@ -64,9 +64,21 @@ contract QnsEnsExit is IQnsEnsExit {
 
         IQNS(qns).registerNode(fqdn);
 
-        if (data.length != 0) 
-            IQNS(qns).multicallWithNodeCheck(uint(fqdn.namehash(0)), data);
+        uint node = uint(fqdn.namehash(0));
 
+        ensowners[node] = owner;
+
+        if (data.length != 0) 
+            IQNS(qns).multicallWithNodeCheck(node, data);
+
+    }
+
+    function ownerOf (
+        uint256 node
+    ) public returns (
+        address
+    ) {
+        return ensowners[node];
     }
 
     function simulate (bytes calldata _payload) external {
