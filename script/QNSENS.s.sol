@@ -80,7 +80,7 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         vm.startBroadcast(PRIVKEY);
         entry.ping();
 
-        inputs[2] = "uqtest.eth";
+        inputs[2] = "uqtesttest.eth";
         bytes memory testuqbar = vm.ffi(inputs);
         uint256 testuqbarnode = uint(BytesUtils.namehash(testuqbar, 0));
 
@@ -101,6 +101,27 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
 
         vm.stopBroadcast();
 
+    }
+}
+
+contract SetWsForEnsNameOnQns is EnvironmentAndScript {
+    function run () public {
+        vm.selectFork(EXIT_RPC);
+        vm.startBroadcast(PRIVKEY);
+        console.log("QNS", address(qns));
+        string[] memory inputs = new string[](3);
+        inputs[0] = "./dnswire/target/debug/dnswire";
+        inputs[1] = "--to-hex";
+        inputs[2] = "uqtesttest.eth";
+        bytes memory testuqbarnode = vm.ffi(inputs);
+        qns.setWsRecord(
+            uint(BytesUtils.namehash(testuqbarnode, 0)), 
+            keccak256("yes"), 
+            type(uint32).max, 
+            type(uint16).max, 
+            new bytes32[](0)
+        );
+        vm.stopBroadcast();
     }
 }
 
@@ -137,4 +158,16 @@ contract SimulateQnsEnsExit is EnvironmentAndScript {
         exit.simulate(vm.envBytes("PAYLOAD"));
 
     }
+}
+
+contract NameHash is EnvironmentAndScript {
+    function run () public {
+        string[] memory inputs = new string[](3);
+        inputs[0] = "./dnswire/target/debug/dnswire";
+        inputs[1] = "--to-hex";
+        inputs[2] = "eth";
+        bytes memory node = vm.ffi(inputs);
+        console.log("node", uint(BytesUtils.namehash(node, 0)));
+    }
+
 }
