@@ -43,7 +43,10 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     // externals
     //
 
-    function registerSubdomainContract(bytes calldata fqdn, IQNSNFT nft) external {
+    function registerSubdomainContract (
+        bytes calldata fqdn, 
+        IQNSNFT nft
+    ) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
         
         nft.setBaseNode(node);
@@ -63,7 +66,7 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     }
 
     // this function is called once on mint by the NFT contract
-    function registerNode(
+    function registerNode (
         bytes calldata fqdn
     ) external {
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
@@ -134,7 +137,11 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         emit WsChanged(node, record.protocols, publicKey, ip, port, routers);
     }
 
-    function clearProtocols(uint256 node, uint32 protocols) external {
+    function clearProtocols (
+        uint256 node, 
+        uint32 protocols
+    ) external {
+
         address parentOwner = records[uint256(node)].ownershipResolver;
         
         require(
@@ -152,14 +159,17 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     // views
     //
 
-    function resolve(bytes memory fqdn) external view returns (address) {
+    function resolve (
+        bytes memory fqdn
+    ) external view returns (address) {
+
         (uint256 node, uint256 parentNode) = _getNodeAndParent(fqdn);
 
         IERC721 nft = IERC721(records[parentNode].ownershipResolver);
         return nft.ownerOf(node);
     }
 
-    function ws(
+    function ws (
         uint256 node
     ) external view virtual override returns (WsRecord memory) {
         require(
@@ -173,14 +183,18 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     // internals
     //
 
-    function _getNodeAndParent(bytes memory fqdn) internal pure returns (uint256, uint256) {
+    function _getNodeAndParent (
+        bytes memory fqdn
+    ) internal pure returns (uint256, uint256) {
+
         (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
         bytes32 node = _makeNode(parentNode, labelhash);
         return (uint256(node), uint256(parentNode));
+
     }
 
-    function _makeNode(
+    function _makeNode (
         bytes32 node,
         bytes32 labelhash
     ) internal pure returns (bytes32) {
@@ -191,7 +205,9 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     // ERC165
     //
 
-    function supportsInterface(bytes4 interfaceID) public view override returns (bool) {
+    function supportsInterface (
+        bytes4 interfaceID
+    ) public view override returns (bool) {
         return
             interfaceID == type(IQNS).interfaceId ||
             super.supportsInterface(interfaceID);
