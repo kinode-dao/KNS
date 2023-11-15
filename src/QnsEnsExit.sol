@@ -10,8 +10,11 @@ import { IQNS } from "./interfaces/IQNS.sol";
 
 contract QnsEnsExit is IQnsEnsExit {
 
-    error EthNameTooShort();
     error NotEthName();
+    error EthNameTooShort();
+    error ParentNotRegistered();
+
+    event Error(bytes4 error);
 
     using BytesUtils for bytes;
 
@@ -43,6 +46,8 @@ contract QnsEnsExit is IQnsEnsExit {
         lz = ILayerZeroEndpoint(_lz);
         lzc = _lzc;
 
+        ensowners[uint(DOT_ETH_HASH)] = address(this);
+
     }
 
     function setEntry (address _entry, uint16 _entrychain) public onlyowner {
@@ -55,21 +60,24 @@ contract QnsEnsExit is IQnsEnsExit {
         bytes[] calldata data
     ) external onlythis {
 
-
         if (fqdn.length < 5) 
             revert EthNameTooShort();
 
         if (DOT_ETH_HASH != keccak256(fqdn[fqdn.length-5:fqdn.length]))
             revert NotEthName();
+        
+        ( uint parent, uint child ) = 
+            _getParentAndChildNodes(fqdn);
+
+        if (ensowners[parent] == address(0))
+            revert ParentNotRegistered();
+
+        ensowners[child] = owner;
 
         IQNS(qns).registerNode(fqdn);
 
-        uint node = uint(fqdn.namehash(0));
-
-        ensowners[node] = owner;
-
         if (data.length != 0) 
-            IQNS(qns).multicallWithNodeCheck(node, data);
+            IQNS(qns).multicallWithNodeCheck(child, data);
 
     }
 
@@ -114,23 +122,29 @@ contract QnsEnsExit is IQnsEnsExit {
             "!trusted"
         );
 
-        ExcessivelySafeCall.excessivelySafeCall
-            ( address(this), gasleft(), 150, _payload );
+        ( bool success, bytes memory data) = 
+            ExcessivelySafeCall.excessivelySafeCall
+                ( address(this), gasleft(), 150, _payload );
+        
+        if (!success) {
+            bytes4 selector;
+            assembly { selector := mload(add(data, 0x20)) }
+            emit Error(selector);
+        }
         
     }
 
     function _getParentAndChildNodes(bytes memory fqdn) internal pure returns (uint256 node, uint256 parentNode) {
-        (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
-        bytes32 parentNode = fqdn.namehash(offset);
-        uint256 node = uint256(_makeNode(parentNode, labelhash));
-        return (node, uint256(parentNode));
+        (bytes32 label, uint256 offset) = fqdn.readLabel(0);
+        bytes32 parent = fqdn.namehash(offset);
+        return (uint256(parent), _makeNode(parent, label));
     }
 
     function _makeNode(
         bytes32 node,
         bytes32 labelhash
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(node, labelhash));
+    ) internal pure returns (uint256) {
+        return uint(keccak256(abi.encodePacked(node, labelhash)));
     }
 
 }
