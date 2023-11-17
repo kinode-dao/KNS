@@ -80,7 +80,7 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         vm.startBroadcast(PRIVKEY);
         entry.ping();
 
-        inputs[2] = "uqtesttest.eth";
+        inputs[2] = "qutset.testuq.eth";
         bytes memory testuqbar = vm.ffi(inputs);
         uint256 testuqbarnode = uint(BytesUtils.namehash(testuqbar, 0));
 
@@ -108,7 +108,6 @@ contract SetWsForEnsNameOnQns is EnvironmentAndScript {
     function run () public {
         vm.selectFork(EXIT_RPC);
         vm.startBroadcast(PRIVKEY);
-        console.log("QNS", address(qns));
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
         inputs[1] = "--to-hex";
@@ -168,6 +167,34 @@ contract NameHash is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory node = vm.ffi(inputs);
         console.log("node", uint(BytesUtils.namehash(node, 0)));
+    }
+
+}
+
+contract Thing is EnvironmentAndScript {
+
+    error MyError(address,address);
+
+    function run () public {
+        (bool success, bytes memory data) = address(this).call(abi.encodeWithSelector(this.thing.selector));
+        if (!success){ 
+            console.log("!success"); 
+            console.logBytes(data);
+            bytes4 selector;
+            assembly { selector := mload(add(data, 0x20)) }
+            console.logBytes4(selector);
+            // (bytes4 sel, address one, address two) = abi.decode(data, (bytes4, address,address));
+            (bytes4 sel) = abi.decode(data, (bytes4));
+            // console.logBytes4(abi.decode(data, (bytes4,address,address)));
+            // console.log("one", one);
+            // console.log("two", two);
+            // console.log("sel");
+            // console.logBytes8(selector);
+        }
+    }
+    function thing () external {
+
+        revert MyError(address(this), address(this));
     }
 
 }

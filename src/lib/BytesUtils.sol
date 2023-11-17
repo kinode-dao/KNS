@@ -38,6 +38,26 @@ library BytesUtils {
         return
             keccak256(abi.encodePacked(namehash(self, newOffset), labelhash));
     }
+    function namehashAndTLD(
+        bytes memory self
+    ) internal pure returns (bytes32, bytes32) { 
+        return namehashAndTLDhash(self, 0);
+    }
+
+    function namehashAndTLDhash(
+        bytes memory self,
+        uint256 offset
+    ) internal pure returns (bytes32, bytes32) {
+        (bytes32 labelhash, uint256 newOffset) = readLabel(self, offset);
+        if (labelhash == bytes32(0)) {
+            require(offset == self.length - 1, "namehash: Junk at end of name");
+            return (bytes32(0), bytes32(0));
+        }
+        (bytes32 _namehash, bytes32 tldhash) = namehashAndTLDhash(self, newOffset);
+        if (tldhash == bytes32(0)) tldhash = labelhash;
+        return (keccak256(abi.encodePacked(_namehash, labelhash)), tldhash);
+
+    }
 
     /**
      * @dev Returns the keccak-256 hash of a DNS-encoded label, and the offset to the start of the next label.
@@ -59,4 +79,15 @@ library BytesUtils {
         }
         newIdx = idx + len + 1;
     }
+
+    function labelLen(
+        bytes memory self,
+        uint256 idx
+    ) internal pure returns (
+        uint256 len
+    ) {
+        len = uint256(uint8(self[idx]));
+
+    }
+
 }
