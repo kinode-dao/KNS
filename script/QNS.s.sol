@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Script, console } from "forge-std/Script.sol";
 
-import { QNSRegistry } from "../src/QNSRegistry.sol";
+import { QNSRegistryResolver } from "../src/QNSRegistryResolver.sol";
 import { UqNFT } from "../src/UqNFT.sol";
-import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
+import { ITLDRegistrar } from "../src/interfaces/ITLDRegistrar.sol";
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
 contract QNSScript is Script {
@@ -16,14 +16,14 @@ contract QNSScript is Script {
         
         vm.startBroadcast(deployerPrivateKey);
 
-        QNSRegistry qnsRegistryImpl = new QNSRegistry();
+        QNSRegistryResolver qnsRegistryImpl = new QNSRegistryResolver();
 
-        QNSRegistry qnsRegistry = QNSRegistry(
+        QNSRegistryResolver qnsRegistry = QNSRegistryResolver(
             address(
                 new ERC1967Proxy(
                     address(qnsRegistryImpl),
                     abi.encodeWithSelector(
-                        QNSRegistry.initialize.selector
+                        QNSRegistryResolver.initialize.selector
                     )
                 )
             )
@@ -49,10 +49,7 @@ contract QNSScript is Script {
             )
         );
 
-        qnsRegistry.registerSubdomainContract(
-            baseNode,
-            IQNSNFT(uqNft)
-        );
+        qnsRegistry.registerTLDRegistrar(baseNode, address(uqNft));
     }
 }
 
@@ -67,7 +64,7 @@ contract QNSTest is Script {
         bytes memory wsPayload = vm.envBytes("WSCD");
         bytes memory regPayload = vm.envBytes("REGCD");
 
-        QNSRegistry newQNS = new QNSRegistry();
+        QNSRegistryResolver newQNS = new QNSRegistryResolver();
         bytes memory newcode = address(newQNS).code;
         vm.etch(QNS, newcode);
 
@@ -103,42 +100,48 @@ contract SetRouters is Script {
 
         bytes memory name;
         bytes[] memory records;
-        uint nameId;
+        bytes32 node;
 
         vm.startBroadcast();
 
         name = vm.ffi(inputs);
-        nameId = uint(BytesUtils.namehash(name, 0));
+        node = BytesUtils.namehash(name, 0);
 
-        records = new bytes[](1);
-        records[0] = abi.encodeWithSelector(
-            QNSRegistry.setWsRecord.selector, nameId,
-            bytes(""), WS_IP, WS_PORT, new bytes32[](0)
-        );
+        records = new bytes[](3);
+        records[0] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setKey.selector, node, bytes32(0) );
+        records[1] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setIp.selector, node, WS_IP );
+        records[2] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setWs.selector, node, WS_PORT );
 
         nft.register(name, msg.sender, records);
 
         inputs[2] = node2;
         name = vm.ffi(inputs);
-        nameId = uint(BytesUtils.namehash(name, 0));
+        node = BytesUtils.namehash(name, 0);
 
-        records = new bytes[](1);
-        records[0] = abi.encodeWithSelector(
-            QNSRegistry.setWsRecord.selector, nameId,
-            bytes(""), WS_IP, WS_PORT, new bytes32[](0)
-        );
+        records = new bytes[](3);
+        records[0] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setKey.selector, node, bytes32(0) );
+        records[1] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setIp.selector, node, WS_IP );
+        records[2] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setWs.selector, node, WS_PORT );
 
         nft.register(name, msg.sender, records);
 
         inputs[2] = node3;
         name = vm.ffi(inputs);
-        nameId = uint(BytesUtils.namehash(name, 0));
+        node = BytesUtils.namehash(name, 0);
 
-        records = new bytes[](1);
-        records[0] = abi.encodeWithSelector(
-            QNSRegistry.setWsRecord.selector, nameId,
-            bytes(""), WS_IP, WS_PORT, new bytes32[](0)
-        );
+        records = new bytes[](3);
+        records[0] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setKey.selector, node, bytes32(0) );
+        records[1] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setIp.selector, node, WS_IP );
+        records[2] = abi.encodeWithSelector
+            ( QNSRegistryResolver.setWs.selector, node, WS_PORT );
 
         nft.register(name, msg.sender, records);
 

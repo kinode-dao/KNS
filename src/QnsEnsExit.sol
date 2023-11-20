@@ -6,7 +6,7 @@ import { ILayerZeroEndpoint } from "layer-zero/interfaces/ILayerZeroEndpoint.sol
 import { ExcessivelySafeCall } from "./lib/ExcessivelySafeCall.sol";
 import { BytesUtils } from "./lib/BytesUtils.sol";
 import { IQnsEnsExit } from "./interfaces/IQnsEnsExit.sol";
-import { IQNS } from "./interfaces/IQNS.sol";
+import { IQNSRegistryResolver } from "./interfaces/IQNSRegistryResolver.sol";
 
 contract QnsEnsExit is IQnsEnsExit {
 
@@ -74,10 +74,10 @@ contract QnsEnsExit is IQnsEnsExit {
 
         ensowners[child] = owner;
 
-        IQNS(qns).registerNode(fqdn);
+        IQNSRegistryResolver(qns).registerNode(fqdn);
 
         if (data.length != 0) 
-            IQNS(qns).multicallWithNodeCheck(child, data);
+            IQNSRegistryResolver(qns).multicallWithNodeCheck(child, data);
 
     }
 

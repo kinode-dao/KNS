@@ -6,20 +6,20 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
-import "./QNSRegistry.sol";
+import "./QNSRegistryResolver.sol";
 import "./lib/BytesUtils.sol";
-import "./interfaces/IQNS.sol";
+import "./interfaces/IQNSRegistryResolver.sol";
 import "./interfaces/IQNSNFT.sol";
 import "./interfaces/IMulticallable.sol";
 
 contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
     using BytesUtils for bytes;
 
-    QNSRegistry public qns;
+    QNSRegistryResolver public qns;
     uint256     public baseNode;
 
     function initialize (
-        QNSRegistry _qns
+        QNSRegistryResolver _qns
     ) public initializer {
 
         __UUPSUpgradeable_init();
@@ -71,26 +71,14 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
     function allowSubdomains(
         bytes calldata name,
         IQNSNFT nft
-    ) public {
-        (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
-        require(
-            parentNode == baseNode,
-            "UqNFT: only subdomains of baseNode can be registered"
-        );
-        require(
-            msg.sender == ownerOf(node),
-            "UqNFT: only owner of node can allow subdomains"
-        );
-
-        qns.registerSubdomainContract(name, nft);
-    }
+    ) public { }
 
     function transferFromAndClearProtocols(
         address from,
         address to,
         uint256 tokenId
     ) public {
-        qns.clearProtocols(tokenId, 0xFFFFFFFF);
+        qns.clearRecords(bytes32(tokenId), 0xFFFFFFFF);
         safeTransferFrom(from, to, tokenId);
     }
 

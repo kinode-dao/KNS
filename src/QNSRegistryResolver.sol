@@ -6,16 +6,19 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "./interfaces/IQNS.sol";
+import "./interfaces/IQNSRegistryResolver.sol";
 import "./interfaces/IQNSNFT.sol";
 import "./lib/Multicallable.sol";
 import "./lib/BytesUtils.sol";
 
 error MustChooseStaticOrRouted();
+error TLDRegistrarOnly();
+error TLD401();
+error NotTLD();
 
 // TODO lets see what inspiration we can take from VersionableResolver?
 
-contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
+contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
     mapping (bytes32 => address) public TLDs;
@@ -31,12 +34,12 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
     mapping (bytes32 => uint16)    public udp;
 
     modifier tldAuth (bytes32 node) {
-        if (!nodes[node].tld.auth(msg.sender)) revert TLD401();
+        if (!nodes[node].tld.auth(node, msg.sender)) revert TLD401();
         _;
     }
     
     modifier onlyTLD (Node storage node) {
-        if (address(node.tld) != msg.sender) revert OnlyTLD();
+        if (address(node.tld) != msg.sender) revert TLDRegistrarOnly();
         _;
     }
 
@@ -65,42 +68,42 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
 
         if (offset != fqdn.length) revert NotTLD();
 
-        TLDS[tld] = nodes[tld].tld = registrar;
+        nodes[tld].tld = ITLDRegistrar(TLDs[tld] = registrar);
 
         // TODO could check that registrar implements IQNSNFT via ERC165
-        emit NewTLD(node, fqdn, registrar);
+        emit NewTLD(tld, fqdn, registrar);
 
     }
 
     // this function is called once on mint by the NFT contract
     function registerNode(bytes calldata fqdn) external {
 
-        ( bytes32 node, bytes32 tld ) = fqdn.namehashAndTLDhash();
+        ( bytes32 node, bytes32 tld ) = fqdn.namehashAndTLD();
 
         if (msg.sender != TLDs[tld]) revert TLDRegistrarOnly();
 
-        nodes[node] = Node(tlds[tld], 0);
+        nodes[node] = Node(ITLDRegistrar(TLDs[tld]), 0);
 
         emit NodeRegistered(node, fqdn);
 
     }
 
-    function setKey (bytes32 _node, bytes32 key) external tldAuth(nodes[_node]) {
+    function setKey (bytes32 _node, bytes32 _key) external tldAuth(_node) {
 
-        bytes32(0) == key[_node] = key
+        ( key[_node] = _key ) == 0 
             ? nodes[_node].records &= KEYED
             : nodes[_node].records |= KEYED;
 
-        emit KeyUpdate(_node, key);
+        emit KeyUpdate(_node, _key);
 
     }
 
     function setRouting (
         bytes32 _node, 
         bytes32[] calldata _routers
-    ) external tldAuth(nodes[_node]) {
+    ) external tldAuth(_node) {
 
-        0 == (routing[_node] = _routers).length
+        ( routing[_node] = _routers ).length == 0
             ? nodes[_node].records &= ROUTED
             : nodes[_node].records |= ROUTED;
 
@@ -108,65 +111,75 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
 
     }
 
-    function setIp (bytes32 _node, uint128 _ip) external tldAuth(nodes[_node]) {
+    function setIp (bytes32 _node, uint128 _ip) external tldAuth(_node) {
 
-        0 == ip[_node] = _ip
+        ( ip[_node] = _ip ) == 0
             ? nodes[_node].records &= IP
             : nodes[_node].records |= IP;
         
-        emit IpUpdated(_node, _ip);
+        emit IpUpdate(_node, _ip);
 
     }
 
-    function setWs (bytes32 _node, uint16 _ws) external tldAuth(nodes[_node]) {
+    function setWs (bytes32 _node, uint16 _ws) external tldAuth(_node) {
 
-        0 == ws[_node] = _ws
+        ( ws[_node] = _ws ) == 0
             ? nodes[_node].records &= WS
             : nodes[_node].records |= WS;
         
-        emit WsUpdated(_node, _ws);
+        emit WsUpdate(_node, _ws);
 
     }
 
-    function setWt (bytes32 _node, uint16 _wt) external tldAuth(nodes[_node]) {
+    function setWt (bytes32 _node, uint16 _wt) external tldAuth(_node) {
 
-        0 == wt[_node] = _wt
+        ( wt[_node] = _wt ) == 0
             ? nodes[_node].records &= WT
             : nodes[_node].records |= WT;
         
-        emit WtUpdated(_node, _ws);
+        emit WtUpdate(_node, _wt);
 
     }
 
-    function setTcp (bytes32 _node, uint16 _tcp) external tldAuth(nodes[_node]) {
+    function setTcp (bytes32 _node, uint16 _tcp) external tldAuth(_node) {
 
-        0 == _tcp[_node] = _tcp 
+        ( tcp[_node] = _tcp ) == 0
             ? nodes[_node].records &= TCP
             : nodes[_node].records |= TCP;
         
-        emit TcpUpdated(_node, _tcp);
+        emit TcpUpdate(_node, _tcp);
 
     }
 
-    function setUdp (bytes32 _node, uint16 _udp) external tldAuth(nodes[_node]) {
+    function setUdp (bytes32 _node, uint16 _udp) external tldAuth(_node) {
 
-        0 == _udp[_node] = _udp 
+        ( udp[_node] = _udp ) == 0
             ? nodes[_node].records &= UDP
             : nodes[_node].records |= UDP;
         
-        emit UdpUpdated(_node, _udp);
+        emit UdpUpdate(_node, _udp);
 
     }
 
-    function clearRecords (
-        bytes32 _node, 
-        uint96 _records
-    ) external tldAuth(nodes[_node]) {
+    function clearRecords (bytes32 _node, uint96 _records) external tldAuth(_node) {
 
-        nodes[_node].records &= ~records;
+        nodes[_node].records &= ~_records;
 
-        emit ProtocolsCleared(node);
+        emit RecordsCleared(_node);
 
+    }
+
+    // 
+    // views
+    //
+    function resolve (bytes calldata fqdn) external view returns (address owner, address tldRegistrar) {
+        bytes32 namehash = fqdn.namehash(0);
+        Node storage node = nodes[namehash];
+        return ( address(node.tld), node.tld.resolve(namehash) );
+    }
+
+    function routers (bytes32 _node) external view returns (bytes32[] memory) {
+        return routing[_node];
     }
 
     //
@@ -175,12 +188,10 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
 
     function _getNodeAndParent (
         bytes memory fqdn
-    ) internal pure returns (uint256, uint256) {
-
-        (bytes32 labelhash, uint256 offset) = fqdn.readLabel(0);
+    ) internal pure returns (bytes32, bytes32) {
+        (bytes32 label, uint256 offset) = fqdn.readLabel(0);
         bytes32 parentNode = fqdn.namehash(offset);
-        bytes32 node = _makeNode(parentNode, labelhash);
-        return (uint256(node), uint256(parentNode));
+        return ( _makeNode(parentNode, label), parentNode );
 
     }
 
@@ -199,7 +210,7 @@ contract QNSRegistry is Multicallable, IQNS, ERC165Upgradeable, UUPSUpgradeable,
         bytes4 interfaceID
     ) public view override returns (bool) {
         return
-            interfaceID == type(IQNS).interfaceId ||
+            interfaceID == type(IQNSRegistryResolver).interfaceId ||
             super.supportsInterface(interfaceID);
     }
 }

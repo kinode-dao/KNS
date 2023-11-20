@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Script, console } from "forge-std/Script.sol";
 
-import { QNSRegistry } from "../src/QNSRegistry.sol";
+import { QNSRegistryResolver } from "../src/QNSRegistryResolver.sol";
 import { UqNFT } from "../src/UqNFT.sol";
 
 contract Upgrade is Script {
@@ -13,10 +13,10 @@ contract Upgrade is Script {
         
         vm.startBroadcast(deployerPrivateKey);
 
-        QNSRegistry qns = QNSRegistry(vm.envAddress("QNS_REGISTRY"));
+        QNSRegistryResolver qns = QNSRegistryResolver(vm.envAddress("QNS_REGISTRY"));
         UqNFT uqnft = UqNFT(vm.envAddress("UQ_NFT"));
 
-        QNSRegistry newQnsRegistryImpl = new QNSRegistry();
+        QNSRegistryResolver newQnsRegistryImpl = new QNSRegistryResolver();
         UqNFT newUqNftImpl = new UqNFT();
 
         qns.upgradeTo(address(newQnsRegistryImpl));

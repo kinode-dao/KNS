@@ -10,7 +10,7 @@ import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
-import { IQNS } from "../src/interfaces/IQNS.sol";
+import { IQNSRegistryResolver } from "../src/interfaces/IQNSRegistryResolver.sol";
 import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
 import { QnsEnsExit } from "../src/QnsEnsExit.sol";
 import { QnsEnsEntry } from "../src/QnsEnsEntry.sol";
@@ -20,7 +20,7 @@ contract EnvironmentAndScript is Script {
     uint ENTRY_RPC = vm.createFork(vm.envString("RPC_GOERLI"));
     uint EXIT_RPC = vm.createFork(vm.envString("RPC_SEPOLIA"));
     uint PRIVKEY = vm.envUint("PRIVATE_KEY");
-    IQNS qns = IQNS(vm.envAddress("QNS_TEST_QNS_REGISTRY"));
+    IQNSRegistryResolver qns = IQNSRegistryResolver(vm.envAddress("QNS_TEST_QNS_REGISTRY"));
     QnsEnsExit exit = QnsEnsExit(vm.envAddress("QNS_SEPOLIA_ENS_EXIT"));
     QnsEnsEntry entry = QnsEnsEntry(payable(vm.envAddress("QNS_GOERLI_ENS_ENTRY")));
     address ensregistry = vm.envAddress("ENS_GOERLI_REGISTRY");
@@ -52,7 +52,7 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        qns.registerSubdomainContract(eth, IQNSNFT(address(exit)));
+        qns.registerTLDRegistrar(eth, address(exit));
 
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
@@ -84,15 +84,13 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         bytes memory testuqbar = vm.ffi(inputs);
         uint256 testuqbarnode = uint(BytesUtils.namehash(testuqbar, 0));
 
-        bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeWithSelector(
-            IQNS.setWsRecord.selector,
-            testuqbarnode, 
-            keccak256("yes"), 
-            type(uint32).max, 
-            type(uint16).max, 
-            new bytes32[](0)
-        );
+        bytes[] memory data = new bytes[](3);
+        data[0] = abi.encodeWithSelector
+            ( IQNSRegistryResolver.setKey.selector, testuqbarnode, keccak256("yes") );
+        data[1] = abi.encodeWithSelector
+            ( IQNSRegistryResolver.setIp.selector, testuqbarnode, type(uint128).max );
+        data[2] = abi.encodeWithSelector
+            ( IQNSRegistryResolver.setWs.selector, testuqbarnode, type(uint16).max );
 
         entry.setQnsRecords(
             testuqbar,
@@ -113,13 +111,10 @@ contract SetWsForEnsNameOnQns is EnvironmentAndScript {
         inputs[1] = "--to-hex";
         inputs[2] = "uqtesttest.eth";
         bytes memory testuqbarnode = vm.ffi(inputs);
-        qns.setWsRecord(
-            uint(BytesUtils.namehash(testuqbarnode, 0)), 
-            keccak256("yes"), 
-            type(uint32).max, 
-            type(uint16).max, 
-            new bytes32[](0)
-        );
+        bytes32 namehash = BytesUtils.namehash(testuqbarnode, 0);
+        qns.setKey(namehash, keccak256("key"));
+        qns.setIp(namehash, type(uint128).max);
+        qns.setWs(namehash, type(uint16).max);
         vm.stopBroadcast();
     }
 }
@@ -152,7 +147,7 @@ contract SimulateQnsEnsExit is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        qns.registerSubdomainContract(eth, IQNSNFT(address(exit)));
+        qns.registerTLDRegistrar(eth, address(exit));
 
         exit.simulate(vm.envBytes("PAYLOAD"));
 

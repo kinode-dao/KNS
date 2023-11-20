@@ -21,5 +21,11 @@ interface ITLDRegistrar is IERC721 {
 
     function register (bytes[] calldata name) 
         external returns (uint node);
+
+    function auth (bytes32 node, address user)
+        external view returns (bool authed);
+
+    function resolve (bytes32 node) 
+        external view returns (address owner);
     
 }

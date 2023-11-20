@@ -23,10 +23,12 @@ interface IQNSRegistryResolver is IMulticallable {
     }
 
     // Logged whenever a QNS adds/drops support for subdomaining
-    event NewTLD(uint256 indexed node, bytes name, address tld);
+    event NewTLD(bytes32 indexed node, bytes name, address tld);
 
     // Logged whenever a QNS node is created
-    event NodeRegistered(uint256 indexed node, bytes name);
+    event NodeRegistered(bytes32 indexed node, bytes name);
+
+    event RecordsCleared(bytes32 indexed node);
 
     event KeyUpdate(bytes32 indexed node, bytes32 key);
     event RoutingUpdate(bytes32 indexed node, bytes32[] routers);
@@ -38,12 +40,12 @@ interface IQNSRegistryResolver is IMulticallable {
 
     // externals
 
-    function registerTLDRegistrar(bytes calldata fqdn, ITLDRegistrar registrar) external;
+    function registerTLDRegistrar(bytes calldata fqdn, address registrar) external;
 
     function registerNode(bytes calldata fqdn) external;
 
     function setKey(bytes32 node, bytes32 key) external;
-    function setRouting(bytes32 node, bytes32[] calldata routers);
+    function setRouting(bytes32 node, bytes32[] calldata routers) external;
     function setIp(bytes32 node, uint128 ip) external;
     function setWs(bytes32 node, uint16 port) external;
     function setWt(bytes32 node, uint16 port) external;
@@ -54,18 +56,16 @@ interface IQNSRegistryResolver is IMulticallable {
     // views
     //
 
-    function routing(uint256 node) external returns (uint256[] memory);
-    function ip(uint256 node) external returns (uint128);
-    function ws(uint256 node) external returns (uint16);
-    function wt(uint256 node) external returns (uint16);
-    function tcp(uint256 node) external returns (uint16);
-    function udp(uint256 node) external returns (uint16);
-
-    function ws(
-        uint256 node
-    ) external view returns (WsRecord memory);
+    function key(bytes32) external view returns (bytes32);
+    function routers(bytes32 node) external view returns (bytes32[] memory);
+    function routing(bytes32 node, uint index) external view returns (bytes32);
+    function ip(bytes32 node) external view returns (uint128);
+    function ws(bytes32 node) external view returns (uint16);
+    function wt(bytes32 node) external view returns (uint16);
+    function tcp(bytes32 node) external view returns (uint16);
+    function udp(bytes32 node) external view returns (uint16);
 
     function resolve(
         bytes calldata fqdn
-    ) external view returns (address);
+    ) external view returns (address, address);
 }
