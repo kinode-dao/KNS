@@ -8,7 +8,7 @@ interface IMulticallable {
     ) external returns (bytes[] memory results);
 
     function multicallWithNodeCheck(
-        uint256,
+        bytes32 node,
         bytes[] calldata data
     ) external returns (bytes[] memory results); 
 

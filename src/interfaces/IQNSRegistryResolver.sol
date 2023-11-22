@@ -40,7 +40,7 @@ interface IQNSRegistryResolver is IMulticallable {
 
     // externals
 
-    function registerTLDRegistrar(bytes calldata fqdn, address registrar) external;
+    function registerTLD(bytes calldata fqdn, address registrar) external;
 
     function registerNode(bytes calldata fqdn) external;
 
@@ -65,7 +65,4 @@ interface IQNSRegistryResolver is IMulticallable {
     function tcp(bytes32 node) external view returns (uint16);
     function udp(bytes32 node) external view returns (uint16);
 
-    function resolve(
-        bytes calldata fqdn
-    ) external view returns (address, address);
 }
