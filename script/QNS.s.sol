@@ -49,7 +49,7 @@ contract QNSScript is Script {
             )
         );
 
-        qnsRegistry.registerTLDRegistrar(baseNode, address(uqNft));
+        qnsRegistry.registerTLD(baseNode, address(uqNft));
     }
 }
 

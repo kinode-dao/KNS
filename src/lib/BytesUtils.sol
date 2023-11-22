@@ -38,13 +38,14 @@ library BytesUtils {
         return
             keccak256(abi.encodePacked(namehash(self, newOffset), labelhash));
     }
+
     function namehashAndTLD(
         bytes memory self
     ) internal pure returns (bytes32, bytes32) { 
-        return namehashAndTLDhash(self, 0);
+        return namehashAndTLDHash(self, 0);
     }
 
-    function namehashAndTLDhash(
+    function namehashAndTLDHash(
         bytes memory self,
         uint256 offset
     ) internal pure returns (bytes32, bytes32) {
@@ -53,10 +54,18 @@ library BytesUtils {
             require(offset == self.length - 1, "namehash: Junk at end of name");
             return (bytes32(0), bytes32(0));
         }
-        (bytes32 _namehash, bytes32 tldhash) = namehashAndTLDhash(self, newOffset);
+        (bytes32 _namehash, bytes32 tldhash) = namehashAndTLDHash(self, newOffset);
         if (tldhash == bytes32(0)) tldhash = labelhash;
         return (keccak256(abi.encodePacked(_namehash, labelhash)), tldhash);
 
+    }
+
+    function childParentAndTLD(
+        bytes memory self
+    ) internal pure returns (bytes32, bytes32, bytes32) {
+        (bytes32 label, uint256 offset) = readLabel(self);
+        (bytes32 parent, bytes32 tld) = namehashAndTLDHash(self, offset);
+        return (keccak256(abi.encodePacked(parent, label)), parent, tld);
     }
 
     /**
@@ -80,6 +89,12 @@ library BytesUtils {
         newIdx = idx + len + 1;
     }
 
+    function readLabel (
+        bytes memory self
+    ) internal pure returns (bytes32 labelHash, uint256 newIdx) {
+        return readLabel(self, 0);
+    }
+
     function labelLen(
         bytes memory self,
         uint256 idx
@@ -87,7 +102,6 @@ library BytesUtils {
         uint256 len
     ) {
         len = uint256(uint8(self[idx]));
-
     }
 
 }

@@ -52,7 +52,7 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        qns.registerTLDRegistrar(eth, address(exit));
+        qns.registerTLD(eth, address(exit));
 
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
@@ -147,7 +147,7 @@ contract SimulateQnsEnsExit is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        qns.registerTLDRegistrar(eth, address(exit));
+        qns.registerTLD(eth, address(exit));
 
         exit.simulate(vm.envBytes("PAYLOAD"));
 

@@ -6,13 +6,13 @@ import "../interfaces/IMulticallable.sol";
 
 abstract contract Multicallable is IMulticallable {
     function _multicall(
-        uint256 node,
+        bytes32 node,
         bytes[] calldata data
     ) internal returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; i++) {
             if (node != 0) {
-                uint256 txNode = uint(bytes32(data[i][4:36]));
+                bytes32 txNode = bytes32(data[i][4:36]);
                 require(
                     txNode == node,
                     "multicall: All records must have a matching namehash"
@@ -31,7 +31,7 @@ abstract contract Multicallable is IMulticallable {
     // from priviledged contracts (such as EthRegistrarController)
     // that can set records on behalf of the node owners
     function multicallWithNodeCheck(
-        uint node,
+        bytes32 node,
         bytes[] calldata data
     ) external returns (bytes[] memory results) {
         return _multicall(node, data);

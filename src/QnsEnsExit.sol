@@ -60,24 +60,24 @@ contract QnsEnsExit is IQnsEnsExit {
         bytes[] calldata data
     ) external onlythis {
 
-        if (fqdn.length < 5) 
-            revert EthNameTooShort();
+        // if (fqdn.length < 5) 
+        //     revert EthNameTooShort();
 
-        if (DOT_ETH_HASH != keccak256(fqdn[fqdn.length-5:fqdn.length]))
-            revert NotEthName();
+        // if (DOT_ETH_HASH != keccak256(fqdn[fqdn.length-5:fqdn.length]))
+        //     revert NotEthName();
         
-        ( uint parent, uint child ) = 
-            _getParentAndChildNodes(fqdn);
+        // ( uint parent, uint child ) = 
+        //     _getParentAndChildNodes(fqdn);
 
-        if (ensowners[parent] == address(0))
-            revert ParentNotRegistered();
+        // if (ensowners[parent] == address(0))
+        //     revert ParentNotRegistered();
 
-        ensowners[child] = owner;
+        // ensowners[child] = owner;
 
-        IQNSRegistryResolver(qns).registerNode(fqdn);
+        // IQNSRegistryResolver(qns).registerNode(fqdn);
 
-        if (data.length != 0) 
-            IQNSRegistryResolver(qns).multicallWithNodeCheck(child, data);
+        // if (data.length != 0) 
+        //     IQNSRegistryResolver(qns).multicallWithNodeCheck(child, data);
 
     }
 

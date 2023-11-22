@@ -52,19 +52,19 @@ contract UqNFT is IQNSNFT, Initializable, ERC721Upgradeable, OwnableUpgradeable,
         bytes[] calldata recordCallData
     ) public {
         // uq is 2 characters, +1 empty byte at the end, +2 DNS labels
-        require(name.length >= 14, "UqNFT: name must be at least 9 characters long");
+        // require(name.length >= 14, "UqNFT: name must be at least 9 characters long");
 
-        (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
-        require(
-            parentNode == baseNode,
-            "UqNFT: only subdomains of baseNode can be registered"
-        );
+        // (uint256 node, uint256 parentNode) = _getNodeAndParent(name);
+        // require(
+        //     parentNode == baseNode,
+        //     "UqNFT: only subdomains of baseNode can be registered"
+        // );
 
-        _safeMint(owner, node, "");
-        qns.registerNode(name);
+        // _safeMint(owner, node, "");
+        // qns.registerNode(name);
 
-        if (recordCallData.length > 0) 
-            qns.multicallWithNodeCheck(node, recordCallData);
+        // if (recordCallData.length > 0) 
+        //     qns.multicallWithNodeCheck(node, recordCallData);
 
     }
 
