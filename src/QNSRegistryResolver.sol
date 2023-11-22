@@ -57,7 +57,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     // externals
     //
 
-    function registerTLDRegistrar (
+    function registerTLD (
         bytes calldata fqdn, 
         address registrar
     ) external {
@@ -76,7 +76,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     }
 
     // this function is called once on mint by the NFT contract
-    function registerNode(bytes calldata fqdn) external {
+    function registerNode(
+        bytes calldata fqdn
+    ) external {
 
         ( bytes32 node, bytes32 tld ) = fqdn.namehashAndTLD();
 
@@ -98,10 +100,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
     }
 
-    function setRouting (
-        bytes32 _node, 
-        bytes32[] calldata _routers
-    ) external tldAuth(_node) {
+    function setRouting (bytes32 _node, bytes32[] calldata _routers) external tldAuth(_node) {
 
         ( routing[_node] = _routers ).length == 0
             ? nodes[_node].records &= ROUTED
@@ -172,12 +171,6 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     // 
     // views
     //
-    function resolve (bytes calldata fqdn) external view returns (address owner, address tldRegistrar) {
-        bytes32 namehash = fqdn.namehash(0);
-        Node storage node = nodes[namehash];
-        return ( address(node.tld), node.tld.resolve(namehash) );
-    }
-
     function routers (bytes32 _node) external view returns (bytes32[] memory) {
         return routing[_node];
     }
