@@ -6,6 +6,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
+import { console } from "forge-std/console.sol";
+
 import "./lib/BytesUtils.sol";
 import "./interfaces/ITLDRegistrar.sol";
 import "./interfaces/IQNSRegistryResolver.sol";
@@ -29,6 +31,8 @@ error TLDWebmasterApproveToCaller();
 
 contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using BytesUtils for bytes;
+
+    bytes32 constant OWNER_MASK = 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
 
     IQNSRegistryResolver public qns;
 
@@ -72,6 +76,10 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
 
     function symbol () public view returns (string memory) {
         return _symbol;
+    }
+
+    function _node (uint _node) internal view returns (bytes32) {
+        return _nodes[_node];
     }
 
     function approve (address to, uint256 node) public {
@@ -158,12 +166,17 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     }
 
     function _setOwner(
-        address to, 
-        bytes32 node
-    ) internal pure returns (bytes32) {
+        address _to, 
+        bytes32 _node
+    ) internal view returns (bytes32) {
 
-        bytes32 addressMask = bytes32(uint(uint160(to)) << 96);
-        return addressMask | node;
+        return _node & OWNER_MASK | _addrToBytes32(_to);
+
+    }
+
+    function _addrToBytes32 (address addr) internal pure returns (bytes32) { 
+
+        return bytes32(uint(uint160(addr)) << 96); 
 
     }
 
