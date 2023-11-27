@@ -10,32 +10,36 @@ import { DotUqRegistrar } from "../src/DotUqRegistrar.sol";
 
 contract DotUqShim is DotUqRegistrar {
 
-    function mint (address user, uint node) public {
-        _mint(user, node);
+    function mint (address user, uint _node) public {
+        _mint(user, _node);
     }
 
-    function node (uint node) public view returns (bytes32) { 
-        return _node(node); 
+    function node (uint _node) public view returns (bytes32) { 
+        return _getNode(_node); 
     }
 
-    function setAttributes(bytes32 _attributes, uint node) public view returns (bytes32) {
-        return _setAttributes(_attributes, _node(node));
+    function setAttributes(bytes32 _attributes, uint _node) public view returns (bytes32) {
+        return _setAttributes(_attributes, _getNode(_node));
     }
 
-    function setAttributesWrite(bytes32 _attributes, uint node) public returns (bytes32) {
-        return _setNode(_setAttributes(_attributes, _node(node)), node);
+    function setAttributesWrite(bytes32 _attributes, uint _node) public returns (bytes32) {
+        return _setNode(_setAttributes(_attributes, _getNode(_node)), _node);
     }
 
-    function getAttributes(uint256 node) public view returns (bytes32) {
-        return _getAttributes(_node(node));
+    function getAttributes(uint256 _node) public view returns (bytes32) {
+        return _getAttributes(_getNode(_node));
     }
 
-    function setOwner (address _newOwner, uint node) public view returns (bytes32) {
-        return _setOwner(_newOwner, _node(node));
+    function setOwner (address _newOwner, uint _node) public view returns (bytes32) {
+        return _setOwner(_newOwner, _getNode(_node));
     }
 
-    function setOwnerWrite (address _newOwner, uint node) public returns (bytes32) {
-        return _setNode(_setOwner(_newOwner, _node(node)), node);
+    function setOwnerWrite (address _newOwner, uint _node) public returns (bytes32) {
+        return _setNode(_setOwner(_newOwner, _getNode(_node)), _node);
+    }
+
+    function fuses () public view {
+        _fuses();
     }
 
 }
@@ -50,6 +54,14 @@ contract DotUqTest is TestUtils {
 
     DotUqShim public dotUq = new DotUqShim();
 
-    function setUp() public { }
+    function setUp() public { 
+
+        dotUq.fuses();
+
+    }
+
+    function testThis () public {
+        dotUq.fuses();
+    }
 
 }
