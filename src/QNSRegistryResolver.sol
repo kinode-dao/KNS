@@ -171,6 +171,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     // 
     // views
     //
+
     function routers (bytes32 _node) external view returns (bytes32[] memory) {
         return routing[_node];
     }
