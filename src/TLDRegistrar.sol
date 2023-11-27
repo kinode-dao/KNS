@@ -83,7 +83,7 @@ contract TLDRegistrar is ITLDRegistrar {
         return _symbol;
     }
 
-    function _node (uint _node) internal view returns (bytes32) {
+    function _getNode (uint _node) internal view returns (bytes32) {
         return _nodes[_node];
     }
 
@@ -324,18 +324,11 @@ contract TLDRegistrar is ITLDRegistrar {
         uint256 nodeId
     ) {
 
-        ( bytes32 _child, bytes32 _parent, bytes32 _tld) = 
-            name.childParentAndTLD();
+        bytes32 _nodeId = qns.registerNode(name);
 
-        if (!auth(_parent, msg.sender)) revert NotAuthorized();
+        if (data.length > 0) qns.multicallWithNodeCheck(_nodeId, data);
 
-        if (TLD_HASH != _tld) revert InvalidTLD();
-
-        qns.registerNode(name);
-
-        if (data.length > 0) qns.multicallWithNodeCheck(_child, data);
-
-        _safeMint(owner, uint(_child));
+        _safeMint(owner, uint(_nodeId));
 
     }
 
@@ -346,10 +339,19 @@ contract TLDRegistrar is ITLDRegistrar {
         bool authed
     ) {
 
-        return 
-            _isWebmaster(sender, uint(node)) ||
-            _isApprovedOrOwner(sender, uint(node));
+        return auth(uint(node), sender);
 
+    }
+
+    function auth (
+        uint node,
+        address sender 
+    ) public view virtual returns (
+        bool authed
+    ) {
+        return 
+            _isWebmaster(sender, node) || 
+            _isApprovedOrOwner(sender, node);
     }
 
 

@@ -6,12 +6,17 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
+import "./lib/BytesUtils.sol";
+
 import "./TLDRegistrar.sol";
 
-contract DotUqRegistrar is TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+import "./interfaces/IDotUqRegistrar.sol";
 
-    uint constant CONTROLLABLE_VIA_PARENT = 1;
-    mapping (bytes32 => bytes32) public parents;
+contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+
+    using BytesUtils for bytes;
+
+    mapping (uint => uint) public parents;
 
     function initialize (
         address _qns
@@ -29,30 +34,66 @@ contract DotUqRegistrar is TLDRegistrar, Initializable, OwnableUpgradeable, UUPS
         return  _getInitializedVersion();
     }
 
+    function _fuses () internal view {
+        console.log("fuses");
+        console.logBytes32(PARENT_CANNOT_CONTROL);
+        console.logBytes32(CANNOT_CREATE_SUBDOMAIN);
+        console.logBytes32(CANNOT_TRANSFER);
+        console.logBytes32(PARENT_CANNOT_CONTROL | CANNOT_CREATE_SUBDOMAIN | CANNOT_TRANSFER);
+    }
 
     function register (
         bytes calldata name,
-        bytes[] calldata
+        bytes[] calldata data
     ) external payable returns (
         uint256 nodeId
     ) {
+
+        ( bytes32 _child, bytes32 _parent, bytes32 _tld) = 
+            name.childParentAndTLD();
+        
+        address _owner = _parent != TLD_HASH
+            ? _getOwner(_getNode(uint(_parent)))
+            : msg.sender;
+
+        _register(name, _owner, data);
 
     }
 
     function auth (
         bytes32 _nodeId,
-        address _sender
-    ) public override view returns (bool) {
+        address sender
+    ) public override(TLDRegistrar) view returns (bool) {
 
-        bytes32 node = _node(uint(_nodeId));
+        return auth(uint(_nodeId), sender);
+
+    }
+
+    function auth (
+        uint _nodeId,
+        address _sender
+    ) public override(TLDRegistrar) view returns (bool authed) {
+
+        authed = super.auth(_nodeId, _sender);
+
+        while (!authed && _nodeId != 0) {
+
+            if (_controllableViaParent(_nodeId)) {
+
+                _nodeId = parents[_nodeId];
+                authed = super.auth(_nodeId, _sender);
+
+            } else return false;
+
+        }
 
     }
 
     function _controllableViaParent (
-        bytes32 _node
-    ) internal view {
+        uint _node
+    ) internal view returns (bool) {
 
-        bytes32 _attributes = _getAttributes(_node);
+        bytes32 _attributes = _getAttributes(_getNode(_node));
 
         console.log("attributes");
         console.logBytes32(bytes32(uint(1 << 96)));
