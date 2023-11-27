@@ -29,7 +29,7 @@ error ERC721ApproveToOwner();
 error ERC721InvalidTokenId();
 error TLDWebmasterApproveToCaller();
 
-contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract TLDRegistrar is ITLDRegistrar {
     using BytesUtils for bytes;
 
     bytes32 constant MASK_RIGHT_96 = 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
@@ -49,12 +49,6 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
 
     mapping (address => mapping(address => bool)) private _operators;
     mapping (address => mapping(address => bool)) private _webmasters;
-
-    // 
-    // uups upgradeable
-    // 
-
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // 
     // erc 721
@@ -87,7 +81,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
         address owner = ownerOf(node);
 
         if (to == owner) revert ERC721ApproveToOwner();
-        if (_msgSender() != owner && isApprovedForAll(owner, _msgSender()))
+        if (msg.sender != owner && isApprovedForAll(owner, msg.sender))
             revert ERC721NotOwnerOrApproved();
 
         _approve(to, node);
@@ -104,7 +98,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     }
 
     function setApprovalForAll (address _operator, bool _approved) public {
-        _setApprovalForAll(_msgSender(), _operator, _approved);
+        _setApprovalForAll(msg.sender, _operator, _approved);
     }
 
     function _setApprovalForAll(address _owner, address _operator, bool _approved) public {
@@ -118,7 +112,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     }
 
     function setWebmaster(address _webmaster, bool _approved) public {
-        _setWebmaster(_msgSender(), _webmaster, _approved);
+        _setWebmaster(msg.sender, _webmaster, _approved);
     }
 
     function isWebmaster(address _owner, address _webmaster) public view returns (bool) {
@@ -145,7 +139,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     }
 
     function transferFrom(address from, address to, uint256 node) public {
-        if (!_isApprovedOrOwner(_msgSender(), node))
+        if (!_isApprovedOrOwner(msg.sender, node))
             revert ERC721NotOwnerOrApproved();
         _transfer(from, to, node);
     }
@@ -155,7 +149,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     }
 
     function safeTransferFrom(address from, address to, uint node, bytes memory data) public {
-        if (!_isApprovedOrOwner(_msgSender(), node))
+        if (!_isApprovedOrOwner(msg.sender, node))
             revert ERC721NotOwnerOrApproved();
         _safeTransfer(from, to, node, data);
     }
@@ -179,7 +173,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     ) internal view returns (bytes32) {
 
         bytes32 withoutOwner = _node & MASK_RIGHT_96;
-        return wthoutOwner | _addrToBytes32(_to);
+        return withoutOwner | _addrToBytes32(_to);
 
     }
 
@@ -292,7 +286,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
         bytes memory data
     ) private returns (bool) {
         if (0 < to.code.length) {
-            try IERC721Receiver(to).onERC721Received(_msgSender(), from, node, data) returns (bytes4 retval) {
+            try IERC721Receiver(to).onERC721Received(msg.sender, from, node, data) returns (bytes4 retval) {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory r) {
                 if (r.length == 0) revert ERC721TransferToNonReceiver();
@@ -324,7 +318,7 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
         ( bytes32 _child, bytes32 _parent, bytes32 _tld) = 
             name.childParentAndTLD();
 
-        if (!auth(_parent, _msgSender())) revert NotAuthorized();
+        if (!auth(_parent, msg.sender)) revert NotAuthorized();
 
         if (TLD_HASH != _tld) revert InvalidTLD();
 
