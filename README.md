@@ -15,3 +15,8 @@ The QNSRegistryResolver is constructed to give control of any given TLD to a ded
 ### TLDRegistrar
 
 The TLDRegistrar contract is a base contract with internal methods providing the functionality of interacting with the QNSRegistryResolver. Any contract inheriting this builds its own logic atop that dictates the particular management of the TLD it is concerned with. This contract optimizes for gas while conforming to an ERC721 standard for tokenization. In addition to the 160 bits of an node owners address, it stores 96 bits that may be utilized in any way by the inheriting contract. Prior art utilizes this storage to build domain name expiries and permission schemes for governing various types of authorization over a node's attributes, for instance if it has relinquished control of its subdomains.
+
+### DotUqRegistar
+
+The DotUqRegistar implements the TLDRegistar base class to create a contract that will manage .uq names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer. 
+
