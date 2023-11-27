@@ -37,7 +37,6 @@ contract TLDRegistrar is ITLDRegistrar {
 
     IQNSRegistryResolver public qns;
 
-
     bytes32 public TLD_HASH;
     bytes   public TLD_DNS_WIRE;
 
@@ -317,11 +316,11 @@ contract TLDRegistrar is ITLDRegistrar {
         TLD_DNS_WIRE = tld;
     }
 
-    function register(
+    function _register (
         bytes calldata name,
         address owner,
         bytes[] calldata data
-    ) external payable returns (
+    ) internal returns (
         uint256 nodeId
     ) {
 
