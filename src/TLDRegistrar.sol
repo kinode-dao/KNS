@@ -37,6 +37,7 @@ contract TLDRegistrar is ITLDRegistrar {
 
     IQNSRegistryResolver public qns;
 
+
     bytes32 public TLD_HASH;
     bytes   public TLD_DNS_WIRE;
 
@@ -49,6 +50,16 @@ contract TLDRegistrar is ITLDRegistrar {
 
     mapping (address => mapping(address => bool)) private _operators;
     mapping (address => mapping(address => bool)) private _webmasters;
+
+    function __TLDRegistrar_init(
+        address _qns,
+        string memory _name,
+        string memory _symbol
+    ) internal {
+        qns = IQNSRegistryResolver(_qns);
+        _name = _name;
+        _symbol = _symbol;
+    }
 
     // 
     // erc 721
@@ -277,7 +288,6 @@ contract TLDRegistrar is ITLDRegistrar {
         _afterTokenTransfer(owner, address(0), node, 1);
 
     }
-
 
     function _checkOnERC721Received(
         address from,
