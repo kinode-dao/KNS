@@ -42,7 +42,7 @@ interface IQNSRegistryResolver is IMulticallable {
 
     function registerTLD(bytes calldata fqdn, address registrar) external;
 
-    function registerNode(bytes calldata fqdn) external;
+    function registerNode(bytes calldata fqdn) external returns (bytes32 nodeId);
 
     function setKey(bytes32 node, bytes32 key) external;
     function setRouting(bytes32 node, bytes32[] calldata routers) external;

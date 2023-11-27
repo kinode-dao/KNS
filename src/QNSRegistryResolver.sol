@@ -78,7 +78,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     // this function is called once on mint by the NFT contract
     function registerNode(
         bytes calldata fqdn
-    ) external {
+    ) external returns (
+        bytes32 nodeHash
+    ) {
 
         ( bytes32 node, bytes32 tld ) = fqdn.namehashAndTLD();
 
@@ -87,6 +89,8 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
         nodes[node] = Node(ITLDRegistrar(TLDs[tld]), 0);
 
         emit NodeRegistered(node, fqdn);
+
+        return node;
 
     }
 
