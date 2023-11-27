@@ -18,5 +18,13 @@ The TLDRegistrar contract is a base contract with internal methods providing the
 
 ### DotUqRegistar
 
-The DotUqRegistar implements the TLDRegistar base class to create a contract that will manage .uq names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer. 
+The DotUqRegistar implements the TLDRegistar base class to create a contract that will manage .UQ names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer. 
 
+
+### DotEthRegistar
+
+The DotEthRegistrar is the exitpoint of a cross chain contract setup that is meant to allow .ETH domains from the ENS domains smart contract on Ethereum Mainnet to claim and manage their .ETH domain within the QNSRegistryResolver. It accepts a message transported over [LayerZero](https://github.com/LayerZero-Labs/LayerZero). The message attests that an address has been authenticated as either an owner or an operator for a particular node and caches this user so that they may operate on the .ETH name within the QNSRegistryResolver. The message may also set records simulatenously, for convenience. The various attributes set in the ENS NameWrapper are also ported over so definition is not lost when interacting with ENS.
+
+### DotEthAuthenticator
+
+The DotEthAuthenticator is responsible for sending the messages described above. It assures the sender is allowed to operate on behalf of a .ETH name and sends along the appropriate metadata to the DotEthRegistrar allowing the sender to operate on their .ETH name in the QNSRegistryResolver.
