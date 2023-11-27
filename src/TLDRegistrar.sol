@@ -32,7 +32,8 @@ error TLDWebmasterApproveToCaller();
 contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using BytesUtils for bytes;
 
-    bytes32 constant OWNER_MASK = 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
+    bytes32 constant MASK_RIGHT_96 = 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
+    bytes32 constant MASK_LEFT_160 = ~MASK_RIGHT_96;
 
     IQNSRegistryResolver public qns;
 
@@ -165,12 +166,20 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
             revert ERC721TransferToNonReceiver();
     }
 
+    function _setNode(
+        bytes32 _node,
+        uint256 _key
+    ) internal returns (bytes32) {
+        return _nodes[_key] = _node;
+    }
+
     function _setOwner(
         address _to, 
         bytes32 _node
     ) internal view returns (bytes32) {
 
-        return _node & OWNER_MASK | _addrToBytes32(_to);
+        bytes32 withoutOwner = _node & MASK_RIGHT_96;
+        return wthoutOwner | _addrToBytes32(_to);
 
     }
 
@@ -183,19 +192,18 @@ contract TLDRegistrar is ITLDRegistrar, Initializable, OwnableUpgradeable, UUPSU
     function _setAttributes (
         bytes32 attributes,
         bytes32 node
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
 
-        bytes32 mask = bytes32(uint256(0xffffffffffffffffffffffff)); // Mask for the rightmost 96 bits
-        bytes32 attributesMasked = attributes & mask;
-        bytes32 nodeMasked = node & ~mask;
-        return nodeMasked | attributesMasked;
+        bytes32 withoutOwner = attributes & MASK_RIGHT_96;
+        bytes32 withoutAttributes = node & MASK_LEFT_160;
+        return withoutAttributes | withoutOwner;
 
     }
 
     function _getAttributes (
         bytes32 node
     ) internal pure returns (bytes32) {
-        return node & bytes32(uint256(0xffffffffffffffffffffffff)); // Mask for the rightmost 96 bits
+        return node & MASK_RIGHT_96;
     }
 
     function _getOwner(
