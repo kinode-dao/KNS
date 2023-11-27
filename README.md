@@ -34,13 +34,15 @@ registerTLD is called when granting a new contract to mint nodes in the registry
 
 Registering a node performs no check with the TLDRegistrar beyond asserting the fact that the sender of the message is the TLDRegistrar for that particular TLD. Though it is meaningless to do so, this may be called many times as the only thing this sets is writing the TLDRegistrar's address in as the tld of the node, and writes the protocols to the zeroth value, which are a bitmap that only serve as an efficient indicator of which protocols the node supports.
 
-`setKey(bytes32 _node, bytes32 _key)`
-`setRouting(bytes32 _node, bytes32[] _nodes)`
-`setIp(bytes32 _node, uint128 _ipAddress)`
-`setWs(bytes32 _node, uint16 _port)`
-`setWt(bytes32 _node, uint16 _port)`
-`setTcp(bytes32 _node, uint16 _port)`
-`setUdp(bytes32 _node, uint16 _port)`
+```
+setKey(bytes32 _node, bytes32 _key)
+setRouting(bytes32 _node, bytes32[] _nodes)
+setIp(bytes32 _node, uint128 _ipAddress)
+setWs(bytes32 _node, uint16 _port)
+setWt(bytes32 _node, uint16 _port)
+setTcp(bytes32 _node, uint16 _port)
+setUdp(bytes32 _node, uint16 _port)
+```
 
 All of the above functions for setting a node's records make an authorization call to the respective TLDRegistar of a node such that the TLD can decide according to its own opinions whether a node is authorized to set a record or not. It only requires the a node's bytes32 namehash as an argument because the node must be registered before a record is set, and when a node is registered, its TLD is set. So, a TLDRegistrar must be able to reason about whether or not a user is authorized to make a change to a record using only the node's namehash.
 
