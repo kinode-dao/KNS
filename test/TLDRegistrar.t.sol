@@ -6,9 +6,13 @@ import { console2 } from "forge-std/console2.sol";
 
 import { TestUtils } from "./Utils.sol";
 
+import { ITLDRegistrar } from "../src/interfaces/ITLDRegistrar.sol";
+
 import { QNSRegistryResolver } from "../src/QNSRegistryResolver.sol";
 import { TLDRegistrar } from "../src/TLDRegistrar.sol";
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
+
+error TLD401();
 
 contract TLDShim is TLDRegistrar {
 
@@ -16,7 +20,7 @@ contract TLDShim is TLDRegistrar {
         _mint(user, _node);
     }
 
-    function node (uint256 _node) public view returns (bytes32) { 
+    function getNode (uint256 _node) public view returns (bytes32) { 
         return _getNode(_node); 
     }
 
@@ -44,6 +48,26 @@ contract TLDShim is TLDRegistrar {
         __TLDRegistrar_init(_qns, _name, _symbol);
     }
 
+    function register (bytes calldata name, address owner, bytes[] calldata data) external returns (uint256) {
+        return _register(name, owner, data);
+    }
+
+}
+
+contract User {
+
+    TLDShim public tld;
+    QNSRegistryResolver public qns;
+
+    constructor (QNSRegistryResolver _qns, TLDShim _tld) {
+        qns = _qns;
+        tld = _tld;
+    }
+
+    function setKey(bytes32 _node, bytes32 _key) public {
+        qns.setKey(_node, _key);
+    }
+
 }
 
 contract TLDRegistrarTest is TestUtils {
@@ -58,6 +82,9 @@ contract TLDRegistrarTest is TestUtils {
 
     TLDShim public tld = new TLDShim();
     QNSRegistryResolver qns = new QNSRegistryResolver();
+    User webmaster = new User(qns, tld);
+    User operator = new User(qns, tld);
+    User approved = new User(qns, tld);
 
     function setUp() public { 
 
@@ -82,16 +109,117 @@ contract TLDRegistrarTest is TestUtils {
 
     }
 
+    function testRegisteringNodeMintsToken () public {
+
+        bytes memory fqdn = dnsStringToWire("sub.tld");
+
+        uint256 _nodeId = tld.register(fqdn, address(this), new bytes[](0));
+
+        (ITLDRegistrar _tld, ) = qns.nodes(bytes32(_nodeId));
+
+        assertEq(address(_tld), address(tld), "wrong QNS node tld");
+
+        bytes32 tldNode = tld.getNode(_nodeId);
+
+        assertEq(tldNode, bytes32(uint(uint160(address(this))) << 96),
+            "tldNode should be equal to msg.sender with no attributes");
+
+    }
+
+    function testRegisteringNodeMintsTokenAndSetsRecords () public {
+
+    }
+
+    function testSettingRecordAuthsForOwnerOfNode () public {
+
+        testRegisteringNodeMintsToken();
+
+        bytes32 node = dnsStringToNode("sub.tld");
+
+        qns.setKey(node, bytes32("key"));
+
+        bytes32 key = qns.key(node);
+
+        assertEq(key, bytes32("key"), "key was not set");
+
+    }
+
+    function testAuthWhenSettingRecordsAsWebmaster () public {
+
+        testRegisteringNodeMintsToken();
+
+        tld.setWebmaster(address(webmaster), true);
+
+        bytes32 node = dnsStringToNode("sub.tld");
+
+        webmaster.setKey(node, bytes32("key"));
+
+        bytes32 key = qns.key(node);
+
+        assertEq(key, bytes32("key"), "key was not set by webmaster");
+
+        tld.setWebmaster(address(webmaster), false);
+
+        vm.expectRevert(TLD401.selector);
+
+        approved.setKey(node, bytes32(0));
+
+    }
+
+    function testAuthWhenSettingRecordsAsOperator () public {
+
+        testRegisteringNodeMintsToken();
+
+        tld.setApprovalForAll(address(operator), true);
+
+        bytes32 node = dnsStringToNode("sub.tld");
+
+        operator.setKey(node, bytes32("key"));
+
+        bytes32 key = qns.key(node);
+
+        assertEq(key, bytes32("key"), "key was not set by operator");
+
+        tld.setApprovalForAll(address(operator), false);
+
+        vm.expectRevert(TLD401.selector);
+
+        approved.setKey(node, bytes32(0));
+
+    }
+
+    function testAuthWhenSettingRecordsAsApproved () public {
+
+        testRegisteringNodeMintsToken();
+
+        bytes32 node = dnsStringToNode("sub.tld");
+
+        tld.approve(address(approved), uint(node));
+
+        approved.setKey(node, bytes32("key"));
+
+        bytes32 key = qns.key(node);
+
+        assertEq(key, bytes32("key"), "key was not set by approved");
+
+        tld.approve(address(0), uint(node));
+
+        vm.expectRevert(TLD401.selector);
+
+        approved.setKey(node, bytes32(0));
+
+    }
+
     function testTransferFrom () public { 
 
-        bytes32 node = tld.node(NODE);
+        bytes32 node = tld.getNode(NODE);
         address owner = tld.ownerOf(NODE);
 
         assertEq(owner, address(this), "owner should be this contract");
 
         tld.transferFrom(address(this), msg.sender, NODE);
 
-        node = tld.node(NODE);
+        node = tld.getNode(NODE);
         owner = tld.ownerOf(NODE);
 
         assertEq(owner, msg.sender, "owner should be msg.sender of test");
@@ -102,7 +230,7 @@ contract TLDRegistrarTest is TestUtils {
 
         bytes32 withAttrs1 = tld.setAttributesWrite(ATTRIBUTES1, NODE);
         bytes32 withNewOwner = tld.setOwnerWrite(msg.sender, NODE);
-        bytes32 end = tld.node(NODE);
+        bytes32 end = tld.getNode(NODE);
 
         assertEq(tld.getAttributes(NODE), ATTRIBUTES1, "unexpected attributes");
         assertEq(tld.ownerOf(NODE), msg.sender, "owner should be msg.sender");

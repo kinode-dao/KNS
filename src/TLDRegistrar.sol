@@ -70,7 +70,7 @@ contract TLDRegistrar is ITLDRegistrar {
 
     }
 
-    // called by QNSRegistry just as safety for the correct TLD 
+    // called by QNSRegistry as safety for the correct TLD 
     function __initTLDRegistration (
         bytes calldata _fqdn, 
         bytes32 _tldHash
@@ -82,7 +82,6 @@ contract TLDRegistrar is ITLDRegistrar {
         TLD_DNS_WIRE = _fqdn;
 
     }
-
 
     // 
     // erc 721
@@ -341,14 +340,16 @@ contract TLDRegistrar is ITLDRegistrar {
         address owner,
         bytes[] calldata data
     ) internal returns (
-        uint256 nodeId
+        uint256 nodeId_
     ) {
 
-        bytes32 _nodeId = qns.registerNode(name);
+        bytes32 _node = qns.registerNode(name);
 
-        if (data.length > 0) qns.multicallWithNodeCheck(_nodeId, data);
+        if (data.length > 0) qns.multicallWithNodeCheck(_node, data);
 
-        _safeMint(owner, uint(_nodeId));
+        nodeId_ = uint(_node);
+
+        _safeMint(owner, nodeId_);
 
     }
 
