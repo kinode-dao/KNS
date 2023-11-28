@@ -53,13 +53,15 @@ library BytesUtils {
         bytes memory self,
         uint256 offset
     ) internal pure returns (bytes32, bytes32) {
+
         (bytes32 labelhash, uint256 newOffset) = readLabel(self, offset);
         if (labelhash == bytes32(0)) {
             require(offset == self.length - 1, "namehash: Junk at end of name");
             return (bytes32(0), bytes32(0));
         }
         (bytes32 _namehash, bytes32 tldhash) = namehashAndTLDHash(self, newOffset);
-        if (tldhash == bytes32(0)) tldhash = labelhash;
+        if (tldhash == bytes32(0))
+            tldhash = keccak256(abi.encodePacked(bytes32(0), labelhash));
         return (keccak256(abi.encodePacked(_namehash, labelhash)), tldhash);
 
     }
