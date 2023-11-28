@@ -336,20 +336,23 @@ contract TLDRegistrar is ITLDRegistrar {
     //
 
     function _register (
-        bytes calldata name,
-        address owner,
-        bytes[] calldata data
+        bytes calldata _name,
+        address _owner,
+        bytes32 _attributes,
+        bytes[] calldata _data
     ) internal returns (
         uint256 nodeId_
     ) {
 
-        bytes32 _node = qns.registerNode(name);
+        bytes32 _node = qns.registerNode(_name);
 
-        if (data.length > 0) qns.multicallWithNodeCheck(_node, data);
+        if (_data.length > 0) qns.multicallWithNodeCheck(_node, _data);
 
         nodeId_ = uint(_node);
 
-        _safeMint(owner, nodeId_);
+        _safeMint(_owner, nodeId_);
+
+        _setNode(_setAttributes(_attributes, _getNode(nodeId_)), nodeId_);
 
     }
 

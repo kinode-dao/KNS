@@ -18,7 +18,7 @@ contract TLDRegistrarTest is TestUtils {
 
     using BytesUtils for bytes;
 
-    bytes12 constant public BYTES12 = 0xFFFFFFFFFFFFFFFFFFFFFFFF;
+    bytes32 constant public BYTES32 = bytes32(uint(0xFFFFFFFFFFFFFFFFFFFFFFFF));
 
     uint constant public NODE = type(uint).max;
     bytes32 constant public ATTRIBUTES1 = 0x0000000000000000000000000000000000000000101010101010101010101010;
@@ -53,6 +53,26 @@ contract TLDRegistrarTest is TestUtils {
 
     }
 
+    function registerNodeAndMintToken () public returns (uint256) {
+
+        bytes memory fqdn = dnsStringToWire("sub.tld");
+
+        return tld.register(fqdn, address(this), new bytes[](0));
+
+    }
+
+    function testRegisterNodeSavesAttributes () public {
+
+        bytes memory fqdn = dnsStringToWire("sub.tld");
+
+        uint _nodeId = tld.register(fqdn, address(this), ATTRIBUTES1, new bytes[](0));
+
+        bytes32 _node = tld.getNode(_nodeId);
+
+        assertEq(_node & ATTRIBUTES1, ATTRIBUTES1, "attributes not saved in node");
+
+    }
+
     function testRegisteringNodeMintsToken () public {
 
         uint _nodeId = registerNodeAndMintToken();
@@ -72,13 +92,6 @@ contract TLDRegistrarTest is TestUtils {
 
     }
 
-    function registerNodeAndMintToken () public returns (uint256) {
-
-        bytes memory fqdn = dnsStringToWire("sub.tld");
-
-        return tld.register(fqdn, address(this), new bytes[](0));
-
-    }
 
     function testSettingRecordAuthsForOwnerOfNode () public {
 
