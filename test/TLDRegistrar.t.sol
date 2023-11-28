@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import { console } from "forge-std/console.sol";
 import { console2 } from "forge-std/console2.sol";
 
-import { TestUtils } from "./Utils.sol";
+import { User, TLDShim, TestUtils } from "./Utils.sol";
 
 import { ITLDRegistrar } from "../src/interfaces/ITLDRegistrar.sol";
 
@@ -14,77 +14,21 @@ import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
 error TLD401();
 
-contract TLDShim is TLDRegistrar {
-
-    function mint (address user, uint256 _node) public {
-        _mint(user, _node);
-    }
-
-    function getNode (uint256 _node) public view returns (bytes32) { 
-        return _getNode(_node); 
-    }
-
-    function setAttributes(bytes32 _attributes, uint256 _node) public view returns (bytes32) {
-        return _setAttributes(_attributes, _getNode(_node));
-    }
-
-    function setAttributesWrite(bytes32 _attributes, uint256 _node) public returns (bytes32) {
-        return _setNode(_setAttributes(_attributes, _getNode(_node)), _node);
-    }
-
-    function getAttributes(uint256 _node) public view returns (bytes32) {
-        return _getAttributes(_getNode(_node));
-    }
-
-    function setOwner (address _newOwner, uint256 _node) public view returns (bytes32) {
-        return _setOwner(_newOwner, _getNode(_node));
-    }
-
-    function setOwnerWrite (address _newOwner, uint256 _node) public returns (bytes32) {
-        return _setNode(_setOwner(_newOwner, _getNode(_node)), _node);
-    }
-
-    function init (address _qns, string memory _name, string memory _symbol) public {
-        __TLDRegistrar_init(_qns, _name, _symbol);
-    }
-
-    function register (bytes calldata name, address owner, bytes[] calldata data) external returns (uint256) {
-        return _register(name, owner, data);
-    }
-
-}
-
-contract User {
-
-    TLDShim public tld;
-    QNSRegistryResolver public qns;
-
-    constructor (QNSRegistryResolver _qns, TLDShim _tld) {
-        qns = _qns;
-        tld = _tld;
-    }
-
-    function setKey(bytes32 _node, bytes32 _key) public {
-        qns.setKey(_node, _key);
-    }
-
-}
-
 contract TLDRegistrarTest is TestUtils {
 
     using BytesUtils for bytes;
 
-    bytes12 constant BYTES12 = 0xFFFFFFFFFFFFFFFFFFFFFFFF;
+    bytes12 constant public BYTES12 = 0xFFFFFFFFFFFFFFFFFFFFFFFF;
 
-    uint constant NODE = type(uint).max;
-    bytes32 constant ATTRIBUTES1 = 0x0000000000000000000000000000000000000000101010101010101010101010;
-    bytes32 constant ATTRIBUTES2 = 0x0000000000000000000000000000000000000000111111111111111111111111;
+    uint constant public NODE = type(uint).max;
+    bytes32 constant public ATTRIBUTES1 = 0x0000000000000000000000000000000000000000101010101010101010101010;
+    bytes32 constant public ATTRIBUTES2 = 0x0000000000000000000000000000000000000000111111111111111111111111;
 
     TLDShim public tld = new TLDShim();
     QNSRegistryResolver qns = new QNSRegistryResolver();
-    User webmaster = new User(qns, tld);
-    User operator = new User(qns, tld);
-    User approved = new User(qns, tld);
+    User public webmaster = new User(address(qns), address(0), address(tld));
+    User public operator = new User(address(qns), address(0), address(tld));
+    User public approved = new User(address(qns), address(0), address(tld));
 
     function setUp() public { 
 
@@ -111,9 +55,7 @@ contract TLDRegistrarTest is TestUtils {
 
     function testRegisteringNodeMintsToken () public {
 
-        bytes memory fqdn = dnsStringToWire("sub.tld");
-
-        uint256 _nodeId = tld.register(fqdn, address(this), new bytes[](0));
+        uint _nodeId = registerNodeAndMintToken();
 
         (ITLDRegistrar _tld, ) = qns.nodes(bytes32(_nodeId));
 
@@ -130,9 +72,17 @@ contract TLDRegistrarTest is TestUtils {
 
     }
 
+    function registerNodeAndMintToken () public returns (uint256) {
+
+        bytes memory fqdn = dnsStringToWire("sub.tld");
+
+        return tld.register(fqdn, address(this), new bytes[](0));
+
+    }
+
     function testSettingRecordAuthsForOwnerOfNode () public {
 
-        testRegisteringNodeMintsToken();
+        registerNodeAndMintToken();
 
         bytes32 node = dnsStringToNode("sub.tld");
 
@@ -146,7 +96,7 @@ contract TLDRegistrarTest is TestUtils {
 
     function testAuthWhenSettingRecordsAsWebmaster () public {
 
-        testRegisteringNodeMintsToken();
+        registerNodeAndMintToken();
 
         tld.setWebmaster(address(webmaster), true);
 
@@ -168,7 +118,7 @@ contract TLDRegistrarTest is TestUtils {
 
     function testAuthWhenSettingRecordsAsOperator () public {
 
-        testRegisteringNodeMintsToken();
+        registerNodeAndMintToken();
 
         tld.setApprovalForAll(address(operator), true);
 
@@ -190,7 +140,7 @@ contract TLDRegistrarTest is TestUtils {
 
     function testAuthWhenSettingRecordsAsApproved () public {
 
-        testRegisteringNodeMintsToken();
+        registerNodeAndMintToken();
 
         bytes32 node = dnsStringToNode("sub.tld");
 
@@ -212,15 +162,21 @@ contract TLDRegistrarTest is TestUtils {
 
     function testTransferFrom () public { 
 
-        bytes32 node = tld.getNode(NODE);
-        address owner = tld.ownerOf(NODE);
+        uint _nodeId = registerNodeAndMintToken();
+
+        bytes32 node = tld.getNode(_nodeId);
+
+        console.logBytes32(node);
+
+        address owner = tld.ownerOf(_nodeId);
 
         assertEq(owner, address(this), "owner should be this contract");
 
-        tld.transferFrom(address(this), msg.sender, NODE);
+        tld.transferFrom(address(this), msg.sender, _nodeId);
 
-        node = tld.getNode(NODE);
-        owner = tld.ownerOf(NODE);
+        node = tld.getNode(_nodeId);
+
+        owner = tld.ownerOf(_nodeId);
 
         assertEq(owner, msg.sender, "owner should be msg.sender of test");
 

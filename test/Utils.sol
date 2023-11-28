@@ -4,6 +4,9 @@ pragma solidity ^0.8.13;
 import {Test, console, console2} from "forge-std/Test.sol";
 
 import "../src/lib/BytesUtils.sol";
+import "../src/TLDRegistrar.sol";
+import "../src/DotUqRegistrar.sol";
+import "../src/QNSREgistryResolver.sol";
 
 contract TestUtils is Test {
 
@@ -29,4 +32,98 @@ contract TestUtils is Test {
     function onERC721Received (address, address,uint256,bytes calldata) public pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
+}
+
+contract TLDShim is TLDRegistrar {
+
+    function mint (address user, uint256 _node) public {
+        _mint(user, _node);
+    }
+
+    function getNode (uint256 _node) public view returns (bytes32) { 
+        return _getNode(_node); 
+    }
+
+    function setAttributes(bytes32 _attributes, uint256 _node) public view returns (bytes32) {
+        return _setAttributes(_attributes, _getNode(_node));
+    }
+
+    function setAttributesWrite(bytes32 _attributes, uint256 _node) public returns (bytes32) {
+        return _setNode(_setAttributes(_attributes, _getNode(_node)), _node);
+    }
+
+    function getAttributes(uint256 _node) public view returns (bytes32) {
+        return _getAttributes(_getNode(_node));
+    }
+
+    function setOwner (address _newOwner, uint256 _node) public view returns (bytes32) {
+        return _setOwner(_newOwner, _getNode(_node));
+    }
+
+    function setOwnerWrite (address _newOwner, uint256 _node) public returns (bytes32) {
+        return _setNode(_setOwner(_newOwner, _getNode(_node)), _node);
+    }
+
+    function init (address _qns, string memory _name, string memory _symbol) public {
+        __TLDRegistrar_init(_qns, _name, _symbol);
+    }
+
+    function register (bytes calldata _name, address _owner, bytes[] calldata _data) external returns (uint256) {
+        return _register(_name, _owner, bytes32(0), _data);
+    }
+
+    function register (bytes calldata _name, address _owner, bytes32 _attributes, bytes[] calldata _data) external returns (uint256) {
+        return _register(_name, _owner, _attributes, _data);
+    }
+
+}
+
+contract DotUqShim is DotUqRegistrar {
+
+    function mint (address user, uint _node) public {
+        _mint(user, _node);
+    }
+
+    function node (uint _node) public view returns (bytes32) { 
+        return _getNode(_node); 
+    }
+
+    function setAttributes(bytes32 _attributes, uint _node) public view returns (bytes32) {
+        return _setAttributes(_attributes, _getNode(_node));
+    }
+
+    function setAttributesWrite(bytes32 _attributes, uint _node) public returns (bytes32) {
+        return _setNode(_setAttributes(_attributes, _getNode(_node)), _node);
+    }
+
+    function getAttributes(uint256 _node) public view returns (bytes32) {
+        return _getAttributes(_getNode(_node));
+    }
+
+    function setOwner (address _newOwner, uint _node) public view returns (bytes32) {
+        return _setOwner(_newOwner, _getNode(_node));
+    }
+
+    function setOwnerWrite (address _newOwner, uint _node) public returns (bytes32) {
+        return _setNode(_setOwner(_newOwner, _getNode(_node)), _node);
+    }
+
+}
+
+contract User {
+
+    TLDShim public tld;
+    DotUqShim public dotuq;
+    QNSRegistryResolver public qns;
+
+    constructor (address _qns, address _dotuq, address _tld) {
+        qns = QNSRegistryResolver(_qns);
+        dotuq = DotUqShim(_dotuq);
+        tld = TLDShim(_tld);
+    }
+
+    function setKey(bytes32 _node, bytes32 _key) public {
+        qns.setKey(_node, _key);
+    }
+
 }
