@@ -74,16 +74,13 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         address _sender
     ) public override(TLDRegistrar) view returns (bool authed) {
 
-        authed = super.auth(_nodeId, _sender);
-
         while (!authed && _nodeId != 0) {
 
-            if (_controllableViaParent(_nodeId)) {
+            authed = super.auth(_nodeId, _sender);
 
-                _nodeId = parents[_nodeId];
-                authed = super.auth(_nodeId, _sender);
-
-            } else return false;
+            if (authed) return true;
+            else if (_controllableViaParent(_nodeId)) _nodeId = parents[_nodeId];
+            else return false;
 
         }
 
