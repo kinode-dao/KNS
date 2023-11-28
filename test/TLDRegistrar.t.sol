@@ -51,6 +51,10 @@ contract TLDRegistrarTest is TestUtils {
             "unexpected tld dns wire in setup"
         );
 
+        address _tldRegistrar = qns.TLDs(dnsStringToWire("tld").namehash());
+
+        assertEq(_tldRegistrar, address(tld), "TLD entry should be address of TLDRegistrar");
+
     }
 
     function registerNodeAndMintToken () public returns (uint256) {
