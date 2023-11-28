@@ -26,4 +26,6 @@ interface ITLDRegistrar is IERC721 {
     function isWebmaster (address owner, address webmaster) 
         external view returns (bool);
 
+    function __initTLDRegistration (bytes memory tldDnsWire, bytes32 tldHash) external;
+
 }

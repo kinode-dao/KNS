@@ -18,6 +18,8 @@ error NotQNS();
 error InvalidTLD();
 error NotAuthorized();
 error MustBeTLD();
+error AlreadyRegistered();
+error QNSRegistryOnly();
 error ERC721TransferToNonReceiver();
 error ERC721AlreadyMinted();
 error ERC721MintToAddress0();
@@ -50,15 +52,37 @@ contract TLDRegistrar is ITLDRegistrar {
     mapping (address => mapping(address => bool)) private _operators;
     mapping (address => mapping(address => bool)) private _webmasters;
 
+
+    //
+    // initializers
+    //
+
     function __TLDRegistrar_init(
         address _qns,
         string memory _name,
         string memory _symbol
     ) internal {
+
         qns = IQNSRegistryResolver(_qns);
+
         _name = _name;
         _symbol = _symbol;
+
     }
+
+    // called by QNSRegistry just as safety for the correct TLD 
+    function __initTLDRegistration (
+        bytes calldata _fqdn, 
+        bytes32 _tldHash
+    ) public {
+
+        if (TLD_HASH != bytes32(0)) revert AlreadyRegistered();
+        if (msg.sender != address(qns)) revert QNSRegistryOnly();
+        TLD_HASH = _tldHash;
+        TLD_DNS_WIRE = _fqdn;
+
+    }
+
 
     // 
     // erc 721
@@ -81,6 +105,10 @@ contract TLDRegistrar is ITLDRegistrar {
 
     function symbol () public view returns (string memory) {
         return _symbol;
+    }
+    
+    function _getNode (bytes32 _node) internal view returns (bytes32) {
+        return _getNode(uint(_node));
     }
 
     function _getNode (uint _node) internal view returns (bytes32) {
@@ -307,14 +335,6 @@ contract TLDRegistrar is ITLDRegistrar {
     //
     // externals
     //
-    function setTLD (bytes calldata tld) external {
-        if (msg.sender != address(qns)) revert NotQNS();
-        if (TLD_HASH != bytes32(0)) revert TLDSet();
-        ( bytes32 label, uint offset ) = tld.readLabel();
-        if (tld.length != offset) revert MustBeTLD(); 
-        TLD_HASH = label;
-        TLD_DNS_WIRE = tld;
-    }
 
     function _register (
         bytes calldata name,
