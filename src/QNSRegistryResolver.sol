@@ -66,9 +66,11 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
         _checkOwner();
 
-        ( bytes32 tld, uint offset ) = fqdn.readLabel(0);
+        ( bytes32 label, uint offset ) = fqdn.readLabel(0);
 
         if (offset != fqdn.length - 1) revert NotTLD();
+
+        bytes32 tld = _makeNode(bytes32(0), label);
 
         nodes[tld].tld = ITLDRegistrar(TLDs[tld] = registrar);
 
