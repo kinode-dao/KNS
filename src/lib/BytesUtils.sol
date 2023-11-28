@@ -39,6 +39,10 @@ library BytesUtils {
             keccak256(abi.encodePacked(namehash(self, newOffset), labelhash));
     }
 
+    function namehash (bytes memory self) internal pure returns (bytes32) {
+        return namehash(self, 0);
+    }
+
     function namehashAndTLD(
         bytes memory self
     ) internal pure returns (bytes32, bytes32) { 
