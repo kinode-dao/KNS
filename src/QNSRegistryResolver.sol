@@ -11,6 +11,8 @@ import "./interfaces/IQNSNFT.sol";
 import "./lib/Multicallable.sol";
 import "./lib/BytesUtils.sol";
 
+import "forge-std/console.sol";
+
 error MustChooseStaticOrRouted();
 error TLDRegistrarOnly();
 error TLD401();
@@ -66,9 +68,11 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
         ( bytes32 tld, uint offset ) = fqdn.readLabel(0);
 
-        if (offset != fqdn.length) revert NotTLD();
+        if (offset != fqdn.length - 1) revert NotTLD();
 
         nodes[tld].tld = ITLDRegistrar(TLDs[tld] = registrar);
+
+        ITLDRegistrar(registrar).__initTLDRegistration(fqdn, tld);
 
         // TODO could check that registrar implements IQNSNFT via ERC165
         emit NewTLD(tld, fqdn, registrar);
@@ -76,7 +80,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     }
 
     // this function is called once on mint by the NFT contract
-    function registerNode(
+    function registerNode (
         bytes calldata fqdn
     ) external returns (
         bytes32 nodeHash
