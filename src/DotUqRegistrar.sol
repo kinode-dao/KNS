@@ -49,11 +49,11 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         uint256 nodeId
     ) {
 
-        ( bytes32 _child, bytes32 _parent, bytes32 _tld) = 
-            name.childParentAndTLD();
+        ( bytes32 _child, bytes32 _parent, bytes32 _tld ) 
+            = name.childParentAndTLD();
         
         address _owner = _parent != TLD_HASH
-            ? _getOwner(_getNode(uint(_parent)))
+            ? _getOwner(_getNode(_parent))
             : msg.sender;
 
         _register(name, _owner, data);
@@ -74,7 +74,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         address _sender
     ) public override(TLDRegistrar) view returns (bool authed) {
 
-        while (!authed && _nodeId != 0) {
+        while (!authed) {
 
             authed = super.auth(_nodeId, _sender);
 
