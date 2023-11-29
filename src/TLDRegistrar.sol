@@ -130,7 +130,6 @@ contract TLDRegistrar is ITLDRegistrar {
     }
 
     function getApproved (uint256 _node) public view returns (address) {
-        if (_ownerOf(_node) == address(0)) revert ERC721InvalidTokenId();
         return _approvals[_node];
     }
 
@@ -171,7 +170,7 @@ contract TLDRegistrar is ITLDRegistrar {
     }
 
     function _isApprovedOrOwner (address spender, uint node) internal view returns (bool) {
-        address _owner = TLDRegistrar.ownerOf(node);
+        address _owner = _ownerOf(node);
         return (spender == _owner || isApprovedForAll(_owner, spender) || getApproved(node) == spender);
     }
 
