@@ -134,7 +134,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
 
         return 
             _nodeContents == bytes32(0) || 
-            _nodeContents & PARENT_CANNOT_CONTROL == PARENT_CANNOT_CONTROL;
+            _nodeContents & PARENT_CANNOT_CONTROL != PARENT_CANNOT_CONTROL;
 
     }
 
