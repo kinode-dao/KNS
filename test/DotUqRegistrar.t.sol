@@ -14,6 +14,8 @@ bytes32 constant PARENT_CANNOT_CONTROL = bytes32(uint(1));
 bytes32 constant CANNOT_CREATE_SUBDOMAIN = bytes32(uint(2));
 bytes32 constant CANNOT_TRANSFER = bytes32(uint(4));
 
+error NotAuthorizedToMintName();
+
 contract DotUqTest is TestUtils {
 
     bytes32 constant public ATTRIBUTES1 = 0x0000000000000000000000000000000000000000101010101010101010101010;
@@ -42,7 +44,7 @@ contract DotUqTest is TestUtils {
         assertEq(
             _node & PARENT_CANNOT_CONTROL, 
             PARENT_CANNOT_CONTROL,
-            "Parent cannot control is not set on second level domain name"
+            ".uq TLD should not be able to control"
         );
 
         address _owner = dotuq.ownerOf(_nodeId);
@@ -64,6 +66,22 @@ contract DotUqTest is TestUtils {
             bytes32(0),
             "parent should be able to control"
         );
+
+    }
+
+    function testRegister3LDNameFailsWhenSenderIsNotAuthorizedFor2LD () public {
+
+        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+
+        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+
+        dotuq.transferFrom(address(this), msg.sender, _2LNodeId);
+
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+
+        vm.expectRevert(NotAuthorizedToMintName.selector);
+
+        dotuq.register(_fqdn3l, new bytes[](0));
 
     }
 
