@@ -12,6 +12,8 @@ import "./TLDRegistrar.sol";
 
 import "./interfaces/IDotUqRegistrar.sol";
 
+error NotAuthorizedToMintName();
+
 contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     using BytesUtils for bytes;
@@ -32,14 +34,6 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
 
     function getInitializedVersion() public view returns (uint8) {
         return  _getInitializedVersion();
-    }
-
-    function _fuses () internal view {
-        console.log("fuses");
-        console.logBytes32(PARENT_CANNOT_CONTROL);
-        console.logBytes32(CANNOT_CREATE_SUBDOMAIN);
-        console.logBytes32(CANNOT_TRANSFER);
-        console.logBytes32(PARENT_CANNOT_CONTROL | CANNOT_CREATE_SUBDOMAIN | CANNOT_TRANSFER);
     }
 
     function register (
@@ -76,19 +70,27 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         bytes calldata _name,
         uint256 _offset,
         address _minter
-    ) internal view returns (bytes32 node_, bool auth_) {
+    ) internal view returns (bytes32, bool) {
 
+        // get current label
         ( bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
 
-        if (_label == bytes32(0)) return ( bytes32(0), false);
+        // if label is TLD make namehash and return
+        if (_newOffset == _name.length - 1) return (keccak256(abi.encodePacked(bytes32(0), _label)), true);
 
-        ( node_, auth_ ) = _authRegister(_name, _newOffset, _minter);
+        // recurse to retrieve parent 
+        ( bytes32 _parent, bool auth_ ) = _authRegister(_name, _newOffset, _minter);
 
-        node_ = keccak256(abi.encodePacked(_node, _label));
+        // make current node
+        bytes32 node_ = keccak256(abi.encodePacked(_parent, _label));
 
-        if (auth_ && !_controllableViaParent(uint(node_))) auth_ = false;
+        // if current node is not controllable via parent then auth must be false
+        if (!_controllableViaParent(uint(node_))) auth_ = false;
 
-        if (node_ != TLD_HASH) auth_ = super.auth(uint(node_), _minter);
+        // if auth is false then check auth for current node
+        if (!auth_) auth_ = super.auth(uint(node_), _minter);
+
+        return (node_, auth_);
 
     }
 
@@ -104,7 +106,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
     function auth (
         uint _nodeId,
         address _sender
-    ) public override(TLDRegistrar) view returns (bool authed) {
+    ) public override(TLDRegistrar) view returns (bool authed_) {
 
         while (!authed_) {
 
@@ -122,11 +124,17 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         uint _nodeId
     ) internal view returns (bool) {
 
-        bytes32 _node = _getNode(_nodeId);
+        return _controllableViaParent(_getNode(_nodeId));
 
-        bytes32 _attributes = _getAttributes(_node);
+    }
 
-        return false;
+    function _controllableViaParent (
+        bytes32 _nodeContents
+    ) internal view returns (bool) {
+
+        return 
+            _nodeContents == bytes32(0) || 
+            _nodeContents & PARENT_CANNOT_CONTROL == PARENT_CANNOT_CONTROL;
 
     }
 
