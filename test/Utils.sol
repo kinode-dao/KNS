@@ -84,7 +84,7 @@ contract DotUqShim is DotUqRegistrar {
         _mint(user, _node);
     }
 
-    function node (uint _node) public view returns (bytes32) { 
+    function getNode (uint _node) public view returns (bytes32) { 
         return _getNode(_node); 
     }
 
