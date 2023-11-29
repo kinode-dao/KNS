@@ -101,4 +101,21 @@ contract DotUqTest is TestUtils {
 
     }
 
+    function testRegister3LDWhenApprovedFor2LD () public {
+
+        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+
+        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+
+        dotuq.approve(msg.sender, _2LNodeId);
+
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+
+        vm.prank(msg.sender);
+
+        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+
+
+    }
+
 }
