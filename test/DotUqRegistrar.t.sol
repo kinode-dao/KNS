@@ -85,4 +85,20 @@ contract DotUqTest is TestUtils {
 
     }
 
+    function testRegister3LDNameWhenOwning2LD () public {
+
+        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+
+        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+
+        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+
+        assertEq(dotuq.ownerOf(_2LNodeId), address(this), "wrong 2l node owner");
+
+        assertEq(dotuq.ownerOf(_3LNodeId), address(this), "wrong 3l node owner");
+
+    }
+
 }
