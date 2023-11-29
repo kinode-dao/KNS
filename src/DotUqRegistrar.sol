@@ -43,29 +43,61 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
     }
 
     function register (
-        bytes calldata name,
-        bytes[] calldata data
+        bytes calldata _name,
+        bytes[] calldata _data
     ) external payable returns (
         uint256 nodeId
     ) {
 
-        ( bytes32 _child, bytes32 _parent, bytes32 _tld ) 
-            = name.childParentAndTLD();
-        
-        address _owner = _parent != TLD_HASH
-            ? _getOwner(_getNode(_parent))
-            : msg.sender;
+        bytes32 _attributes = _authAndGetRegistrationAttributes(_name, msg.sender);
 
-        _register(name, _owner, data);
+        return _register(_name, msg.sender, _attributes, _data);
+
+    }
+
+    function _authAndGetRegistrationAttributes (
+        bytes calldata _name,
+        address _minter
+    ) internal view returns (bytes32 attributes_) {
+
+        ( , uint _offset ) = _name.readLabel(0);
+
+        ( bytes32 _parent, bool _auth ) = _authRegister(_name, _offset, _minter);
+
+        if (!_auth) revert NotAuthorizedToMintName();
+
+        attributes_ = _parent == TLD_HASH
+            ? PARENT_CANNOT_CONTROL
+            : bytes32(0);
+
+    }
+
+    function _authRegister (
+        bytes calldata _name,
+        uint256 _offset,
+        address _minter
+    ) internal view returns (bytes32 node_, bool auth_) {
+
+        ( bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
+
+        if (_label == bytes32(0)) return ( bytes32(0), false);
+
+        ( node_, auth_ ) = _authRegister(_name, _newOffset, _minter);
+
+        node_ = keccak256(abi.encodePacked(_node, _label));
+
+        if (auth_ && !_controllableViaParent(uint(node_))) auth_ = false;
+
+        if (node_ != TLD_HASH) auth_ = super.auth(uint(node_), _minter);
 
     }
 
     function auth (
         bytes32 _nodeId,
-        address sender
+        address _sender
     ) public override(TLDRegistrar) view returns (bool) {
 
-        return auth(uint(_nodeId), sender);
+        return auth(uint(_nodeId), _sender);
 
     }
 
@@ -74,11 +106,11 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         address _sender
     ) public override(TLDRegistrar) view returns (bool authed) {
 
-        while (!authed) {
+        while (!authed_) {
 
-            authed = super.auth(_nodeId, _sender);
+            authed_ = super.auth(_nodeId, _sender);
 
-            if (authed) return true;
+            if (authed_) break;
             else if (_controllableViaParent(_nodeId)) _nodeId = parents[_nodeId];
             else return false;
 
@@ -87,16 +119,14 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
     }
 
     function _controllableViaParent (
-        uint _node
+        uint _nodeId
     ) internal view returns (bool) {
 
-        bytes32 _attributes = _getAttributes(_getNode(_node));
+        bytes32 _node = _getNode(_nodeId);
 
-        console.log("attributes");
-        console.logBytes32(bytes32(uint(1 << 96)));
-        console.logBytes32(bytes32(uint(1 << 160)));
-        console.logBytes32(bytes32(uint(1 >> 96)));
-        console.logBytes32(bytes32(uint(1 >> 160)));
+        bytes32 _attributes = _getAttributes(_node);
+
+        return false;
 
     }
 
