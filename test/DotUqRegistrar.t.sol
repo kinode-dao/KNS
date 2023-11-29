@@ -115,6 +115,39 @@ contract DotUqTest is TestUtils {
 
         uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
 
+        assertEq(dotuq.ownerOf(_2LNodeId), address(this), "wrong 2l node owner");
+
+        assertEq(dotuq.ownerOf(_3LNodeId), msg.sender, "wrong 3l node owner");
+
+    }
+
+    function test2LDCanRelinquishControlOf3LD () public {
+
+        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+
+        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+
+        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+
+        bytes32 _3LDNode = dotuq.getNode(_3LNodeId);
+
+        assertEq(
+            _3LDNode & PARENT_CANNOT_CONTROL, 
+            bytes32(0),
+            "3LD node should be controllable by parent before revocation"
+        );
+
+        dotuq.revokeControlOverSubdomain(_fqdn3l);
+
+        _3LDNode = dotuq.getNode(_3LNodeId);
+
+        assertEq(
+            _3LDNode & PARENT_CANNOT_CONTROL, 
+            PARENT_CANNOT_CONTROL,
+            "3LD node should have parent control revoked"
+        );
 
     }
 
