@@ -8,4 +8,6 @@ bytes32 constant CANNOT_TRANSFER = bytes32(uint(4));
 
 interface IDotUqRegistrar {
 
+    event ControlRevoked(uint child, uint parent, address sender);
+
 }

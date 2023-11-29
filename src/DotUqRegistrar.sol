@@ -13,6 +13,7 @@ import "./TLDRegistrar.sol";
 import "./interfaces/IDotUqRegistrar.sol";
 
 error NotAuthorizedToMintName();
+error CannotRevokeControlFromTLD();
 
 contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
@@ -91,6 +92,32 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         if (!auth_) auth_ = super.auth(uint(node_), _minter);
 
         return (node_, auth_);
+
+    }
+
+    function revokeControlOverSubdomain (
+        bytes memory _name
+    ) public {
+
+        ( bytes32 _child, bytes32 _parent, bytes32 _tld ) 
+            = _name.childParentAndTLD();
+        
+        if (_parent == _tld) revert CannotRevokeControlFromTLD();
+
+        bool _authed = auth(_parent, msg.sender);
+
+        if (auth(_parent, msg.sender)) {
+
+            bytes32 _node = _getNode(_child);
+
+            bytes32 _attributes = _setAttributes
+                (PARENT_CANNOT_CONTROL, _getAttributes(_node)); 
+
+            _setNode(_setAttributes(_attributes, _node), uint(_child));
+
+            emit ControlRevoked(uint(_child), uint(_parent), msg.sender);
+
+        } else revert NotAuthorized();
 
     }
 
