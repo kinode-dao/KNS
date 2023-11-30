@@ -15,6 +15,8 @@ bytes32 constant CANNOT_CREATE_SUBDOMAIN = bytes32(uint(2));
 bytes32 constant CANNOT_TRANSFER = bytes32(uint(4));
 
 error NotAuthorizedToMintName();
+error CannotRevokeControlFromTLD();
+error NotAuthorized();
 
 contract DotUqTest is TestUtils {
 
@@ -151,6 +153,39 @@ contract DotUqTest is TestUtils {
 
     }
 
+    function test3LDCanNotCompel2LDToRelinquish () public {
+
+        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+
+        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+
+        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+
+        dotuq.transferFrom(
+            address(this),
+            msg.sender,
+            _3LNodeId
+        );
+
+        vm.prank(msg.sender);
+
+        vm.expectRevert(NotAuthorized.selector);
+
+        dotuq.revokeControlOverSubdomain(_fqdn3l);
+
+        // _3LDNode = dotuq.getNode(_3LNodeId);
+
+        // assertEq(
+        //     _3LDNode & PARENT_CANNOT_CONTROL, 
+        //     PARENT_CANNOT_CONTROL,
+        //     "3LD node should have parent control revoked"
+        // );
+
+    }
+
+
     function testQNSAuthsWhenChangingRecord () public {
 
         bytes memory _fqdn = dnsStringToWire("sub.uq");
@@ -160,6 +195,26 @@ contract DotUqTest is TestUtils {
         qns.setKey(bytes32(_nodeId), keccak256("key"));
 
         assertEq(qns.key(bytes32(_nodeId)), keccak256("key"));
+
+    }
+
+    function testQNSAuthsWhenChanging3LDRecordFrom2LD () public {
+
+        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+
+        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+
+        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+
+        dotuq.transferFrom(address(this), msg.sender, _2LNodeId);
+
+        vm.prank(msg.sender);
+
+        qns.setKey(bytes32(_3LNodeId), keccak256("key"));
+
+        assertEq(qns.key(bytes32(_3LNodeId)), keccak256("key"));
 
     }
 
