@@ -55,7 +55,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
     function _authAndGetRegistrationAttributes (
         bytes calldata _name,
         address _minter
-    ) internal view returns (bytes32 attributes_) {
+    ) internal returns (bytes32 attributes_) {
 
         ( , uint _offset ) = _name.readLabel(0);
 
@@ -73,7 +73,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         bytes calldata _name,
         uint256 _offset,
         address _minter
-    ) internal view returns (bytes32, bool) {
+    ) internal returns (bytes32, bool) {
 
         // get current label
         ( bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
@@ -86,6 +86,9 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
 
         // make current node
         bytes32 node_ = keccak256(abi.encodePacked(_parent, _label));
+
+        // if parent is not set, set
+        if (parents[uint(node_)] == 0) parents[uint(node_)] = uint(_parent);
 
         // if current node is not controllable via parent then auth must be false
         if (!_controllableViaParent(uint(node_))) auth_ = false;

@@ -353,6 +353,7 @@ contract TLDRegistrar is ITLDRegistrar {
 
         _setNode(_setAttributes(_attributes, _getNode(nodeId_)), nodeId_);
 
+
     }
 
     function auth (
@@ -381,6 +382,7 @@ contract TLDRegistrar is ITLDRegistrar {
     //
     // internals
     //
+
     function _getNodeAndParent(bytes memory fqdn) internal pure returns (bytes32 node, bytes32 parentNode) {
         (bytes32 label, uint256 offset) = fqdn.readLabel(0);
         parentNode = fqdn.namehash(offset);
