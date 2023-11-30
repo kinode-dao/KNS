@@ -151,4 +151,16 @@ contract DotUqTest is TestUtils {
 
     }
 
+    function testQNSAuthsWhenChangingRecord () public {
+
+        bytes memory _fqdn = dnsStringToWire("sub.uq");
+
+        uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
+
+        qns.setKey(bytes32(_nodeId), keccak256("key"));
+
+        assertEq(qns.key(bytes32(_nodeId)), keccak256("key"));
+
+    }
+
 }
