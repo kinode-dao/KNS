@@ -106,14 +106,11 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         
         if (_parent == _tld) revert CannotRevokeControlFromTLD();
 
-        bool _authed = auth(_parent, msg.sender);
-
         if (auth(_parent, msg.sender)) {
 
-            bytes32 _node = _setAttributes
-                (PARENT_CANNOT_CONTROL, _getNode(_child)); 
+            bytes32 _node = _getNode(_child) | PARENT_CANNOT_CONTROL;
 
-            _setNode(_node, uint(_child));
+            _setNode(_node , uint(_child));
 
             emit ControlRevoked(uint(_child), uint(_parent), msg.sender);
 
