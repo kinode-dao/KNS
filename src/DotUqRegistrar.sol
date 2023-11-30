@@ -43,12 +43,12 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         bytes calldata _name,
         bytes[] calldata _data
     ) external payable returns (
-        uint256 nodeId
+        uint256 nodeId_
     ) {
 
         bytes32 _attributes = _authAndGetRegistrationAttributes(_name, msg.sender);
 
-        return _register(_name, msg.sender, _attributes, _data);
+        nodeId_ = _register(_name, msg.sender, _attributes, _data);
 
     }
 
@@ -57,11 +57,14 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         address _minter
     ) internal returns (bytes32 attributes_) {
 
-        ( , uint _offset ) = _name.readLabel(0);
+        ( bytes32 _label , uint _offset ) = _name.readLabel(0);
 
         ( bytes32 _parent, bool _auth ) = _authRegister(_name, _offset, _minter);
 
         if (!_auth) revert NotAuthorizedToMintName();
+
+        parents[uint(keccak256(abi.encodePacked(_parent, _label)))] 
+            = uint(_parent);
 
         attributes_ = _parent == TLD_HASH
             ? PARENT_CANNOT_CONTROL
@@ -135,7 +138,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         address _sender
     ) public override(TLDRegistrar) view returns (bool authed_) {
 
-        while (!authed_) {
+        while (!authed_ && _nodeId != uint(TLD_HASH)) {
 
             authed_ = super.auth(_nodeId, _sender);
 
