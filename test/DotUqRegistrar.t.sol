@@ -19,6 +19,7 @@ bytes32 constant CANNOT_TRANSFER = bytes32(uint(4));
 error NotAuthorizedToMintName();
 error CannotRevokeControlFromTLD();
 error NotAuthorized();
+error SecondLevelDomainNot9CharactersOrMore();
 
 contract DotUqTest is TestUtils {
     using BytesUtils for bytes;
@@ -40,7 +41,7 @@ contract DotUqTest is TestUtils {
 
     function testRegister2LDName () public {
 
-        bytes memory _fqdn = dnsStringToWire("sub.uq");
+        bytes memory _fqdn = dnsStringToWire("sub123abc.uq");
 
         uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
 
@@ -58,9 +59,19 @@ contract DotUqTest is TestUtils {
 
     }
 
+    function testRegister2LDNameFailsWhenLessThan9Characters () public {
+
+        bytes memory _fqdn = dnsStringToWire("12345678.uq");
+
+        vm.expectRevert(SecondLevelDomainNot9CharactersOrMore.selector);
+
+        uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
+
+    }
+
     function testRegister3LDName () public {
 
-        bytes memory _fqdn = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn = dnsStringToWire("sub.sub123abc.uq");
 
         uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
 
@@ -76,13 +87,13 @@ contract DotUqTest is TestUtils {
 
     function testRegister3LDNameFailsWhenSenderIsNotAuthorizedFor2LD () public {
 
-        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+        bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
         uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
 
         dotuq.transferFrom(address(this), msg.sender, _2LNodeId);
 
-        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
         vm.expectRevert(NotAuthorizedToMintName.selector);
 
@@ -92,11 +103,11 @@ contract DotUqTest is TestUtils {
 
     function testRegister3LDNameWhenOwning2LD () public {
 
-        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+        bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
         uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
 
-        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
         uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
 
@@ -108,13 +119,13 @@ contract DotUqTest is TestUtils {
 
     function testRegister3LDWhenApprovedFor2LD () public {
 
-        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+        bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
         uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
 
         dotuq.approve(msg.sender, _2LNodeId);
 
-        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
         vm.prank(msg.sender);
 
@@ -128,11 +139,11 @@ contract DotUqTest is TestUtils {
 
     function test2LDCanRelinquishControlOf3LD () public {
 
-        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+        bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
         uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
 
-        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
         uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
 
@@ -158,11 +169,11 @@ contract DotUqTest is TestUtils {
 
     function test3LDCanNotCompel2LDToRelinquish () public {
 
-        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+        bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
         uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
 
-        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
         uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
 
@@ -183,7 +194,7 @@ contract DotUqTest is TestUtils {
 
     function testQNSAuthsWhenChangingRecord () public {
 
-        bytes memory _fqdn = dnsStringToWire("sub.uq");
+        bytes memory _fqdn = dnsStringToWire("sub123abc.uq");
 
         uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
 
@@ -195,11 +206,11 @@ contract DotUqTest is TestUtils {
 
     function testQNSAuthsWhenChanging3LDRecordFrom2LD () public {
 
-        bytes memory _fqdn2l = dnsStringToWire("sub.uq");
+        bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
         uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
 
-        bytes memory _fqdn3l = dnsStringToWire("sub.sub.uq");
+        bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
         uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
 
@@ -215,7 +226,7 @@ contract DotUqTest is TestUtils {
 
     function testRegisterWithRecordData () public {
 
-        bytes memory _fqdn = dnsStringToWire("sub.uq");
+        bytes memory _fqdn = dnsStringToWire("sub123abc.uq");
 
         bytes32 _nodeHash = _fqdn.namehash(0);
 
@@ -273,6 +284,10 @@ contract DotUqTest is TestUtils {
         assertEq(_wt, type(uint16).max, "unexpected wt");
         assertEq(_tcp, type(uint16).max, "unexpected tcp");
         assertEq(_udp, type(uint16).max, "unexpected udp");
+
+    }
+
+    function testTest () public {
 
     }
 
