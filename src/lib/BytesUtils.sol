@@ -87,6 +87,7 @@ library BytesUtils {
     ) internal pure returns (bytes32 labelhash, uint256 newIdx) {
         require(idx < self.length, "readLabel: Index out of bounds");
         uint256 len = uint256(uint8(self[idx]));
+        require(len < 64, "readLabel: Label too long");
         if (len > 0) {
             labelhash = keccak(self, idx + 1, len);
         } else {
