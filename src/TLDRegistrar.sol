@@ -39,6 +39,7 @@ contract TLDRegistrar is ITLDRegistrar {
 
     IQNSRegistryResolver public qns;
 
+    bytes32 public TLD_LABEL;
     bytes32 public TLD_HASH;
     bytes   public TLD_DNS_WIRE;
 
@@ -80,6 +81,7 @@ contract TLDRegistrar is ITLDRegistrar {
         if (msg.sender != address(qns)) revert QNSRegistryOnly();
         TLD_HASH = _tldHash;
         TLD_DNS_WIRE = _fqdn;
+        ( TLD_LABEL, ) = _fqdn.readLabel(0);
 
     }
 

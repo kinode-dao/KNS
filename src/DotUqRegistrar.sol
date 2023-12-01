@@ -16,6 +16,8 @@ import "./interfaces/IDotUqRegistrar.sol";
 
 error NotAuthorizedToMintName();
 error CannotRevokeControlFromTLD();
+error SecondLevelDomainNot9CharactersOrMore();
+error NotDotUqTLD();
 
 contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
@@ -46,33 +48,14 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         uint256 nodeId_
     ) {
 
-        bytes32 _attributes = _authAndGetRegistrationAttributes(_name, msg.sender);
+        ( bytes32 _attributes, ) = 
+            _authAndGetRegistrationAttributes(_name, 0, msg.sender);
 
         nodeId_ = _register(_name, msg.sender, _attributes, _data);
 
     }
 
     function _authAndGetRegistrationAttributes (
-        bytes calldata _name,
-        address _minter
-    ) internal returns (bytes32 attributes_) {
-
-        ( bytes32 _label , uint _offset ) = _name.readLabel(0);
-
-        ( bytes32 _parent, bool _auth ) = _authRegister(_name, _offset, _minter);
-
-        if (!_auth) revert NotAuthorizedToMintName();
-
-        parents[uint(keccak256(abi.encodePacked(_parent, _label)))] 
-            = uint(_parent);
-
-        attributes_ = _parent == TLD_HASH
-            ? PARENT_CANNOT_CONTROL
-            : bytes32(0);
-
-    }
-
-    function _authRegister (
         bytes calldata _name,
         uint256 _offset,
         address _minter
@@ -81,11 +64,18 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         // get current label
         ( bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
 
-        // if label is TLD make namehash and return
-        if (_newOffset == _name.length - 1) return (keccak256(abi.encodePacked(bytes32(0), _label)), true);
+        // if label is TLD demand it is .uq and return
+        if (_newOffset == _name.length - 1)
+            if (_label != TLD_LABEL) revert NotDotUqTLD();
+                else return (TLD_HASH, true);
 
         // recurse to retrieve parent 
-        ( bytes32 _parent, bool auth_ ) = _authRegister(_name, _newOffset, _minter);
+        ( bytes32 _parent, bool auth_ ) = 
+            _authAndGetRegistrationAttributes (_name, _newOffset, _minter);
+
+        // if second level domain, check it is 9 characters or more
+        if (_parent == TLD_HASH && _newOffset - _offset <= 9) 
+            revert SecondLevelDomainNot9CharactersOrMore();
 
         // make current node
         bytes32 node_ = keccak256(abi.encodePacked(_parent, _label));
@@ -93,13 +83,25 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         // if parent is not set, set
         if (parents[uint(node_)] == 0) parents[uint(node_)] = uint(_parent);
 
-        // if current node is not controllable via parent then auth must be false
-        if (!_controllableViaParent(uint(node_))) auth_ = false;
+        // if not in the first callframe of recursion, update auth and recurse
+        if (_offset != 0) {
 
-        // if auth is false then check auth for current node
-        if (!auth_) auth_ = super.auth(uint(node_), _minter);
+            // if current node is not controllable via parent then auth must be false
+            if (!_controllableViaParent(uint(node_))) auth_ = false;
 
-        return (node_, auth_);
+            // if auth is false then check auth for current node
+            if (!auth_) auth_ = super.auth(uint(node_), _minter);
+
+            return (node_, auth_);
+
+        // at end of first callframe, check auth and return attributes
+        } else {
+
+            if (!auth_) revert NotAuthorizedToMintName();
+
+            return (_parent == TLD_HASH ? PARENT_CANNOT_CONTROL : bytes32(0), true);
+
+        }
 
     }
 
