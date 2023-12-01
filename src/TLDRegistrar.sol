@@ -345,37 +345,39 @@ contract TLDRegistrar is ITLDRegistrar {
 
         bytes32 _node = qns.registerNode(_name);
 
-        if (_data.length > 0) qns.multicallWithNodeCheck(_node, _data);
-
         nodeId_ = uint(_node);
 
         _safeMint(_owner, nodeId_);
 
         _setNode(_setAttributes(_attributes, _getNode(nodeId_)), nodeId_);
 
+        if (0 < _data.length) qns.multicallWithNodeCheck(_node, _data);
 
     }
 
     function auth (
-        bytes32 node,
-        address sender
+        bytes32 _node,
+        address _sender
     ) public view virtual returns (
-        bool authed
+        bool authed_
     ) {
 
-        return auth(uint(node), sender);
+        authed_ = auth(uint(_node), _sender);
 
     }
 
     function auth (
-        uint node,
-        address sender 
+        uint _node,
+        address _sender 
     ) public view virtual returns (
-        bool authed
+        bool authed_
     ) {
-        return 
-            _isWebmaster(sender, node) || 
-            _isApprovedOrOwner(sender, node);
+
+        authed_ = 
+            _sender == address(this) ||
+            _isWebmaster(_sender, _node) || 
+            _isApprovedOrOwner(_sender, _node);
+
     }
 
 
