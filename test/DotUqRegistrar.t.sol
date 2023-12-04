@@ -43,7 +43,7 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn = dnsStringToWire("sub123abc.uq");
 
-        uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
+        uint _nodeId = dotuq.register(_fqdn, address(this), new bytes[](0));
 
         bytes32 _node = dotuq.getNode(_nodeId);
 
@@ -65,7 +65,7 @@ contract DotUqTest is TestUtils {
 
         vm.expectRevert(SecondLevelDomainNot9CharactersOrMore.selector);
 
-        uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
+        uint _nodeId = dotuq.register(_fqdn, address(this), new bytes[](0));
 
     }
 
@@ -73,7 +73,7 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn = dnsStringToWire("sub.sub123abc.uq");
 
-        uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
+        uint _nodeId = dotuq.register(_fqdn, address(this), new bytes[](0));
 
         bytes32 _node = dotuq.getNode(_nodeId);
 
@@ -89,7 +89,7 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
-        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+        uint _2LNodeId = dotuq.register(_fqdn2l, address(this), new bytes[](0));
 
         dotuq.transferFrom(address(this), msg.sender, _2LNodeId);
 
@@ -97,7 +97,7 @@ contract DotUqTest is TestUtils {
 
         vm.expectRevert(NotAuthorizedToMintName.selector);
 
-        dotuq.register(_fqdn3l, new bytes[](0));
+        dotuq.register(_fqdn3l, address(this), new bytes[](0));
 
     }
 
@@ -105,11 +105,11 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
-        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+        uint _2LNodeId = dotuq.register(_fqdn2l, address(this), new bytes[](0));
 
         bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
-        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+        uint _3LNodeId = dotuq.register(_fqdn3l, address(this), new bytes[](0));
 
         assertEq(dotuq.ownerOf(_2LNodeId), address(this), "wrong 2l node owner");
 
@@ -121,7 +121,7 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
-        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+        uint _2LNodeId = dotuq.register(_fqdn2l, address(this), new bytes[](0));
 
         dotuq.approve(msg.sender, _2LNodeId);
 
@@ -129,7 +129,7 @@ contract DotUqTest is TestUtils {
 
         vm.prank(msg.sender);
 
-        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+        uint _3LNodeId = dotuq.register(_fqdn3l, msg.sender, new bytes[](0));
 
         assertEq(dotuq.ownerOf(_2LNodeId), address(this), "wrong 2l node owner");
 
@@ -141,11 +141,11 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
-        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+        uint _2LNodeId = dotuq.register(_fqdn2l, address(this), new bytes[](0));
 
         bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
-        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+        uint _3LNodeId = dotuq.register(_fqdn3l, address(this), new bytes[](0));
 
         bytes32 _3LDNode = dotuq.getNode(_3LNodeId);
 
@@ -171,11 +171,11 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
-        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+        uint _2LNodeId = dotuq.register(_fqdn2l, address(this), new bytes[](0));
 
         bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
-        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+        uint _3LNodeId = dotuq.register(_fqdn3l, address(this), new bytes[](0));
 
         dotuq.transferFrom(
             address(this),
@@ -196,7 +196,7 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn = dnsStringToWire("sub123abc.uq");
 
-        uint _nodeId = dotuq.register(_fqdn, new bytes[](0));
+        uint _nodeId = dotuq.register(_fqdn, address(this), new bytes[](0));
 
         qns.setKey(bytes32(_nodeId), keccak256("key"));
 
@@ -208,11 +208,11 @@ contract DotUqTest is TestUtils {
 
         bytes memory _fqdn2l = dnsStringToWire("sub123abc.uq");
 
-        uint _2LNodeId = dotuq.register(_fqdn2l, new bytes[](0));
+        uint _2LNodeId = dotuq.register(_fqdn2l, address(this), new bytes[](0));
 
         bytes memory _fqdn3l = dnsStringToWire("sub.sub123abc.uq");
 
-        uint _3LNodeId = dotuq.register(_fqdn3l, new bytes[](0));
+        uint _3LNodeId = dotuq.register(_fqdn3l, address(this), new bytes[](0));
 
         dotuq.transferFrom(address(this), msg.sender, _2LNodeId);
 
@@ -265,7 +265,7 @@ contract DotUqTest is TestUtils {
             QNSRegistryResolver.setUdp.selector,
             _nodeHash, type(uint16).max);
 
-        bytes32 _node = bytes32(dotuq.register(_fqdn, _data));
+        bytes32 _node = bytes32(dotuq.register(_fqdn, address(this), _data));
 
         assertEq(dotuq.ownerOf(uint(_node)), address(this), "owner should be testing contract");
 
@@ -284,10 +284,6 @@ contract DotUqTest is TestUtils {
         assertEq(_wt, type(uint16).max, "unexpected wt");
         assertEq(_tcp, type(uint16).max, "unexpected tcp");
         assertEq(_udp, type(uint16).max, "unexpected udp");
-
-    }
-
-    function testTest () public {
 
     }
 
