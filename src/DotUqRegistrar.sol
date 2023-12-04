@@ -43,6 +43,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
 
     function register (
         bytes calldata _name,
+        address _to,
         bytes[] calldata _data
     ) external payable returns (
         uint256 nodeId_
@@ -51,7 +52,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         ( bytes32 _attributes, ) = 
             _authAndGetRegistrationAttributes(_name, 0, msg.sender);
 
-        nodeId_ = _register(_name, msg.sender, _attributes, _data);
+        nodeId_ = _register(_name, _to, _attributes, _data);
 
     }
 
@@ -162,7 +163,7 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
 
     function _controllableViaParent (
         bytes32 _nodeContents
-    ) internal view returns (bool) {
+    ) internal pure returns (bool) {
 
         return 
             _nodeContents == bytes32(0) || 
