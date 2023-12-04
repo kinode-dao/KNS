@@ -34,7 +34,6 @@ contract QNSDotUqScript is Script {
         inputs[1] = "--to-hex";
         inputs[2] = "uq";
         bytes memory baseNode = vm.ffi(inputs);
-        console.logBytes(baseNode);
 
         DotUqRegistrar dotUqImpl = new DotUqRegistrar();
         DotUqRegistrar dotUq = DotUqRegistrar(
@@ -55,24 +54,7 @@ contract QNSDotUqScript is Script {
 
 contract QNSTest is Script {
 
-    function run () public {
-
-        console.log("?");
-
-        address UQNFT = vm.envAddress("UQNFT");
-        address QNS = vm.envAddress("QNS_REGISTRY");
-        bytes memory wsPayload = vm.envBytes("WSCD");
-        bytes memory regPayload = vm.envBytes("REGCD");
-
-        QNSRegistryResolver newQNS = new QNSRegistryResolver();
-        bytes memory newcode = address(newQNS).code;
-        vm.etch(QNS, newcode);
-
-        // (bool s, bytes memory r) = QNS.call(wsPayload);
-
-        (bool s, bytes memory r) = UQNFT.call(regPayload);
-
-    }
+    function run () public { }
 
 }
 
@@ -119,7 +101,7 @@ contract SetRouters is Script {
 
         address DOTUQ = vm.envAddress("DOT_UQ_REGISTRAR");
 
-        uint32 WS_IP = 2130706433;
+        uint128 WS_IP = 2130706433;
         uint16 WS_PORT = 3000;
 
         string memory node1 = "uqbar-router-11.uq";
@@ -146,7 +128,7 @@ contract SetRouters is Script {
 
         records = new bytes[](3);
         records[0] = abi.encodeWithSelector
-            ( QNSRegistryResolver.setKey.selector, node, bytes32(0) );
+            ( QNSRegistryResolver.setKey.selector, node, keccak256("key") );
         records[1] = abi.encodeWithSelector
             ( QNSRegistryResolver.setIp.selector, node, WS_IP );
         records[2] = abi.encodeWithSelector
@@ -160,7 +142,7 @@ contract SetRouters is Script {
 
         records = new bytes[](3);
         records[0] = abi.encodeWithSelector
-            ( QNSRegistryResolver.setKey.selector, node, bytes32(0) );
+            ( QNSRegistryResolver.setKey.selector, node, keccak256("key") );
         records[1] = abi.encodeWithSelector
             ( QNSRegistryResolver.setIp.selector, node, WS_IP );
         records[2] = abi.encodeWithSelector
@@ -174,7 +156,7 @@ contract SetRouters is Script {
 
         records = new bytes[](3);
         records[0] = abi.encodeWithSelector
-            ( QNSRegistryResolver.setKey.selector, node, bytes32(0) );
+            ( QNSRegistryResolver.setKey.selector, node, keccak256("key") );
         records[1] = abi.encodeWithSelector
             ( QNSRegistryResolver.setIp.selector, node, WS_IP );
         records[2] = abi.encodeWithSelector
@@ -184,5 +166,14 @@ contract SetRouters is Script {
 
         vm.stopBroadcast();
 
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }
