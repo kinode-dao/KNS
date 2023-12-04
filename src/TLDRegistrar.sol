@@ -208,7 +208,7 @@ contract TLDRegistrar is ITLDRegistrar {
     function _setOwner(
         address _to, 
         bytes32 _node
-    ) internal view returns (bytes32) {
+    ) internal pure returns (bytes32) {
 
         bytes32 withoutOwner = _node & MASK_RIGHT_96;
         return withoutOwner | _addrToBytes32(_to);
@@ -224,7 +224,7 @@ contract TLDRegistrar is ITLDRegistrar {
     function _setAttributes (
         bytes32 attributes,
         bytes32 node
-    ) internal view returns (bytes32) {
+    ) internal pure returns (bytes32) {
 
         bytes32 withoutOwner = attributes & MASK_RIGHT_96;
         bytes32 withoutAttributes = node & MASK_LEFT_160;
