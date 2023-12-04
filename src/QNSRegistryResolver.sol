@@ -28,12 +28,8 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     mapping (bytes32 => Node) public nodes;
 
     mapping (bytes32 => bytes32)   public key;
-    mapping (bytes32 => bytes32[]) public routing;
-    mapping (bytes32 => uint128)   public ip;
-    mapping (bytes32 => uint16)    public ws;
-    mapping (bytes32 => uint16)    public wt;
-    mapping (bytes32 => uint16)    public tcp;
-    mapping (bytes32 => uint16)    public udp;
+    mapping (bytes32 => bytes32[]) private _routers;
+    mapping (bytes32 => IP) public ip;
 
     modifier tldAuth (bytes32 node) {
         if (!nodes[node].tld.auth(node, msg.sender)) revert TLD401();
@@ -92,7 +88,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
         if (msg.sender != TLDs[tld]) revert TLDRegistrarOnly();
 
-        nodes[node] = Node(ITLDRegistrar(TLDs[tld]), 0);
+        nodes[node] = Node(ITLDRegistrar(msg.sender), 0);
 
         emit NodeRegistered(node, fqdn);
 
@@ -103,28 +99,59 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     function setKey (bytes32 _node, bytes32 _key) external tldAuth(_node) {
 
         ( key[_node] = _key ) == 0 
-            ? nodes[_node].records &= KEYED
-            : nodes[_node].records |= KEYED;
+            ? nodes[_node].records &= KEYED_BIT
+            : nodes[_node].records |= KEYED_BIT;
 
         emit KeyUpdate(_node, _key);
 
     }
 
-    function setRouting (bytes32 _node, bytes32[] calldata _routers) external tldAuth(_node) {
+    function setRouters (bytes32 _node, bytes32[] calldata _newRouters) external tldAuth(_node) {
 
-        ( routing[_node] = _routers ).length == 0
-            ? nodes[_node].records &= ROUTED
-            : nodes[_node].records |= ROUTED;
+        ( _routers[_node] = _newRouters ).length == 0
+            ? nodes[_node].records &= ROUTED_BIT
+            : nodes[_node].records |= ROUTED_BIT;
 
-        emit RoutingUpdate(_node, _routers);
+        emit RoutingUpdate(_node, _newRouters);
+
+    }
+
+    function setDirectInfo(
+        bytes32 _node,
+        uint128 _ip,
+        uint16 _ws,
+        uint16 _wt,
+        uint16 _tcp,
+        uint16 _udp
+    ) public {}
+
+    function setAllIp (bytes32 _node, uint128 _ip, uint16 _ws, uint16 _wt, uint16 _tcp, uint16 _udp) external tldAuth(_node) {
+
+        uint96 _records = nodes[_node].records;
+
+        _records = _ip == 0 ? _records & IP_BIT : _records | IP_BIT;
+        _records = _ws == 0 ? _records & WS_BIT : _records | WS_BIT;
+        _records = _wt == 0 ? _records & WT_BIT : _records | WT_BIT;
+        _records = _tcp == 0 ? _records & TCP_BIT : _records | TCP_BIT;
+        _records = _udp == 0 ? _records & UDP_BIT : _records | UDP_BIT;
+
+        nodes[_node].records = _records;
+
+        ip[_node] = IP(_ip, _ws, _wt, _tcp, _udp);
+
+        emit IpUpdate(_node, _ip);
+        emit WsUpdate(_node, _ws);
+        emit WtUpdate(_node, _wt);
+        emit TcpUpdate(_node, _tcp);
+        emit UdpUpdate(_node, _udp);
 
     }
 
     function setIp (bytes32 _node, uint128 _ip) external tldAuth(_node) {
 
-        ( ip[_node] = _ip ) == 0
-            ? nodes[_node].records &= IP
-            : nodes[_node].records |= IP;
+        ( ip[_node].ip = _ip ) == 0
+            ? nodes[_node].records &= IP_BIT
+            : nodes[_node].records |= IP_BIT;
         
         emit IpUpdate(_node, _ip);
 
@@ -132,9 +159,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
     function setWs (bytes32 _node, uint16 _ws) external tldAuth(_node) {
 
-        ( ws[_node] = _ws ) == 0
-            ? nodes[_node].records &= WS
-            : nodes[_node].records |= WS;
+        ( ip[_node].ws = _ws ) == 0
+            ? nodes[_node].records &= WS_BIT
+            : nodes[_node].records |= WS_BIT;
         
         emit WsUpdate(_node, _ws);
 
@@ -142,9 +169,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
     function setWt (bytes32 _node, uint16 _wt) external tldAuth(_node) {
 
-        ( wt[_node] = _wt ) == 0
-            ? nodes[_node].records &= WT
-            : nodes[_node].records |= WT;
+        ( ip[_node].wt = _wt ) == 0
+            ? nodes[_node].records &= WT_BIT
+            : nodes[_node].records |= WT_BIT;
         
         emit WtUpdate(_node, _wt);
 
@@ -152,9 +179,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
     function setTcp (bytes32 _node, uint16 _tcp) external tldAuth(_node) {
 
-        ( tcp[_node] = _tcp ) == 0
-            ? nodes[_node].records &= TCP
-            : nodes[_node].records |= TCP;
+        ( ip[_node].tcp = _tcp ) == 0
+            ? nodes[_node].records &= TCP_BIT
+            : nodes[_node].records |= TCP_BIT;
         
         emit TcpUpdate(_node, _tcp);
 
@@ -162,9 +189,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
     function setUdp (bytes32 _node, uint16 _udp) external tldAuth(_node) {
 
-        ( udp[_node] = _udp ) == 0
-            ? nodes[_node].records &= UDP
-            : nodes[_node].records |= UDP;
+        ( ip[_node].udp = _udp ) == 0
+            ? nodes[_node].records &= UDP_BIT
+            : nodes[_node].records |= UDP_BIT;
         
         emit UdpUpdate(_node, _udp);
 
@@ -183,7 +210,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
     //
 
     function routers (bytes32 _node) external view returns (bytes32[] memory) {
-        return routing[_node];
+        return _routers[_node];
     }
 
     //

@@ -6,13 +6,13 @@ import { IMulticallable } from "./IMulticallable.sol";
 // Record types
 uint32 constant WEBSOCKETS = 1;
 
-uint96 constant KEYED = 1 << 0;
-uint96 constant ROUTED = 1 << 1;
-uint96 constant IP = 1 << 2;
-uint96 constant WS = 1 << 3;
-uint96 constant WT = 1 << 4;
-uint96 constant TCP = 1 << 5;
-uint96 constant UDP = 1 << 6;
+uint96 constant KEYED_BIT = 1 << 0;
+uint96 constant ROUTED_BIT = 1 << 1;
+uint96 constant IP_BIT = 1 << 2;
+uint96 constant WS_BIT = 1 << 3;
+uint96 constant WT_BIT = 1 << 4;
+uint96 constant TCP_BIT = 1 << 5;
+uint96 constant UDP_BIT = 1 << 6;
 
 interface IQNSRegistryResolver is IMulticallable {
 
@@ -20,6 +20,14 @@ interface IQNSRegistryResolver is IMulticallable {
     struct Node {
         ITLDRegistrar tld; // contract that controls ownership logic of QNS id
         uint96 records; // room for 96 records
+    }
+
+    struct IP {
+        uint128 ip;
+        uint16 ws;
+        uint16 wt;
+        uint16 tcp;
+        uint16 udp;
     }
 
     // Logged whenever a QNS adds/drops support for subdomaining
@@ -45,12 +53,14 @@ interface IQNSRegistryResolver is IMulticallable {
     function registerNode(bytes calldata fqdn) external returns (bytes32 nodeId);
 
     function setKey(bytes32 node, bytes32 key) external;
-    function setRouting(bytes32 node, bytes32[] calldata routers) external;
+    function setAllIp(bytes32 node, uint128 ip, uint16 ws, uint16 wt, uint16 tcp, uint16 udp) external;
     function setIp(bytes32 node, uint128 ip) external;
     function setWs(bytes32 node, uint16 port) external;
     function setWt(bytes32 node, uint16 port) external;
     function setTcp(bytes32 node, uint16 port) external;
     function setUdp(bytes32 node, uint16 port) external;
+    function setRouters
+        (bytes32 node, bytes32[] calldata routers) external;
 
     //
     // views
@@ -58,11 +68,7 @@ interface IQNSRegistryResolver is IMulticallable {
 
     function key(bytes32) external view returns (bytes32);
     function routers(bytes32 node) external view returns (bytes32[] memory);
-    function routing(bytes32 node, uint index) external view returns (bytes32);
-    function ip(bytes32 node) external view returns (uint128);
-    function ws(bytes32 node) external view returns (uint16);
-    function wt(bytes32 node) external view returns (uint16);
-    function tcp(bytes32 node) external view returns (uint16);
-    function udp(bytes32 node) external view returns (uint16);
+    function ip(bytes32 node) external view returns 
+        ( uint128 ip, uint16 ws, uint16 wt, uint16 tcp, uint16 udp);
 
 }
