@@ -153,6 +153,10 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
 
     }
 
+    //
+    // internals
+    //
+
     function _controllableViaParent (
         uint _nodeId
     ) internal view returns (bool) {
@@ -170,9 +174,5 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
             _nodeContents & PARENT_CANNOT_CONTROL != PARENT_CANNOT_CONTROL;
 
     }
-
-    //
-    // internals
-    //
 
 }
