@@ -7,7 +7,6 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./interfaces/IQNSRegistryResolver.sol";
-import "./interfaces/IQNSNFT.sol";
 import "./lib/Multicallable.sol";
 import "./lib/BytesUtils.sol";
 
@@ -72,7 +71,6 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
 
         ITLDRegistrar(registrar).__initTLDRegistration(fqdn, tld);
 
-        // TODO could check that registrar implements IQNSNFT via ERC165
         emit NewTLD(tld, fqdn, registrar);
 
     }

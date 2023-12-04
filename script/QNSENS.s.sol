@@ -11,7 +11,6 @@ import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
 import { IQNSRegistryResolver } from "../src/interfaces/IQNSRegistryResolver.sol";
-import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
 import { QnsEnsExit } from "../src/QnsEnsExit.sol";
 import { QnsEnsEntry } from "../src/QnsEnsEntry.sol";
 
