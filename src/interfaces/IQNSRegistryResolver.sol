@@ -39,12 +39,14 @@ interface IQNSRegistryResolver is IMulticallable {
     event RecordsCleared(bytes32 indexed node);
 
     event KeyUpdate(bytes32 indexed node, bytes32 key);
-    event RoutingUpdate(bytes32 indexed node, bytes32[] routers);
+
     event IpUpdate(bytes32 indexed node, uint128 ip);
     event WsUpdate(bytes32 indexed node, uint16 port);
     event WtUpdate(bytes32 indexed node, uint16 port);
     event TcpUpdate(bytes32 indexed node, uint16 port);
     event UdpUpdate(bytes32 indexed node, uint16 port);
+
+    event RoutingUpdate(bytes32 indexed node, bytes32[] routers);
 
     // externals
 
@@ -66,6 +68,7 @@ interface IQNSRegistryResolver is IMulticallable {
     // views
     //
 
+    function nodes(bytes32) external view returns (ITLDRegistrar, uint96);
     function key(bytes32) external view returns (bytes32);
     function routers(bytes32 node) external view returns (bytes32[] memory);
     function ip(bytes32 node) external view returns 
