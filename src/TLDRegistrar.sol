@@ -284,6 +284,8 @@ contract TLDRegistrar is ITLDRegistrar {
 
         _nodes[_node] = _setOwner(_to, _nodes[_node]);
 
+        emit Transfer(address(0), _to, _node);
+
         _afterTokenTransfer(address(0), _to, _node, 1);
 
     }
