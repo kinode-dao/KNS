@@ -17,14 +17,6 @@ import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
 contract SafeDeployment is Script {
 
-    struct Tx {
-        uint8 operation; /// operation as a uint8 with 0 for a call or 1 for a delegatecall (=> 1 byte),
-        address to; /// to as a address (=> 20 bytes),
-        uint256 value; /// value as a uint256 (=> 32 bytes),
-        uint256 dataLength; /// data length as a uint256 (=> 32 bytes),
-        bytes data; /// data as bytes
-    }
-
     address CREATE_CALL = 0xB19D6FFc2182150F8Eb585b79D4ABcd7C5640A9d;
     address MULTISEND = 0x998739BFdAAdde7C933B942a68053933098f9EDa;
     address SAFE = 0x8E2f51D2992382080652B86eC7425A7dFC338055;
@@ -39,13 +31,13 @@ contract SafeDeployment is Script {
             CreateCall.performCreate2.selector,
             uint256(0),
             vm.getCode("QNSRegistryResolver.sol:QNSRegistryResolver"),
-            keccak256("NECTAR")
+            keccak256("NECTAR_OS_TEST")
         );
 
         console.log("qns reg impl");
         console.logBytes(qnsRegistryImplDeploycode);
 
-        (,bytes memory r) = CREATE_CALL.call(qnsRegistryImplDeploycode);
+        (,r) = CREATE_CALL.call(qnsRegistryImplDeploycode);
         address qnsRegistryImplAddress = abi.decode(r, (address));
 
         bytes memory qnsRegistryProxyDeployCode = abi.encodeWithSelector(
@@ -55,37 +47,32 @@ contract SafeDeployment is Script {
                 vm.getCode("ERC1967Proxy.sol:ERC1967Proxy"),
                 abi.encode(
                     qnsRegistryImplAddress,
-                    abi.encodeWithSelector(QNSRegistryResolver.initialize.selector)
+                    abi.encodeWithSelector(
+                        QNSRegistryResolver.initialize.selector,
+                        SAFE
+                    )
                 )
             ),
-            keccak256("NECTAR")
+            keccak256("NECTAR_OS_TEST")
         );
 
         console.log("qns prox addr");
         console.logBytes(qnsRegistryProxyDeployCode);
 
-        (,bytes memory r) = CREATE_CALL.call(qnsRegistryProxyDeployCode);
-        address sqnsRegistryAddress = abi.decode(r, (address));
+        (,r) = CREATE_CALL.call(qnsRegistryProxyDeployCode);
+        address qnsRegistryAddress = abi.decode(r, (address));
 
         bytes memory dotUqImplDeployCode = abi.encodeWithSelector(
             CreateCall.performCreate2.selector,
             uint256(0),
             vm.getCode("DotUqRegistrar.sol:DotUqRegistrar"),
-            keccak256("NECTAR")
+            keccak256("NECTAR_OS_TEST")
         );
 
         console.log("dot uq impl");
         console.logBytes(dotUqImplDeployCode);
 
-        txs = abi.encodePacked(txs, abi.encodePacked(
-            uint8(1),
-            CREATE_CALL,
-            uint256(0),
-            uint256(dotUqImplDeployCode.length),
-            dotUqImplDeployCode
-        ));
-
-        (,bytes memory r) = CREATE_CALL.call(dotUqImplDeployCode);
+        (,r) = CREATE_CALL.call(dotUqImplDeployCode);
         address dotUqImplAddress = abi.decode(r, (address));
 
         bytes memory dotUqProxyDeployCode = abi.encodeWithSelector(
@@ -97,7 +84,8 @@ contract SafeDeployment is Script {
                     dotUqImplAddress,
                     abi.encodeWithSelector(
                         DotUqRegistrar.initialize.selector,
-                        qnsRegistryAddress
+                        qnsRegistryAddress,
+                        SAFE
                     )
                 )
             ),
@@ -107,7 +95,7 @@ contract SafeDeployment is Script {
         console.log("dot uq proxy");
         console.logBytes(dotUqProxyDeployCode);
 
-        (,bytes memory r) = CREATE_CALL.call(dotUqProxyDeployCode);
+        (,r) = CREATE_CALL.call(dotUqProxyDeployCode);
         address dotUqProxyAddress = abi.decode(r, (address));
 
         string[] memory inputs = new string[](3);
@@ -122,7 +110,7 @@ contract SafeDeployment is Script {
             dotUqProxyAddress
         );
 
-        console.log("set dot uq");
+        console.log("set dot uq", qnsRegistryAddress);
         console.logBytes(setDotUqCallCode);
 
     }
