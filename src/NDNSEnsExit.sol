@@ -5,10 +5,10 @@ import { ILayerZeroEndpoint } from "layer-zero/interfaces/ILayerZeroEndpoint.sol
 
 import { ExcessivelySafeCall } from "./lib/ExcessivelySafeCall.sol";
 import { BytesUtils } from "./lib/BytesUtils.sol";
-import { IQnsEnsExit } from "./interfaces/IQnsEnsExit.sol";
-import { IQNSRegistryResolver } from "./interfaces/IQNSRegistryResolver.sol";
+import { INDNSEnsExit } from "./interfaces/INDNSEnsExit.sol";
+import { INDNSRegistryResolver } from "./interfaces/INDNSRegistryResolver.sol";
 
-contract QnsEnsExit is IQnsEnsExit {
+contract NDNSEnsExit is INDNSEnsExit {
 
     error NotEthName();
     error EthNameTooShort();
@@ -23,7 +23,7 @@ contract QnsEnsExit is IQnsEnsExit {
     ILayerZeroEndpoint 
             immutable public lz;
     uint16  immutable public lzc;
-    address immutable public qns;
+    address immutable public ndns;
 
     address immutable public owner;
 
@@ -35,14 +35,14 @@ contract QnsEnsExit is IQnsEnsExit {
     modifier onlythis () { require(msg.sender == address(this)); _; }
 
     constructor (
-        address _qns,
+        address _ndns,
         address _lz, 
         uint16 _lzc
     ) {
 
         owner = msg.sender;
 
-        qns = _qns;
+        ndns = _ndns;
         lz = ILayerZeroEndpoint(_lz);
         lzc = _lzc;
 
@@ -54,7 +54,7 @@ contract QnsEnsExit is IQnsEnsExit {
         trustedentries[_entrychain] = abi.encodePacked(_entry, address(this));
     }
 
-    function setQnsRecords (
+    function setNDNSRecords (
         address owner,
         bytes calldata fqdn,
         bytes[] calldata data
@@ -74,10 +74,10 @@ contract QnsEnsExit is IQnsEnsExit {
 
         // ensowners[child] = owner;
 
-        // IQNSRegistryResolver(qns).registerNode(fqdn);
+        // INDNSRegistryResolver(ndns).registerNode(fqdn);
 
         // if (data.length != 0) 
-        //     IQNSRegistryResolver(qns).multicallWithNodeCheck(child, data);
+        //     INDNSRegistryResolver(ndns).multicallWithNodeCheck(child, data);
 
     }
 

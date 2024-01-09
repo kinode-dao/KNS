@@ -26,11 +26,11 @@ contract DotNecRegistrar is IDotNecRegistrar, TLDRegistrar, Initializable, Ownab
     mapping (uint => uint) public parents;
 
     function initialize (
-        address _qns,
+        address _ndns,
         address _owner
     ) public initializer {
 
-        __TLDRegistrar_init(_qns, "Uqbar Name Service", "UQNS");
+        __TLDRegistrar_init(_ndns, "Uqbar Name Service", "UNDNS");
         __UUPSUpgradeable_init();
         _transferOwnership(_owner);
 

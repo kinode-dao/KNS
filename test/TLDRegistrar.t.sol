@@ -8,7 +8,7 @@ import { User, TLDShim, TestUtils } from "./Utils.sol";
 
 import { ITLDRegistrar } from "../src/interfaces/ITLDRegistrar.sol";
 
-import { QNSRegistryResolver } from "../src/QNSRegistryResolver.sol";
+import { NDNSRegistryResolver } from "../src/NDNSRegistryResolver.sol";
 import { TLDRegistrar } from "../src/TLDRegistrar.sol";
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
@@ -25,18 +25,18 @@ contract TLDRegistrarTest is TestUtils {
     bytes32 constant public ATTRIBUTES2 = 0x0000000000000000000000000000000000000000111111111111111111111111;
 
     TLDShim public tld = new TLDShim();
-    QNSRegistryResolver qns = new QNSRegistryResolver();
-    User public webmaster = new User(address(qns), address(0), address(tld));
-    User public operator = new User(address(qns), address(0), address(tld));
-    User public approved = new User(address(qns), address(0), address(tld));
+    NDNSRegistryResolver ndns = new NDNSRegistryResolver();
+    User public webmaster = new User(address(ndns), address(0), address(tld));
+    User public operator = new User(address(ndns), address(0), address(tld));
+    User public approved = new User(address(ndns), address(0), address(tld));
 
     function setUp() public { 
 
-        qns.initialize(address(this));
+        ndns.initialize(address(this));
 
-        tld.init(address(qns), "tld", "tld");
+        tld.init(address(ndns), "tld", "tld");
 
-        qns.registerTLD(dnsStringToWire("tld"), address(tld));
+        ndns.registerTLD(dnsStringToWire("tld"), address(tld));
 
     }
 
@@ -51,7 +51,7 @@ contract TLDRegistrarTest is TestUtils {
             "unexpected tld dns wire in setup"
         );
 
-        address _tldRegistrar = qns.TLDs(dnsStringToWire("tld").namehash());
+        address _tldRegistrar = ndns.TLDs(dnsStringToWire("tld").namehash());
 
         assertEq(_tldRegistrar, address(tld), "TLD entry should be address of TLDRegistrar");
 
@@ -81,9 +81,9 @@ contract TLDRegistrarTest is TestUtils {
 
         uint _nodeId = registerNodeAndMintToken();
 
-        (ITLDRegistrar _tld, ) = qns.nodes(bytes32(_nodeId));
+        (ITLDRegistrar _tld, ) = ndns.nodes(bytes32(_nodeId));
 
-        assertEq(address(_tld), address(tld), "wrong QNS node tld");
+        assertEq(address(_tld), address(tld), "wrong NDNS node tld");
 
         bytes32 tldNode = tld.getNode(_nodeId);
 
@@ -103,9 +103,9 @@ contract TLDRegistrarTest is TestUtils {
 
         bytes32 node = dnsStringToNode("sub.tld");
 
-        qns.setKey(node, bytes32("key"));
+        ndns.setKey(node, bytes32("key"));
 
-        bytes32 key = qns.key(node);
+        bytes32 key = ndns.key(node);
 
         assertEq(key, bytes32("key"), "key was not set");
 
@@ -121,7 +121,7 @@ contract TLDRegistrarTest is TestUtils {
 
         webmaster.setKey(node, bytes32("key"));
 
-        bytes32 key = qns.key(node);
+        bytes32 key = ndns.key(node);
 
         assertEq(key, bytes32("key"), "key was not set by webmaster");
 
@@ -143,7 +143,7 @@ contract TLDRegistrarTest is TestUtils {
 
         operator.setKey(node, bytes32("key"));
 
-        bytes32 key = qns.key(node);
+        bytes32 key = ndns.key(node);
 
         assertEq(key, bytes32("key"), "key was not set by operator");
 
@@ -165,7 +165,7 @@ contract TLDRegistrarTest is TestUtils {
 
         approved.setKey(node, bytes32("key"));
 
-        bytes32 key = qns.key(node);
+        bytes32 key = ndns.key(node);
 
         assertEq(key, bytes32("key"), "key was not set by approved");
 

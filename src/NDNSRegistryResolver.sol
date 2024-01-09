@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "./interfaces/IQNSRegistryResolver.sol";
+import "./interfaces/INDNSRegistryResolver.sol";
 import "./lib/Multicallable.sol";
 import "./lib/BytesUtils.sol";
 
@@ -19,7 +19,7 @@ error NotTLD();
 
 // TODO lets see what inspiration we can take from VersionableResolver?
 
-contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
+contract NDNSRegistryResolver is INDNSRegistryResolver, Multicallable, ERC165Upgradeable, UUPSUpgradeable, OwnableUpgradeable {
     using BytesUtils for bytes;
 
     mapping (bytes32 => address) public TLDs;
@@ -239,7 +239,7 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
         bytes4 interfaceID
     ) public view override returns (bool) {
         return
-            interfaceID == type(IQNSRegistryResolver).interfaceId ||
+            interfaceID == type(INDNSRegistryResolver).interfaceId ||
             super.supportsInterface(interfaceID);
     }
 }

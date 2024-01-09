@@ -5,13 +5,13 @@
 
 // import { TestUtils } from "./Utils.sol";
 
-// import { IQNS } from "../src/interfaces/IQNS.sol";
-// import { IQNSNFT } from "../src/interfaces/IQNSNFT.sol";
-// import { QNSRegistry } from "../src/QNSRegistry.sol";
+// import { INDNS } from "../src/interfaces/INDNS.sol";
+// import { INDNSNFT } from "../src/interfaces/INDNSNFT.sol";
+// import { NDNSRegistry } from "../src/NDNSRegistry.sol";
 // import { UqNFT } from "../src/UqNFT.sol";
 // import "forge-std/console.sol";
 
-// contract QNSTest is TestUtils {
+// contract NDNSTest is TestUtils {
 //     // events
 //     event NewSubdomainContract(uint256 indexed node, bytes name, address nft);
 //     event NodeRegistered(uint256 indexed node, bytes name);
@@ -32,7 +32,7 @@
 //     address public charlie = address(5);
 
 //     // contracts
-//     QNSRegistry public qnsRegistry;
+//     NDNSRegistry public ndnsRegistry;
 //     UqNFT public uqNft;
 //     UqNFT public uqNft2;
 
@@ -41,21 +41,21 @@
 
 //     function setUp() public {
 //         vm.prank(deployer);
-//         QNSRegistry qnsRegistryImpl = new QNSRegistry();
+//         NDNSRegistry ndnsRegistryImpl = new NDNSRegistry();
         
 //         vm.prank(deployer);
-//         qnsRegistry = QNSRegistry(
+//         ndnsRegistry = NDNSRegistry(
 //             address(
 //                 new ERC1967Proxy(
-//                     address(qnsRegistryImpl),
+//                     address(ndnsRegistryImpl),
 //                     abi.encodeWithSelector(
-//                         QNSRegistry.initialize.selector
+//                         NDNSRegistry.initialize.selector
 //                     )
 //                 )
 //             )
 //         );
 
-//         assertEq(qnsRegistry.owner(), address(deployer));
+//         assertEq(ndnsRegistry.owner(), address(deployer));
 
 //         vm.prank(deployer);
 //         UqNFT uqNftImpl = new UqNFT();
@@ -67,28 +67,28 @@
 //                     address(uqNftImpl),
 //                     abi.encodeWithSelector(
 //                         UqNFT.initialize.selector,
-//                         qnsRegistry
+//                         ndnsRegistry
 //                     )
 //                 )
 //             )
 //         );
 
 //         assertEq(uqNft.owner(), address(deployer));
-//         assertEq(address(uqNft.qns()), address(qnsRegistry));
+//         assertEq(address(uqNft.ndns()), address(ndnsRegistry));
 //         assertEq(uqNft.name(), "Uqbar Name Service");
-//         assertEq(uqNft.symbol(), "UQNS");
+//         assertEq(uqNft.symbol(), "UNDNS");
 
 //         vm.prank(deployer);
 //         vm.expectEmit(true, false, false, true);
 //         emit NewSubdomainContract(getNodeId("nec"), getDNSWire("nec"), address(uqNft));
-//         qnsRegistry.registerSubdomainContract(
+//         ndnsRegistry.registerSubdomainContract(
 //             getDNSWire("nec"),
-//             IQNSNFT(uqNft)
+//             INDNSNFT(uqNft)
 //         );
 
 //         assertEq(uqNft.baseNode(), getNodeId("nec"));
 
-//         (address actualNft, uint96 actualProtocols) = qnsRegistry.records(getNodeId("uq."));
+//         (address actualNft, uint96 actualProtocols) = ndnsRegistry.records(getNodeId("uq."));
 
 //         assertEq(actualNft, address(uqNft));
 //         assertEq(actualProtocols, 0);
@@ -104,7 +104,7 @@
 //                     address(uqNft2Impl),
 //                     abi.encodeWithSelector(
 //                         UqNFT.initialize.selector,
-//                         qnsRegistry
+//                         ndnsRegistry
 //                     )
 //                 )
 //             )
@@ -113,10 +113,10 @@
 
 //     function test_registerSubdomainContractFailsWhenNotOwner() public {
 //         vm.prank(alice);
-//         vm.expectRevert("QNSRegistry: only parent domain owner can register subdomain contract");
-//         qnsRegistry.registerSubdomainContract(
+//         vm.expectRevert("NDNSRegistry: only parent domain owner can register subdomain contract");
+//         ndnsRegistry.registerSubdomainContract(
 //             getDNSWire("alices-tld"),
-//             IQNSNFT(uqNft2)
+//             INDNSNFT(uqNft2)
 //         );
 //     }
 
@@ -124,20 +124,20 @@
 //         vm.prank(deployer);
 //         vm.expectEmit(true, false, false, true);
 //         emit NewSubdomainContract(getNodeId("new-tld"), getDNSWire("new-tld"), address(uqNft2));
-//         qnsRegistry.registerSubdomainContract(
+//         ndnsRegistry.registerSubdomainContract(
 //             getDNSWire("new-tld"),
 //             uqNft2
 //         );
 
-//         (address actualNft, uint96 actualProtocols) = qnsRegistry.records(getNodeId("new-tld"));
+//         (address actualNft, uint96 actualProtocols) = ndnsRegistry.records(getNodeId("new-tld"));
 //         assertEq(actualNft, address(uqNft2));
 //         assertEq(actualProtocols, 0);
 //     }
 
 //     function test_registerNodeFailsWhenIsNotParent() public {
 //         vm.prank(alice);
-//         vm.expectRevert("QNSRegistry: only NFT contract can register node for a subdomain");
-//         qnsRegistry.registerNode(getDNSWire("test.nec"));
+//         vm.expectRevert("NDNSRegistry: only NFT contract can register node for a subdomain");
+//         ndnsRegistry.registerNode(getDNSWire("test.nec"));
 //     }
     
 //     function test_registerNode() public {
@@ -146,7 +146,7 @@
 //         emit NodeRegistered(getNodeId("alices-node.nec"), getDNSWire("alices-node.nec"));
 //         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
         
-//         (address actualNft, uint96 actualProtocols) = qnsRegistry.records(getNodeId("alices-node.nec"));
+//         (address actualNft, uint96 actualProtocols) = ndnsRegistry.records(getNodeId("alices-node.nec"));
 //         assertEq(actualNft, address(uqNft));
 //         assertEq(actualProtocols, 0);
 //     }
@@ -157,8 +157,8 @@
 //         console.logBytes(getDNSWire("alices-node.nec"));
 
 //         vm.prank(bob);
-//         vm.expectRevert("QNSRegistry: only NFT contract or NFT owner can set ws records for a subdomain");
-//         qnsRegistry.setWsRecord(
+//         vm.expectRevert("NDNSRegistry: only NFT contract or NFT owner can set ws records for a subdomain");
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             bytes32(0),
 //             9004,
@@ -170,7 +170,7 @@
 //     function test_setWsRecordFailsWhenNotMinted() public {
 //         vm.prank(address(uqNft));
 //         vm.expectRevert();
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             9004,
@@ -184,8 +184,8 @@
 //         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
         
 //         vm.prank(alice);
-//         vm.expectRevert("QNSRegistry: must specify either static ip/port or routers");
-//         qnsRegistry.setWsRecord(
+//         vm.expectRevert("NDNSRegistry: must specify either static ip/port or routers");
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             0,
@@ -199,8 +199,8 @@
 //         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
 
 //         vm.prank(alice);
-//         vm.expectRevert("QNSRegistry: public key cannot be 0");
-//         qnsRegistry.setWsRecord(
+//         vm.expectRevert("NDNSRegistry: public key cannot be 0");
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             bytes32(0),
 //             5,
@@ -220,8 +220,8 @@
 //         routers[0] = bytes32(getNodeId("uqbar-router-1.nec"));
         
 //         vm.prank(alice);
-//         vm.expectRevert("QNSRegistry: router does not support websockets");
-//         qnsRegistry.setWsRecord(
+//         vm.expectRevert("NDNSRegistry: router does not support websockets");
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             0,
@@ -234,7 +234,7 @@
 //         vm.prank(deployer);
 //         uqNft.register(getDNSWire("uqbar-router-1.nec"), deployer, new bytes[](0));
 //         vm.prank(deployer);
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("uqbar-router-1.nec"),
 //             _PUBKEY,
 //             1,
@@ -248,7 +248,7 @@
 //         vm.prank(deployer);
 //         uqNft.register(getDNSWire("uqbar-router-2.nec"), deployer, new bytes[](0));
 //         vm.prank(deployer);
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("uqbar-router-2.nec"),
 //             _PUBKEY,
 //             0,
@@ -263,8 +263,8 @@
 //         aliceRouters[0] = bytes32(getNodeId("uqbar-router-2.nec"));
         
 //         vm.prank(alice);
-//         vm.expectRevert("QNSRegistry: router does not support websockets");
-//         qnsRegistry.setWsRecord(
+//         vm.expectRevert("NDNSRegistry: router does not support websockets");
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             0,
@@ -281,7 +281,7 @@
 //         // TODO why are these broken
 //         // vm.expectEmit(true, true, false, true);
 //         // emit WsChanged(getNodeId("alices-node.nec"), 1, _PUBKEY, 65537, new bytes32[](0));
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             1,
@@ -289,7 +289,7 @@
 //             new bytes32[](0)
 //         );
 
-//         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alices-node.nec"));
+//         INDNS.WsRecord memory wsRecord = ndnsRegistry.ws(getNodeId("alices-node.nec"));
 //         assertEq(wsRecord.publicKey, _PUBKEY);
 //         assertEq(wsRecord.ip, 1);
 //         assertEq(wsRecord.port, 1);
@@ -301,7 +301,7 @@
 //         vm.prank(deployer);
 //         uqNft.register(getDNSWire("uqbar-router-1.nec"), deployer, new bytes[](0));
 //         vm.prank(deployer);
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("uqbar-router-1.nec"),
 //             _PUBKEY,
 //             9001,
@@ -319,7 +319,7 @@
 //         // TODO why are these broken
 //         // vm.expectEmit(true, true, false, true);
 //         // emit WsChanged(getNodeId("alices-node.nec"), 1, _PUBKEY, 0, routers);
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             0,
@@ -327,7 +327,7 @@
 //             routers
 //         );
 
-//         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alices-node.nec"));
+//         INDNS.WsRecord memory wsRecord = ndnsRegistry.ws(getNodeId("alices-node.nec"));
 //         assertEq(wsRecord.publicKey, _PUBKEY);
 //         assertEq(wsRecord.ip, 0);
 //         assertEq(wsRecord.port, 0);
@@ -339,7 +339,7 @@
 //         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
         
 //         vm.prank(alice);
-//         qnsRegistry.setWsRecord(
+//         ndnsRegistry.setWsRecord(
 //             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             9001,
@@ -352,13 +352,13 @@
 //         emit ProtocolsCleared(getNodeId("alices-node.nec"));
 //         uqNft.transferFromAndClearProtocols(alice, bob, getNodeId("alices-node.nec"));
 
-//         vm.expectRevert("QNSRegistry: node does not support websockets");
-//         qnsRegistry.ws(getNodeId("alices-node.nec"));
+//         vm.expectRevert("NDNSRegistry: node does not support websockets");
+//         ndnsRegistry.ws(getNodeId("alices-node.nec"));
 //     }
 
 //     function test_resolveFailsWhenNodeNotRegistered() public {
 //         vm.expectRevert("ERC721: invalid token ID");
-//         qnsRegistry.resolve(getDNSWire("alices-node.nec"));
+//         ndnsRegistry.resolve(getDNSWire("alices-node.nec"));
 //     }
 
 //     function test_resolveFailsWhenNodeNotRegistered3LD() public {
@@ -366,19 +366,19 @@
 //         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
 
 //         vm.expectRevert("ERC721: invalid token ID");
-//         qnsRegistry.resolve(getDNSWire("sub.alices-node.nec"));
+//         ndnsRegistry.resolve(getDNSWire("sub.alices-node.nec"));
 //     }
 
 //     function test_resolveTLDFailsAlways() public {
 //         vm.expectRevert();
-//         qnsRegistry.resolve(getDNSWire("nec"));
+//         ndnsRegistry.resolve(getDNSWire("nec"));
 //     }
 
 //     function test_resolve() public {
 //         vm.prank(alice);
 //         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
 
-//         assertEq(qnsRegistry.resolve(getDNSWire("alices-node.nec")), alice);
+//         assertEq(ndnsRegistry.resolve(getDNSWire("alices-node.nec")), alice);
 //     }
 
 //     function test_resolve3LD() public {
@@ -391,6 +391,6 @@
 //         vm.prank(bob);
 //         uqNft2.register(getDNSWire("bob.alices-node.nec"), bob, new bytes[](0));
 
-//         assertEq(qnsRegistry.resolve(getDNSWire("bob.alices-node.nec")), bob);
+//         assertEq(ndnsRegistry.resolve(getDNSWire("bob.alices-node.nec")), bob);
 //     }
 // }

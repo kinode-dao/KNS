@@ -8,9 +8,9 @@ import { ENS } from "ens-contracts/registry/ENS.sol";
 import { console } from "forge-std/console.sol";
 
 import { BytesUtils } from "./lib/BytesUtils.sol";
-import { IQnsEnsExit } from "./interfaces/IQnsEnsExit.sol";
+import { INDNSEnsExit } from "./interfaces/INDNSEnsExit.sol";
 
-contract QnsEnsEntry {
+contract NDNSEnsEntry {
 
     error NotEnsOwner();
 
@@ -52,13 +52,13 @@ contract QnsEnsEntry {
     function ping () public {
 
         lzSend(
-            abi.encodeWithSelector(IQnsEnsExit.ping.selector),
+            abi.encodeWithSelector(INDNSEnsExit.ping.selector),
             bytes("")
         );
 
     }
 
-    function setQnsRecords (
+    function setNDNSRecords (
         bytes calldata fqdn, 
         bytes[] calldata data
     ) public {
@@ -73,7 +73,7 @@ contract QnsEnsEntry {
         if (owner != msg.sender) revert NotEnsOwner();
 
         bytes memory payload = abi.encodeWithSelector
-            (IQnsEnsExit.setQnsRecords.selector, msg.sender, fqdn, data);
+            (INDNSEnsExit.setNDNSRecords.selector, msg.sender, fqdn, data);
 
         lzSend(payload, bytes(""));
 

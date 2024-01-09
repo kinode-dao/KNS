@@ -14,11 +14,11 @@ uint96 constant WT_BIT = 1 << 4;
 uint96 constant TCP_BIT = 1 << 5;
 uint96 constant UDP_BIT = 1 << 6;
 
-interface IQNSRegistryResolver is IMulticallable {
+interface INDNSRegistryResolver is IMulticallable {
 
-    // QNS node data
+    // NDNS node data
     struct Node {
-        ITLDRegistrar tld; // contract that controls ownership logic of QNS id
+        ITLDRegistrar tld; // contract that controls ownership logic of NDNS id
         uint96 records; // room for 96 records
     }
 
@@ -30,10 +30,10 @@ interface IQNSRegistryResolver is IMulticallable {
         uint16 udp;
     }
 
-    // Logged whenever a QNS adds/drops support for subdomaining
+    // Logged whenever a NDNS adds/drops support for subdomaining
     event NewTLD(bytes32 indexed node, bytes name, address tld);
 
-    // Logged whenever a QNS node is created
+    // Logged whenever a NDNS node is created
     event NodeRegistered(bytes32 indexed node, bytes name);
 
     event RecordsCleared(bytes32 indexed node);

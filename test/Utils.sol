@@ -6,7 +6,7 @@ import {Test, console, console2} from "forge-std/Test.sol";
 import "../src/lib/BytesUtils.sol";
 import "../src/TLDRegistrar.sol";
 import "../src/DotNecRegistrar.sol";
-import "../src/QNSREgistryResolver.sol";
+import "../src/NDNSREgistryResolver.sol";
 
 contract TestUtils is Test {
 
@@ -64,8 +64,8 @@ contract TLDShim is TLDRegistrar {
         return _setNode(_setOwner(_newOwner, _getNode(_node)), _node);
     }
 
-    function init (address _qns, string memory _name, string memory _symbol) public {
-        __TLDRegistrar_init(_qns, _name, _symbol);
+    function init (address _ndns, string memory _name, string memory _symbol) public {
+        __TLDRegistrar_init(_ndns, _name, _symbol);
     }
 
     function register (bytes calldata _name, address _owner, bytes[] calldata _data) external returns (uint256) {
@@ -114,16 +114,16 @@ contract User {
 
     TLDShim public tld;
     DotNecShim public dotuq;
-    QNSRegistryResolver public qns;
+    NDNSRegistryResolver public ndns;
 
-    constructor (address _qns, address _dotuq, address _tld) {
-        qns = QNSRegistryResolver(_qns);
+    constructor (address _ndns, address _dotuq, address _tld) {
+        ndns = NDNSRegistryResolver(_ndns);
         dotuq = DotNecShim(_dotuq);
         tld = TLDShim(_tld);
     }
 
     function setKey(bytes32 _node, bytes32 _key) public {
-        qns.setKey(_node, _key);
+        ndns.setKey(_node, _key);
     }
 
 }

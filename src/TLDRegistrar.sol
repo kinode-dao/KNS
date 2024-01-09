@@ -10,16 +10,16 @@ import { console } from "forge-std/console.sol";
 
 import "./lib/BytesUtils.sol";
 import "./interfaces/ITLDRegistrar.sol";
-import "./interfaces/IQNSRegistryResolver.sol";
+import "./interfaces/INDNSRegistryResolver.sol";
 
 error TLDSet();
 error NotATLD();
-error NotQNS();
+error NotNDNS();
 error InvalidTLD();
 error NotAuthorized();
 error MustBeTLD();
 error AlreadyRegistered();
-error QNSRegistryOnly();
+error NDNSRegistryOnly();
 error ERC721TransferToNonReceiver();
 error ERC721AlreadyMinted();
 error ERC721MintToAddress0();
@@ -37,7 +37,7 @@ contract TLDRegistrar is ITLDRegistrar {
     bytes32 constant MASK_RIGHT_96 = 0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
     bytes32 constant MASK_LEFT_160 = ~MASK_RIGHT_96;
 
-    IQNSRegistryResolver public qns;
+    INDNSRegistryResolver public ndns;
 
     bytes32 public TLD_LABEL;
     bytes32 public TLD_HASH;
@@ -59,26 +59,26 @@ contract TLDRegistrar is ITLDRegistrar {
     //
 
     function __TLDRegistrar_init(
-        address _qns,
+        address _ndns,
         string memory _name,
         string memory _symbol
     ) internal {
 
-        qns = IQNSRegistryResolver(_qns);
+        ndns = INDNSRegistryResolver(_ndns);
 
         _name = _name;
         _symbol = _symbol;
 
     }
 
-    // called by QNSRegistry as safety for the correct TLD 
+    // called by NDNSRegistry as safety for the correct TLD 
     function __initTLDRegistration (
         bytes calldata _fqdn, 
         bytes32 _tldHash
     ) public {
 
         if (TLD_HASH != bytes32(0)) revert AlreadyRegistered();
-        if (msg.sender != address(qns)) revert QNSRegistryOnly();
+        if (msg.sender != address(ndns)) revert NDNSRegistryOnly();
         TLD_HASH = _tldHash;
         TLD_DNS_WIRE = _fqdn;
         ( TLD_LABEL, ) = _fqdn.readLabel(0);
@@ -347,7 +347,7 @@ contract TLDRegistrar is ITLDRegistrar {
         uint256 nodeId_
     ) {
 
-        bytes32 _node = qns.registerNode(_name);
+        bytes32 _node = ndns.registerNode(_name);
 
         nodeId_ = uint(_node);
 
@@ -355,7 +355,7 @@ contract TLDRegistrar is ITLDRegistrar {
 
         _setNode(_setAttributes(_attributes, _getNode(nodeId_)), nodeId_);
 
-        if (0 < _data.length) qns.multicallWithNodeCheck(_node, _data);
+        if (0 < _data.length) ndns.multicallWithNodeCheck(_node, _data);
 
     }
 
