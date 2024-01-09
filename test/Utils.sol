@@ -6,7 +6,7 @@ import {Test, console, console2} from "forge-std/Test.sol";
 import "../src/lib/BytesUtils.sol";
 import "../src/TLDRegistrar.sol";
 import "../src/DotNecRegistrar.sol";
-import "../src/NDNSREgistryResolver.sol";
+import "../src/NDNSRegistryResolver.sol";
 
 contract TestUtils is Test {
 
