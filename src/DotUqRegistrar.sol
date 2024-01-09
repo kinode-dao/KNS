@@ -26,12 +26,13 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
     mapping (uint => uint) public parents;
 
     function initialize (
-        address _qns
+        address _qns,
+        address _owner
     ) public initializer {
 
         __TLDRegistrar_init(_qns, "Uqbar Name Service", "UQNS");
         __UUPSUpgradeable_init();
-        __Ownable_init();
+        _transferOwnership(_owner);
 
     }
 

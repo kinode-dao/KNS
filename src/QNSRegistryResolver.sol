@@ -40,9 +40,9 @@ contract QNSRegistryResolver is IQNSRegistryResolver, Multicallable, ERC165Upgra
         _;
     }
 
-    function initialize() public initializer {
+    function initialize(address _owner) public initializer {
         __UUPSUpgradeable_init();
-        __Ownable_init();
+        _transferOwnership(_owner);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
