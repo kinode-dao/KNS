@@ -12,14 +12,14 @@ import "./lib/BytesUtils.sol";
 
 import "./TLDRegistrar.sol";
 
-import "./interfaces/IDotUqRegistrar.sol";
+import "./interfaces/IDotNecRegistrar.sol";
 
 error NotAuthorizedToMintName();
 error CannotRevokeControlFromTLD();
 error SecondLevelDomainNot9CharactersOrMore();
-error NotDotUqTLD();
+error NotDotNecTLD();
 
-contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract DotNecRegistrar is IDotNecRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     using BytesUtils for bytes;
 
@@ -66,9 +66,9 @@ contract DotUqRegistrar is IDotUqRegistrar, TLDRegistrar, Initializable, Ownable
         // get current label
         ( bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
 
-        // if label is TLD demand it is .uq and return
+        // if label is TLD demand it is .nec and return
         if (_newOffset == _name.length - 1)
-            if (_label != TLD_LABEL) revert NotDotUqTLD();
+            if (_label != TLD_LABEL) revert NotDotNecTLD();
                 else return (TLD_HASH, true);
 
         // recurse to retrieve parent 

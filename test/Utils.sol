@@ -5,7 +5,7 @@ import {Test, console, console2} from "forge-std/Test.sol";
 
 import "../src/lib/BytesUtils.sol";
 import "../src/TLDRegistrar.sol";
-import "../src/DotUqRegistrar.sol";
+import "../src/DotNecRegistrar.sol";
 import "../src/QNSREgistryResolver.sol";
 
 contract TestUtils is Test {
@@ -78,7 +78,7 @@ contract TLDShim is TLDRegistrar {
 
 }
 
-contract DotUqShim is DotUqRegistrar {
+contract DotNecShim is DotNecRegistrar {
 
     function mint (address user, uint _node) public {
         _mint(user, _node);
@@ -113,12 +113,12 @@ contract DotUqShim is DotUqRegistrar {
 contract User {
 
     TLDShim public tld;
-    DotUqShim public dotuq;
+    DotNecShim public dotuq;
     QNSRegistryResolver public qns;
 
     constructor (address _qns, address _dotuq, address _tld) {
         qns = QNSRegistryResolver(_qns);
-        dotuq = DotUqShim(_dotuq);
+        dotuq = DotNecShim(_dotuq);
         tld = TLDShim(_tld);
     }
 

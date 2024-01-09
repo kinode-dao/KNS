@@ -32,7 +32,7 @@ contract TLDRegistrarTest is TestUtils {
 
     function setUp() public { 
 
-        qns.initialize();
+        qns.initialize(address(this));
 
         tld.init(address(qns), "tld", "tld");
 

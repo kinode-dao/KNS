@@ -69,7 +69,7 @@
 
 //         vm.prank(deployer);
 //         qnsRegistry.registerSubdomainContract(
-//             getDNSWire("uq"),
+//             getDNSWire("nec"),
 //             IQNSNFT(uqNft)
 //         );
 
@@ -91,11 +91,11 @@
 
 //     function testUpgradeQNSRegistry() external {
 //         vm.prank(alice);
-//         uqNft.register(getDNSWire("alices-node.uq"), alice, new bytes[](0));
+//         uqNft.register(getDNSWire("alices-node.nec"), alice, new bytes[](0));
         
 //         vm.prank(alice);
 //         qnsRegistry.setWsRecord(
-//             getNodeId("alices-node.uq"),
+//             getNodeId("alices-node.nec"),
 //             _PUBKEY,
 //             1,
 //             1,
@@ -103,7 +103,7 @@
 //         );
 
 //         // assert exists in old state
-//         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alices-node.uq"));
+//         IQNS.WsRecord memory wsRecord = qnsRegistry.ws(getNodeId("alices-node.nec"));
 //         assertEq(wsRecord.publicKey, _PUBKEY);
 //         assertEq(wsRecord.ip, 1);
 //         assertEq(wsRecord.port, 1);
@@ -117,14 +117,14 @@
 //         qnsRegistry.upgradeTo(address(qnsRegistry2));
 
 //         // assert old state still exists
-//         IQNS.WsRecord memory newWsRecord = qnsRegistry.ws(getNodeId("alices-node.uq"));
+//         IQNS.WsRecord memory newWsRecord = qnsRegistry.ws(getNodeId("alices-node.nec"));
 //         assertEq(newWsRecord.publicKey, _PUBKEY);
 //         assertEq(newWsRecord.ip, 1);
 //         assertEq(newWsRecord.port, 1);
 //         assertEq(newWsRecord.routers.length, 0);
 
 //         // assert new state can be set
-//         QNSRegistry2(address(qnsRegistry)).setNewRecord(getNodeId("alices-node.uq"));
-//         assertEq(QNSRegistry2(address(qnsRegistry)).new_records(getNodeId("alices-node.uq")), true);
+//         QNSRegistry2(address(qnsRegistry)).setNewRecord(getNodeId("alices-node.nec"));
+//         assertEq(QNSRegistry2(address(qnsRegistry)).new_records(getNodeId("alices-node.nec")), true);
 //     }
 // }
