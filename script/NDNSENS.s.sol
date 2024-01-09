@@ -10,18 +10,18 @@ import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
-import { IQNSRegistryResolver } from "../src/interfaces/IQNSRegistryResolver.sol";
-import { QnsEnsExit } from "../src/QnsEnsExit.sol";
-import { QnsEnsEntry } from "../src/QnsEnsEntry.sol";
+import { INDNSRegistryResolver } from "../src/interfaces/INDNSRegistryResolver.sol";
+import { NDNSEnsExit } from "../src/NDNSEnsExit.sol";
+import { NDNSEnsEntry } from "../src/NDNSEnsEntry.sol";
 
 contract EnvironmentAndScript is Script {
 
     uint ENTRY_RPC = vm.createFork(vm.envString("RPC_GOERLI"));
     uint EXIT_RPC = vm.createFork(vm.envString("RPC_SEPOLIA"));
     uint PRIVKEY = vm.envUint("PRIVATE_KEY");
-    IQNSRegistryResolver qns = IQNSRegistryResolver(vm.envAddress("QNS_TEST_QNS_REGISTRY"));
-    QnsEnsExit exit = QnsEnsExit(vm.envAddress("QNS_SEPOLIA_ENS_EXIT"));
-    QnsEnsEntry entry = QnsEnsEntry(payable(vm.envAddress("QNS_GOERLI_ENS_ENTRY")));
+    INDNSRegistryResolver ndns = INDNSRegistryResolver(vm.envAddress("NDNS_TEST_NDNS_REGISTRY"));
+    NDNSEnsExit exit = NDNSEnsExit(vm.envAddress("NDNS_SEPOLIA_ENS_EXIT"));
+    NDNSEnsEntry entry = NDNSEnsEntry(payable(vm.envAddress("NDNS_GOERLI_ENS_ENTRY")));
     address ensregistry = vm.envAddress("ENS_GOERLI_REGISTRY");
     address ensnamewrapper = vm.envAddress("ENS_GOERLI_NAME_WRAPPER");
 
@@ -39,8 +39,8 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
 
         vm.selectFork(EXIT_RPC);
         vm.startBroadcast(PRIVKEY);
-        exit = new QnsEnsExit(
-            address(qns),
+        exit = new NDNSEnsExit(
+            address(ndns),
             vm.envAddress("LZ_EP_SEPOLIA"),
             uint16(vm.envUint("LZ_CID_SEPOLIA"))
         );
@@ -51,12 +51,12 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        qns.registerTLD(eth, address(exit));
+        ndns.registerTLD(eth, address(exit));
 
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
         vm.startBroadcast(PRIVKEY);
-        entry = new QnsEnsEntry(
+        entry = new NDNSEnsEntry(
             ensregistry,
             ensnamewrapper,
             vm.envAddress("LZ_EP_GOERLI"),
@@ -85,13 +85,13 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
 
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeWithSelector
-            ( IQNSRegistryResolver.setKey.selector, testuqbarnode, keccak256("yes") );
+            ( INDNSRegistryResolver.setKey.selector, testuqbarnode, keccak256("yes") );
         data[1] = abi.encodeWithSelector
-            ( IQNSRegistryResolver.setIp.selector, testuqbarnode, type(uint128).max );
+            ( INDNSRegistryResolver.setIp.selector, testuqbarnode, type(uint128).max );
         data[2] = abi.encodeWithSelector
-            ( IQNSRegistryResolver.setWs.selector, testuqbarnode, type(uint16).max );
+            ( INDNSRegistryResolver.setWs.selector, testuqbarnode, type(uint16).max );
 
-        entry.setQnsRecords(
+        entry.setNDNSRecords(
             testuqbar,
             data
         );
@@ -101,7 +101,7 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
     }
 }
 
-contract SetWsForEnsNameOnQns is EnvironmentAndScript {
+contract SetWsForEnsNameOnNDNS is EnvironmentAndScript {
     function run () public {
         vm.selectFork(EXIT_RPC);
         vm.startBroadcast(PRIVKEY);
@@ -111,14 +111,14 @@ contract SetWsForEnsNameOnQns is EnvironmentAndScript {
         inputs[2] = "uqtesttest.eth";
         bytes memory testuqbarnode = vm.ffi(inputs);
         bytes32 namehash = BytesUtils.namehash(testuqbarnode, 0);
-        qns.setKey(namehash, keccak256("key"));
-        qns.setIp(namehash, type(uint128).max);
-        qns.setWs(namehash, type(uint16).max);
+        ndns.setKey(namehash, keccak256("key"));
+        ndns.setIp(namehash, type(uint128).max);
+        ndns.setWs(namehash, type(uint16).max);
         vm.stopBroadcast();
     }
 }
 
-contract CashQnsEnsEntry is EnvironmentAndScript {
+contract CashNDNSEnsEntry is EnvironmentAndScript {
     function run () public {
         vm.selectFork(ENTRY_RPC);
         vm.startBroadcast(PRIVKEY);
@@ -126,7 +126,7 @@ contract CashQnsEnsEntry is EnvironmentAndScript {
     }
 }
 
-contract SimulateQnsEnsExit is EnvironmentAndScript {
+contract SimulateNDNSEnsExit is EnvironmentAndScript {
     function run () public {
 
         vm.selectFork(EXIT_RPC);
@@ -134,8 +134,8 @@ contract SimulateQnsEnsExit is EnvironmentAndScript {
         address from = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
         vm.startPrank(from);
 
-        exit = new QnsEnsExit(
-            address(qns),
+        exit = new NDNSEnsExit(
+            address(ndns),
             vm.envAddress("LZ_EP_SEPOLIA"),
             uint16(vm.envUint("LZ_CID_SEPOLIA"))
         );
@@ -146,7 +146,7 @@ contract SimulateQnsEnsExit is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        qns.registerTLD(eth, address(exit));
+        ndns.registerTLD(eth, address(exit));
 
         exit.simulate(vm.envBytes("PAYLOAD"));
 

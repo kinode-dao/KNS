@@ -9,10 +9,10 @@ import "@safe/safe-contracts/libraries/MultiSend.sol";
 import { Script, console } from "forge-std/Script.sol";
 import { VmSafe } from "forge-std/Vm.sol";
 
-import { QNSRegistryResolver } from "../src/QNSRegistryResolver.sol";
-import { DotUqRegistrar } from "../src/DotUqRegistrar.sol";
+import { NDNSRegistryResolver } from "../src/NDNSRegistryResolver.sol";
+import { DotNecRegistrar } from "../src/DotNecRegistrar.sol";
 import { ITLDRegistrar } from "../src/interfaces/ITLDRegistrar.sol";
-import { IQNSRegistryResolver } from "../src/interfaces/IQNSRegistryResolver.sol";
+import { INDNSRegistryResolver } from "../src/interfaces/INDNSRegistryResolver.sol";
 import { BytesUtils } from "../src/lib/BytesUtils.sol";
 
 contract SafeDeployment is Script {
@@ -27,46 +27,46 @@ contract SafeDeployment is Script {
 
         vm.prank(SAFE);
 
-        bytes memory qnsRegistryImplDeploycode = abi.encodeWithSelector(
+        bytes memory ndnsRegistryImplDeploycode = abi.encodeWithSelector(
             CreateCall.performCreate2.selector,
             uint256(0),
-            vm.getCode("QNSRegistryResolver.sol:QNSRegistryResolver"),
-            keccak256("NECTAR_OS_TEST")
+            vm.getCode("NDNSRegistryResolver.sol:NDNSRegistryResolver"),
+            keccak256("NECTAR_OS")
         );
 
-        console.log("qns reg impl");
-        console.logBytes(qnsRegistryImplDeploycode);
+        console.log("ndns reg impl");
+        console.logBytes(ndnsRegistryImplDeploycode);
 
-        (,r) = CREATE_CALL.call(qnsRegistryImplDeploycode);
-        address qnsRegistryImplAddress = abi.decode(r, (address));
+        (,r) = CREATE_CALL.call(ndnsRegistryImplDeploycode);
+        address ndnsRegistryImplAddress = abi.decode(r, (address));
 
-        bytes memory qnsRegistryProxyDeployCode = abi.encodeWithSelector(
+        bytes memory ndnsRegistryProxyDeployCode = abi.encodeWithSelector(
             CreateCall.performCreate2.selector,
             uint256(0),
             abi.encodePacked(
                 vm.getCode("ERC1967Proxy.sol:ERC1967Proxy"),
                 abi.encode(
-                    qnsRegistryImplAddress,
+                    ndnsRegistryImplAddress,
                     abi.encodeWithSelector(
-                        QNSRegistryResolver.initialize.selector,
+                        NDNSRegistryResolver.initialize.selector,
                         SAFE
                     )
                 )
             ),
-            keccak256("NECTAR_OS_TEST")
+            keccak256("NECTAR_OS")
         );
 
-        console.log("qns prox addr");
-        console.logBytes(qnsRegistryProxyDeployCode);
+        console.log("ndns prox addr");
+        console.logBytes(ndnsRegistryProxyDeployCode);
 
-        (,r) = CREATE_CALL.call(qnsRegistryProxyDeployCode);
-        address qnsRegistryAddress = abi.decode(r, (address));
+        (,r) = CREATE_CALL.call(ndnsRegistryProxyDeployCode);
+        address ndnsRegistryAddress = abi.decode(r, (address));
 
         bytes memory dotUqImplDeployCode = abi.encodeWithSelector(
             CreateCall.performCreate2.selector,
             uint256(0),
-            vm.getCode("DotUqRegistrar.sol:DotUqRegistrar"),
-            keccak256("NECTAR_OS_TEST")
+            vm.getCode("DotNecRegistrar.sol:DotNecRegistrar"),
+            keccak256("NECTAR_OS")
         );
 
         console.log("dot uq impl");
@@ -83,13 +83,13 @@ contract SafeDeployment is Script {
                 abi.encode(
                     dotUqImplAddress,
                     abi.encodeWithSelector(
-                        DotUqRegistrar.initialize.selector,
-                        qnsRegistryAddress,
+                        DotNecRegistrar.initialize.selector,
+                        ndnsRegistryAddress,
                         SAFE
                     )
                 )
             ),
-            keccak256("NECTAR")
+            keccak256("NECTAR_OS")
         );
 
         console.log("dot uq proxy");
@@ -101,17 +101,17 @@ contract SafeDeployment is Script {
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
         inputs[1] = "--to-hex";
-        inputs[2] = "uq";
+        inputs[2] = "nec";
         bytes memory baseNode = vm.ffi(inputs);
 
-        bytes memory setDotUqCallCode = abi.encodeWithSelector(
-            QNSRegistryResolver.registerTLD.selector,
+        bytes memory setDotNecCallCode = abi.encodeWithSelector(
+            NDNSRegistryResolver.registerTLD.selector,
             baseNode,
             dotUqProxyAddress
         );
 
-        console.log("set dot uq", qnsRegistryAddress);
-        console.logBytes(setDotUqCallCode);
+        console.log("set dot uq", ndnsRegistryAddress);
+        console.logBytes(setDotNecCallCode);
 
     }
 }

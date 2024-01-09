@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import { Script, console } from "forge-std/Script.sol";
 
-import { QNSRegistryResolver } from "../src/QNSRegistryResolver.sol";
+import { NDNSRegistryResolver } from "../src/NDNSRegistryResolver.sol";
 
 contract Upgrade is Script {
     function run() public {
@@ -12,11 +12,11 @@ contract Upgrade is Script {
         
         vm.startBroadcast(deployerPrivateKey);
 
-        QNSRegistryResolver qns = QNSRegistryResolver(vm.envAddress("QNS_REGISTRY"));
+        NDNSRegistryResolver ndns = NDNSRegistryResolver(vm.envAddress("NDNS_REGISTRY"));
 
-        QNSRegistryResolver newQnsRegistryImpl = new QNSRegistryResolver();
+        NDNSRegistryResolver newNDNSRegistryImpl = new NDNSRegistryResolver();
 
-        qns.upgradeTo(address(newQnsRegistryImpl));
+        ndns.upgradeTo(address(newNDNSRegistryImpl));
 
     }
 }

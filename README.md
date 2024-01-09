@@ -1,18 +1,18 @@
-# QNS
+# NDNS
 
 Last updated Sept 21 2023
 
-## QNS Overview
+## NDNS Overview
 
-QNS is a system similar to ENS but designed specifically to coordinate network information to Uqbar Nodes so that they may interact with eachother. Below follows the architecture of the smart contracts and the rationales for these decisions.
+NDNS is a system similar to ENS but designed specifically to coordinate network information to Uqbar Nodes so that they may interact with eachother. Below follows the architecture of the smart contracts and the rationales for these decisions.
 
-### QNSRegistryResolver
+### NDNSRegistryResolver
 
 This contract is the central point of recordholding for all nodes in the network. It contains a minimal mapping of a node to its records which are constrained to contain a public networking key, and in addition, either an array of other nodes for routing, or a set of direct IP and port information for the base networking protocols standardized in Uqbar Nodes. As of the time of first release, that includes port information for TCP and UDP, at the lower level, and WebSockets and WebTransport at the higher level.
 
-The QNSRegistryResolver will be a single contract for the entire network of Uqbar Nodes. This provides simple indexing for any node on the network resulting in clear communication of the correct networking information for any given node.
+The NDNSRegistryResolver will be a single contract for the entire network of Uqbar Nodes. This provides simple indexing for any node on the network resulting in clear communication of the correct networking information for any given node.
 
-The QNSRegistryResolver is constructed to give control of any given TLD to a dedicated address, most likely a smart contract address. These addresses then may write any records they wish into the registry provided it is for the TLD they have been granted. This allows for various entities to participate in the network regardless of where their community derives from. They do not need to under an Uqbar affiliated name.
+The NDNSRegistryResolver is constructed to give control of any given TLD to a dedicated address, most likely a smart contract address. These addresses then may write any records they wish into the registry provided it is for the TLD they have been granted. This allows for various entities to participate in the network regardless of where their community derives from. They do not need to under an Uqbar affiliated name.
 
 Important concepts.
 
@@ -47,25 +47,25 @@ All of the above functions for setting a node's records make an authorization ca
 
 ### TLDRegistrar
 
-The TLDRegistrar contract is a base contract with internal methods providing the functionality of interacting with the QNSRegistryResolver. Any contract inheriting this builds its own logic atop that dictates the particular management of the TLD it is concerned with. This contract optimizes for gas while conforming to an ERC721 standard for tokenization. In addition to the 160 bits of an node owners address, it stores 96 bits that may be utilized in any way by the inheriting contract. Prior art utilizes this storage to build domain name expiries and permission schemes for governing various types of authorization over a node's attributes, for instance if it has relinquished control of its subdomains.
+The TLDRegistrar contract is a base contract with internal methods providing the functionality of interacting with the NDNSRegistryResolver. Any contract inheriting this builds its own logic atop that dictates the particular management of the TLD it is concerned with. This contract optimizes for gas while conforming to an ERC721 standard for tokenization. In addition to the 160 bits of an node owners address, it stores 96 bits that may be utilized in any way by the inheriting contract. Prior art utilizes this storage to build domain name expiries and permission schemes for governing various types of authorization over a node's attributes, for instance if it has relinquished control of its subdomains.
 
-The TLDRegistrar enhances the standard ERC721 spec with addition of a webmaster role. This role is similar to the approval or operator functionality wherein users may allow certain addresses to transfer their NFTs for them. With the webmaster role, the user may allow other addresses to set records in the QNSRegistryResolver on their behalf.
+The TLDRegistrar enhances the standard ERC721 spec with addition of a webmaster role. This role is similar to the approval or operator functionality wherein users may allow certain addresses to transfer their NFTs for them. With the webmaster role, the user may allow other addresses to set records in the NDNSRegistryResolver on their behalf.
 
 `auth(bytes32 node, address sender)`
-The auth function is invoked by the QNSRegistryResolver during the setting of any record to assure the sender is permissioned. The TLDRegistrar comes with a function that checks whether or not the sender is an approved webmaster, an approved operator, or approved directly for the particular token. The latter two checks are from the ERC721 standard. 
+The auth function is invoked by the NDNSRegistryResolver during the setting of any record to assure the sender is permissioned. The TLDRegistrar comes with a function that checks whether or not the sender is an approved webmaster, an approved operator, or approved directly for the particular token. The latter two checks are from the ERC721 standard. 
 
 The function is designated virtual to allow an implementation to overwrite it, for instance as mentioned above to implement expiry or to exert controls over who may set the records (perhaps they are immutable or perhaps a parent can set them).
 
 This function is also called internally when register is invoked.
 
-### DotUqRegistar
+### DotNecRegistar
 
-The DotUqRegistar implements the TLDRegistar base class to create a contract that will manage .UQ names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer.
+The DotNecRegistar implements the TLDRegistar base class to create a contract that will manage .UQ names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer.
 
 ### DotEthRegistar
 
-The DotEthRegistrar is the exitpoint of a cross chain contract setup that is meant to allow .ETH domains from the ENS domains smart contract on Ethereum Mainnet to claim and manage their .ETH domain within the QNSRegistryResolver. It accepts a message transported over [LayerZero](https://github.com/LayerZero-Labs/LayerZero). The message attests that an address has been authenticated as either an owner or an operator for a particular node and caches this user so that they may operate on the .ETH name within the QNSRegistryResolver. The message may also set records simulatenously, for convenience. The various attributes set in the ENS NameWrapper are also ported over so definition is not lost when interacting with ENS.
+The DotEthRegistrar is the exitpoint of a cross chain contract setup that is meant to allow .ETH domains from the ENS domains smart contract on Ethereum Mainnet to claim and manage their .ETH domain within the NDNSRegistryResolver. It accepts a message transported over [LayerZero](https://github.com/LayerZero-Labs/LayerZero). The message attests that an address has been authenticated as either an owner or an operator for a particular node and caches this user so that they may operate on the .ETH name within the NDNSRegistryResolver. The message may also set records simulatenously, for convenience. The various attributes set in the ENS NameWrapper are also ported over so definition is not lost when interacting with ENS.
 
 ### DotEthAuthenticator
 
-The DotEthAuthenticator is responsible for sending the messages described above. It assures the sender is allowed to operate on behalf of a .ETH name and sends along the appropriate metadata to the DotEthRegistrar allowing the sender to operate on their .ETH name in the QNSRegistryResolver.
+The DotEthAuthenticator is responsible for sending the messages described above. It assures the sender is allowed to operate on behalf of a .ETH name and sends along the appropriate metadata to the DotEthRegistrar allowing the sender to operate on their .ETH name in the NDNSRegistryResolver.
