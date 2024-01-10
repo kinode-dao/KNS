@@ -62,26 +62,26 @@ contract SafeDeployment is Script {
         (,r) = CREATE_CALL.call(ndnsRegistryProxyDeployCode);
         address ndnsRegistryAddress = abi.decode(r, (address));
 
-        bytes memory dotUqImplDeployCode = abi.encodeWithSelector(
+        bytes memory dotNecImplDeployCode = abi.encodeWithSelector(
             CreateCall.performCreate2.selector,
             uint256(0),
             vm.getCode("DotNecRegistrar.sol:DotNecRegistrar"),
             keccak256("NECTAR_OS")
         );
 
-        console.log("dot uq impl");
-        console.logBytes(dotUqImplDeployCode);
+        console.log("dot nec impl");
+        console.logBytes(dotNecImplDeployCode);
 
-        (,r) = CREATE_CALL.call(dotUqImplDeployCode);
-        address dotUqImplAddress = abi.decode(r, (address));
+        (,r) = CREATE_CALL.call(dotNecImplDeployCode);
+        address dotNecImplAddress = abi.decode(r, (address));
 
-        bytes memory dotUqProxyDeployCode = abi.encodeWithSelector(
+        bytes memory dotNecProxyDeployCode = abi.encodeWithSelector(
             CreateCall.performCreate2.selector,
             uint256(0),
             abi.encodePacked(
                 vm.getCode("ERC1967Proxy.sol:ERC1967Proxy"),
                 abi.encode(
-                    dotUqImplAddress,
+                    dotNecImplAddress,
                     abi.encodeWithSelector(
                         DotNecRegistrar.initialize.selector,
                         ndnsRegistryAddress,
@@ -92,11 +92,11 @@ contract SafeDeployment is Script {
             keccak256("NECTAR_OS")
         );
 
-        console.log("dot uq proxy");
-        console.logBytes(dotUqProxyDeployCode);
+        console.log("dot nec proxy");
+        console.logBytes(dotNecProxyDeployCode);
 
-        (,r) = CREATE_CALL.call(dotUqProxyDeployCode);
-        address dotUqProxyAddress = abi.decode(r, (address));
+        (,r) = CREATE_CALL.call(dotNecProxyDeployCode);
+        address dotNecProxyAddress = abi.decode(r, (address));
 
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
@@ -107,11 +107,47 @@ contract SafeDeployment is Script {
         bytes memory setDotNecCallCode = abi.encodeWithSelector(
             NDNSRegistryResolver.registerTLD.selector,
             baseNode,
-            dotUqProxyAddress
+            dotNecProxyAddress
         );
 
-        console.log("set dot uq", ndnsRegistryAddress);
+        console.log("set dot nec", ndnsRegistryAddress);
         console.logBytes(setDotNecCallCode);
 
     }
+}
+
+
+contract VerificationConstructorArgs {
+
+    address SAFE = 0x8E2f51D2992382080652B86eC7425A7dFC338055;
+    address NDNS_IMPL = 0x1F2a95Db4927a84978A3A37827c4f7C954bfB32B;
+    address NDNS_PROXY = 0x6e22E7b9f5a99D5921c14A88Aaf954502aC17B90;
+    address DOTNEC_IMPL = 0x4C18DDb7fd0c8EaB356fA1dE088a9861ca1A9931;
+
+    function run () public {
+
+        bytes memory ndnsRegistryConstructorArgs = abi.encode(
+            NDNS_IMPL,
+            abi.encodeWithSelector(
+                NDNSRegistryResolver.initialize.selector,
+                SAFE
+            )
+        );
+
+        bytes memory dotNecConstructorArgs = abi.encode(
+            DOTNEC_IMPL,
+            abi.encodeWithSelector(
+                DotNecRegistrar.initialize.selector,
+                NDNS_PROXY,
+                SAFE
+            )
+        );
+
+        console.log("ndns registry constructor args");
+        console.logBytes(ndnsRegistryConstructorArgs);
+        console.log("dot nec constructor args");
+        console.logBytes(dotNecConstructorArgs);
+
+    }
+
 }

@@ -30,7 +30,7 @@ contract DotNecRegistrar is IDotNecRegistrar, TLDRegistrar, Initializable, Ownab
         address _owner
     ) public initializer {
 
-        __TLDRegistrar_init(_ndns, "Uqbar Name Service", "UNDNS");
+        __TLDRegistrar_init(_ndns, "Nectar OS .nec Domains", "DOTNEC");
         __UUPSUpgradeable_init();
         _transferOwnership(_owner);
 
