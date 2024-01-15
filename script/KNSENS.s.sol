@@ -5,42 +5,42 @@ import {Script, console} from "forge-std/Script.sol";
 
 import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
-import { IETHRegistrarController } from "ens-contracts/ethregistrar/IETHRegistrarController.sol";
-import { IPriceOracle } from "ens-contracts/ethregistrar/IPriceOracle.sol";
+import {IETHRegistrarController} from "ens-contracts/ethregistrar/IETHRegistrarController.sol";
+import {IPriceOracle} from "ens-contracts/ethregistrar/IPriceOracle.sol";
 
-import { BytesUtils } from "../src/lib/BytesUtils.sol";
+import {BytesUtils} from "../src/lib/BytesUtils.sol";
 
-import { INDNSRegistryResolver } from "../src/interfaces/INDNSRegistryResolver.sol";
-import { NDNSEnsExit } from "../src/NDNSEnsExit.sol";
-import { NDNSEnsEntry } from "../src/NDNSEnsEntry.sol";
+import {IKNSRegistryResolver} from "../src/interfaces/IKNSRegistryResolver.sol";
+import {KNSEnsExit} from "../src/KNSEnsExit.sol";
+import {KNSEnsEntry} from "../src/KNSEnsEntry.sol";
 
 contract EnvironmentAndScript is Script {
-
     uint ENTRY_RPC = vm.createFork(vm.envString("RPC_GOERLI"));
     uint EXIT_RPC = vm.createFork(vm.envString("RPC_SEPOLIA"));
     uint PRIVKEY = vm.envUint("PRIVATE_KEY");
-    INDNSRegistryResolver ndns = INDNSRegistryResolver(vm.envAddress("NDNS_TEST_NDNS_REGISTRY"));
-    NDNSEnsExit exit = NDNSEnsExit(vm.envAddress("NDNS_SEPOLIA_ENS_EXIT"));
-    NDNSEnsEntry entry = NDNSEnsEntry(payable(vm.envAddress("NDNS_GOERLI_ENS_ENTRY")));
+    IKNSRegistryResolver kns =
+        IKNSRegistryResolver(vm.envAddress("KNS_TEST_KNS_REGISTRY"));
+    KNSEnsExit exit = KNSEnsExit(vm.envAddress("KNS_SEPOLIA_ENS_EXIT"));
+    KNSEnsEntry entry =
+        KNSEnsEntry(payable(vm.envAddress("KNS_GOERLI_ENS_ENTRY")));
     address ensregistry = vm.envAddress("ENS_GOERLI_REGISTRY");
     address ensnamewrapper = vm.envAddress("ENS_GOERLI_NAME_WRAPPER");
-
 }
 
-contract DeployENSEntry is EnvironmentAndScript 
-    { function run() public { } }
+contract DeployENSEntry is EnvironmentAndScript {
+    function run() public {}
+}
 
-contract DeployENSExit is EnvironmentAndScript 
-    { function run() public { } }
+contract DeployENSExit is EnvironmentAndScript {
+    function run() public {}
+}
 
 contract DeployEnsEntryExitPair is EnvironmentAndScript {
-
     function run() public {
-
         vm.selectFork(EXIT_RPC);
         vm.startBroadcast(PRIVKEY);
-        exit = new NDNSEnsExit(
-            address(ndns),
+        exit = new KNSEnsExit(
+            address(kns),
             vm.envAddress("LZ_EP_SEPOLIA"),
             uint16(vm.envUint("LZ_CID_SEPOLIA"))
         );
@@ -51,12 +51,12 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        ndns.registerTLD(eth, address(exit));
+        kns.registerTLD(eth, address(exit));
 
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
         vm.startBroadcast(PRIVKEY);
-        entry = new NDNSEnsEntry(
+        entry = new KNSEnsEntry(
             ensregistry,
             ensnamewrapper,
             vm.envAddress("LZ_EP_GOERLI"),
@@ -64,15 +64,12 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
             address(exit),
             uint16(vm.envUint("LZ_CID_SEPOLIA"))
         );
-        address(entry).call{value: .25 ether }("");
+        address(entry).call{value: .25 ether}("");
 
         vm.stopBroadcast();
         vm.selectFork(EXIT_RPC);
         vm.startBroadcast(PRIVKEY);
-        exit.setEntry(
-            address(entry), 
-            uint16(vm.envUint("LZ_CID_GOERLI"))
-        );
+        exit.setEntry(address(entry), uint16(vm.envUint("LZ_CID_GOERLI")));
 
         vm.stopBroadcast();
         vm.selectFork(ENTRY_RPC);
@@ -84,25 +81,30 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         uint256 testuqbarnode = uint(BytesUtils.namehash(testuqbar, 0));
 
         bytes[] memory data = new bytes[](3);
-        data[0] = abi.encodeWithSelector
-            ( INDNSRegistryResolver.setKey.selector, testuqbarnode, keccak256("yes") );
-        data[1] = abi.encodeWithSelector
-            ( INDNSRegistryResolver.setIp.selector, testuqbarnode, type(uint128).max );
-        data[2] = abi.encodeWithSelector
-            ( INDNSRegistryResolver.setWs.selector, testuqbarnode, type(uint16).max );
-
-        entry.setNDNSRecords(
-            testuqbar,
-            data
+        data[0] = abi.encodeWithSelector(
+            IKNSRegistryResolver.setKey.selector,
+            testuqbarnode,
+            keccak256("yes")
+        );
+        data[1] = abi.encodeWithSelector(
+            IKNSRegistryResolver.setIp.selector,
+            testuqbarnode,
+            type(uint128).max
+        );
+        data[2] = abi.encodeWithSelector(
+            IKNSRegistryResolver.setWs.selector,
+            testuqbarnode,
+            type(uint16).max
         );
 
-        vm.stopBroadcast();
+        entry.setKNSRecords(testuqbar, data);
 
+        vm.stopBroadcast();
     }
 }
 
-contract SetWsForEnsNameOnNDNS is EnvironmentAndScript {
-    function run () public {
+contract SetWsForEnsNameOnKNS is EnvironmentAndScript {
+    function run() public {
         vm.selectFork(EXIT_RPC);
         vm.startBroadcast(PRIVKEY);
         string[] memory inputs = new string[](3);
@@ -111,31 +113,30 @@ contract SetWsForEnsNameOnNDNS is EnvironmentAndScript {
         inputs[2] = "uqtesttest.eth";
         bytes memory testuqbarnode = vm.ffi(inputs);
         bytes32 namehash = BytesUtils.namehash(testuqbarnode, 0);
-        ndns.setKey(namehash, keccak256("key"));
-        ndns.setIp(namehash, type(uint128).max);
-        ndns.setWs(namehash, type(uint16).max);
+        kns.setKey(namehash, keccak256("key"));
+        kns.setIp(namehash, type(uint128).max);
+        kns.setWs(namehash, type(uint16).max);
         vm.stopBroadcast();
     }
 }
 
-contract CashNDNSEnsEntry is EnvironmentAndScript {
-    function run () public {
+contract CashKNSEnsEntry is EnvironmentAndScript {
+    function run() public {
         vm.selectFork(ENTRY_RPC);
         vm.startBroadcast(PRIVKEY);
         entry.cash();
     }
 }
 
-contract SimulateNDNSEnsExit is EnvironmentAndScript {
-    function run () public {
-
+contract SimulateKNSEnsExit is EnvironmentAndScript {
+    function run() public {
         vm.selectFork(EXIT_RPC);
 
         address from = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
         vm.startPrank(from);
 
-        exit = new NDNSEnsExit(
-            address(ndns),
+        exit = new KNSEnsExit(
+            address(kns),
             vm.envAddress("LZ_EP_SEPOLIA"),
             uint16(vm.envUint("LZ_CID_SEPOLIA"))
         );
@@ -146,15 +147,14 @@ contract SimulateNDNSEnsExit is EnvironmentAndScript {
         inputs[2] = "eth";
         bytes memory eth = vm.ffi(inputs);
 
-        ndns.registerTLD(eth, address(exit));
+        kns.registerTLD(eth, address(exit));
 
         exit.simulate(vm.envBytes("PAYLOAD"));
-
     }
 }
 
 contract NameHash is EnvironmentAndScript {
-    function run () public {
+    function run() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
         inputs[1] = "--to-hex";
@@ -162,23 +162,25 @@ contract NameHash is EnvironmentAndScript {
         bytes memory node = vm.ffi(inputs);
         console.log("node", uint(BytesUtils.namehash(node, 0)));
     }
-
 }
 
 contract Thing is EnvironmentAndScript {
+    error MyError(address, address);
 
-    error MyError(address,address);
-
-    function run () public {
-        (bool success, bytes memory data) = address(this).call(abi.encodeWithSelector(this.thing.selector));
-        if (!success){ 
-            console.log("!success"); 
+    function run() public {
+        (bool success, bytes memory data) = address(this).call(
+            abi.encodeWithSelector(this.thing.selector)
+        );
+        if (!success) {
+            console.log("!success");
             console.logBytes(data);
             bytes4 selector;
-            assembly { selector := mload(add(data, 0x20)) }
+            assembly {
+                selector := mload(add(data, 0x20))
+            }
             console.logBytes4(selector);
             // (bytes4 sel, address one, address two) = abi.decode(data, (bytes4, address,address));
-            (bytes4 sel) = abi.decode(data, (bytes4));
+            bytes4 sel = abi.decode(data, (bytes4));
             // console.logBytes4(abi.decode(data, (bytes4,address,address)));
             // console.log("one", one);
             // console.log("two", two);
@@ -186,9 +188,8 @@ contract Thing is EnvironmentAndScript {
             // console.logBytes8(selector);
         }
     }
-    function thing () external {
 
+    function thing() external {
         revert MyError(address(this), address(this));
     }
-
 }

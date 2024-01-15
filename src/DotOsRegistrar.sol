@@ -12,71 +12,74 @@ import "./lib/BytesUtils.sol";
 
 import "./TLDRegistrar.sol";
 
-import "./interfaces/IDotNecRegistrar.sol";
+import "./interfaces/IDotOsRegistrar.sol";
 
 error NotAuthorizedToMintName();
 error CannotRevokeControlFromTLD();
 error SecondLevelDomainNot9CharactersOrMore();
-error NotDotNecTLD();
+error NotDotOsTLD();
 
-contract DotNecRegistrar is IDotNecRegistrar, TLDRegistrar, Initializable, OwnableUpgradeable, UUPSUpgradeable {
-
+contract DotOsRegistrar is
+    IDotOsRegistrar,
+    TLDRegistrar,
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     using BytesUtils for bytes;
 
-    mapping (uint => uint) public parents;
+    mapping(uint => uint) public parents;
 
-    function initialize (
-        address _ndns,
-        address _owner
-    ) public initializer {
-
-        __TLDRegistrar_init(_ndns, "Nectar OS .nec Domains", "DOTNEC");
+    function initialize(address _kns, address _owner) public initializer {
+        __TLDRegistrar_init(_kns, ".OS KNS Domains", "DOTOS");
         __UUPSUpgradeable_init();
         _transferOwnership(_owner);
-
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 
     function getInitializedVersion() public view returns (uint8) {
-        return  _getInitializedVersion();
+        return _getInitializedVersion();
     }
 
-    function register (
+    function register(
         bytes calldata _name,
         address _to,
         bytes[] calldata _data
-    ) external payable returns (
-        uint256 nodeId_
-    ) {
-
-        ( bytes32 _attributes, ) = 
-            _authAndGetRegistrationAttributes(_name, 0, msg.sender);
+    ) external payable returns (uint256 nodeId_) {
+        (bytes32 _attributes, ) = _authAndGetRegistrationAttributes(
+            _name,
+            0,
+            msg.sender
+        );
 
         nodeId_ = _register(_name, _to, _attributes, _data);
-
     }
 
-    function _authAndGetRegistrationAttributes (
+    function _authAndGetRegistrationAttributes(
         bytes calldata _name,
         uint256 _offset,
         address _minter
     ) internal returns (bytes32, bool) {
-
         // get current label
-        ( bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
+        (bytes32 _label, uint _newOffset) = _name.readLabel(_offset);
 
-        // if label is TLD demand it is .nec and return
+        // if label is TLD demand it is .os and return
         if (_newOffset == _name.length - 1)
-            if (_label != TLD_LABEL) revert NotDotNecTLD();
-                else return (TLD_HASH, true);
+            if (_label != TLD_LABEL) revert NotDotOsTLD();
+            else return (TLD_HASH, true);
 
-        // recurse to retrieve parent 
-        ( bytes32 _parent, bool auth_ ) = 
-            _authAndGetRegistrationAttributes (_name, _newOffset, _minter);
+        // recurse to retrieve parent
+        (bytes32 _parent, bool auth_) = _authAndGetRegistrationAttributes(
+            _name,
+            _newOffset,
+            _minter
+        );
 
         // if second level domain, check it is 9 characters or more
-        if (_parent == TLD_HASH && _newOffset - _offset <= 9) 
+        if (_parent == TLD_HASH && _newOffset - _offset <= 9)
             revert SecondLevelDomainNot9CharactersOrMore();
 
         // make current node
@@ -87,7 +90,6 @@ contract DotNecRegistrar is IDotNecRegistrar, TLDRegistrar, Initializable, Ownab
 
         // if not in the first callframe of recursion, update auth and recurse
         if (_offset != 0) {
-
             // if current node is not controllable via parent then auth must be false
             if (!_controllableViaParent(uint(node_))) auth_ = false;
 
@@ -96,84 +98,66 @@ contract DotNecRegistrar is IDotNecRegistrar, TLDRegistrar, Initializable, Ownab
 
             return (node_, auth_);
 
-        // at end of first callframe, check auth and return attributes
+            // at end of first callframe, check auth and return attributes
         } else {
-
             if (!auth_) revert NotAuthorizedToMintName();
 
-            return (_parent == TLD_HASH ? PARENT_CANNOT_CONTROL : bytes32(0), true);
-
+            return (
+                _parent == TLD_HASH ? PARENT_CANNOT_CONTROL : bytes32(0),
+                true
+            );
         }
-
     }
 
-    function revokeControlOverSubdomain (
-        bytes memory _name
-    ) public {
+    function revokeControlOverSubdomain(bytes memory _name) public {
+        (bytes32 _child, bytes32 _parent, bytes32 _tld) = _name
+            .childParentAndTLD();
 
-        ( bytes32 _child, bytes32 _parent, bytes32 _tld ) 
-            = _name.childParentAndTLD();
-        
         if (_parent == _tld) revert CannotRevokeControlFromTLD();
 
         if (auth(_parent, msg.sender)) {
-
             bytes32 _node = _getNode(_child) | PARENT_CANNOT_CONTROL;
 
-            _setNode(_node , uint(_child));
+            _setNode(_node, uint(_child));
 
             emit ControlRevoked(uint(_child), uint(_parent), msg.sender);
-
         } else revert NotAuthorized();
-
     }
 
-    function auth (
+    function auth(
         bytes32 _nodeId,
         address _sender
-    ) public override(TLDRegistrar) view returns (bool) {
-
+    ) public view override(TLDRegistrar) returns (bool) {
         return auth(uint(_nodeId), _sender);
-
     }
 
-    function auth (
+    function auth(
         uint _nodeId,
         address _sender
-    ) public override(TLDRegistrar) view returns (bool authed_) {
-
+    ) public view override(TLDRegistrar) returns (bool authed_) {
         while (!authed_ && _nodeId != uint(TLD_HASH)) {
-
             authed_ = super.auth(_nodeId, _sender);
 
             if (authed_) break;
-            else if (_controllableViaParent(_nodeId)) _nodeId = parents[_nodeId];
+            else if (_controllableViaParent(_nodeId))
+                _nodeId = parents[_nodeId];
             else return false;
-
         }
-
     }
 
     //
     // internals
     //
 
-    function _controllableViaParent (
-        uint _nodeId
-    ) internal view returns (bool) {
-
+    function _controllableViaParent(uint _nodeId) internal view returns (bool) {
         return _controllableViaParent(_getNode(_nodeId));
-
     }
 
-    function _controllableViaParent (
+    function _controllableViaParent(
         bytes32 _nodeContents
     ) internal pure returns (bool) {
-
-        return 
-            _nodeContents == bytes32(0) || 
+        return
+            _nodeContents == bytes32(0) ||
             _nodeContents & PARENT_CANNOT_CONTROL != PARENT_CANNOT_CONTROL;
-
     }
-
 }

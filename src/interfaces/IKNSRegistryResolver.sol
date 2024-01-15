@@ -1,7 +1,7 @@
 pragma solidity >=0.8.4;
 
-import { ITLDRegistrar } from "./ITLDRegistrar.sol";
-import { IMulticallable } from "./IMulticallable.sol";
+import {ITLDRegistrar} from "./ITLDRegistrar.sol";
+import {IMulticallable} from "./IMulticallable.sol";
 
 // Record types
 uint32 constant WEBSOCKETS = 1;
@@ -14,11 +14,10 @@ uint96 constant WT_BIT = 1 << 4;
 uint96 constant TCP_BIT = 1 << 5;
 uint96 constant UDP_BIT = 1 << 6;
 
-interface INDNSRegistryResolver is IMulticallable {
-
-    // NDNS node data
+interface IKNSRegistryResolver is IMulticallable {
+    // KNS node data
     struct Node {
-        ITLDRegistrar tld; // contract that controls ownership logic of NDNS id
+        ITLDRegistrar tld; // contract that controls ownership logic of KNS id
         uint96 records; // room for 96 records
     }
 
@@ -30,10 +29,10 @@ interface INDNSRegistryResolver is IMulticallable {
         uint16 udp;
     }
 
-    // Logged whenever a NDNS adds/drops support for subdomaining
+    // Logged whenever a KNS adds/drops support for subdomaining
     event NewTLD(bytes32 indexed node, bytes name, address tld);
 
-    // Logged whenever a NDNS node is created
+    // Logged whenever a KNS node is created
     event NodeRegistered(bytes32 indexed node, bytes name);
 
     event RecordsCleared(bytes32 indexed node);
@@ -52,26 +51,47 @@ interface INDNSRegistryResolver is IMulticallable {
 
     function registerTLD(bytes calldata fqdn, address registrar) external;
 
-    function registerNode(bytes calldata fqdn) external returns (bytes32 nodeId);
+    function registerNode(
+        bytes calldata fqdn
+    ) external returns (bytes32 nodeId);
 
     function setKey(bytes32 node, bytes32 key) external;
-    function setAllIp(bytes32 node, uint128 ip, uint16 ws, uint16 wt, uint16 tcp, uint16 udp) external;
+
+    function setAllIp(
+        bytes32 node,
+        uint128 ip,
+        uint16 ws,
+        uint16 wt,
+        uint16 tcp,
+        uint16 udp
+    ) external;
+
     function setIp(bytes32 node, uint128 ip) external;
+
     function setWs(bytes32 node, uint16 port) external;
+
     function setWt(bytes32 node, uint16 port) external;
+
     function setTcp(bytes32 node, uint16 port) external;
+
     function setUdp(bytes32 node, uint16 port) external;
-    function setRouters
-        (bytes32 node, bytes32[] calldata routers) external;
+
+    function setRouters(bytes32 node, bytes32[] calldata routers) external;
 
     //
     // views
     //
 
     function nodes(bytes32) external view returns (ITLDRegistrar, uint96);
-    function key(bytes32) external view returns (bytes32);
-    function routers(bytes32 node) external view returns (bytes32[] memory);
-    function ip(bytes32 node) external view returns 
-        ( uint128 ip, uint16 ws, uint16 wt, uint16 tcp, uint16 udp);
 
+    function key(bytes32) external view returns (bytes32);
+
+    function routers(bytes32 node) external view returns (bytes32[] memory);
+
+    function ip(
+        bytes32 node
+    )
+        external
+        view
+        returns (uint128 ip, uint16 ws, uint16 wt, uint16 tcp, uint16 udp);
 }
