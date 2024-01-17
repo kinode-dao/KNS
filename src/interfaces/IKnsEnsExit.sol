@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ~0.8.17;
 
-interface INDNSEnsExit {
-
+interface IKNSEnsExit {
     event Pinged(address);
 
-    function setEntry (
-        address _entry,
-        uint16 _entryChain
-    ) external;
+    function setEntry(address _entry, uint16 _entryChain) external;
 
-    function setNDNSRecords (
+    function setKNSRecords(
         address owner,
         bytes calldata fqdn,
         bytes[] calldata data
     ) external;
 
-    function ping () external;
-
+    function ping() external;
 }
