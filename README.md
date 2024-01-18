@@ -4,15 +4,15 @@ Last updated Sept 21 2023
 
 ## KNS Overview
 
-KNS is a system similar to ENS but designed specifically to coordinate network information to *TODO* Nodes so that they may interact with eachother. Below follows the architecture of the smart contracts and the rationales for these decisions.
+KNS is a system similar to ENS but designed specifically to coordinate network information to Kinode Nodes so that they may interact with eachother. Below follows the architecture of the smart contracts and the rationales for these decisions.
 
 ### KNSRegistryResolver
 
-This contract is the central point of recordholding for all nodes in the network. It contains a minimal mapping of a node to its records which are constrained to contain a public networking key, and in addition, either an array of other nodes for routing, or a set of direct IP and port information for the base networking protocols standardized in *TODO* Nodes. As of the time of first release, that includes port information for TCP and UDP, at the lower level, and WebSockets and WebTransport at the higher level.
+This contract is the central point of recordholding for all nodes in the network. It contains a minimal mapping of a node to its records which are constrained to contain a public networking key, and in addition, either an array of other nodes for routing, or a set of direct IP and port information for the base networking protocols standardized in Kinodes. As of the time of first release, that includes port information for TCP and UDP, at the lower level, and WebSockets and WebTransport at the higher level.
 
-The KNSRegistryResolver will be a single contract for the entire network of *TODO* Nodes. This provides simple indexing for any node on the network resulting in clear communication of the correct networking information for any given node.
+The KNSRegistryResolver will be a single contract for the entire Kinode network. This provides simple indexing for any node on the network resulting in clear communication of the correct networking information for any given node.
 
-The KNSRegistryResolver is constructed to give control of any given TLD to a dedicated address, most likely a smart contract address. These addresses then may write any records they wish into the registry provided it is for the TLD they have been granted. This allows for various entities to participate in the network regardless of where their community derives from. They do not need to under an *TODO* affiliated name.
+The KNSRegistryResolver is constructed to give control of any given TLD to a dedicated address, most likely a smart contract address. These addresses then may write any records they wish into the registry provided it is for the TLD they have been granted. This allows for various entities to participate in the network regardless of where their community derives from. They do not need to under an Kinode affiliated name.
 
 Important concepts.
 
@@ -60,7 +60,7 @@ This function is also called internally when register is invoked.
 
 ### DotOsRegistar
 
-The DotOsRegistar implements the TLDRegistar base class to create a contract that will manage .UQ names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer.
+The DotOsRegistar implements the TLDRegistar base class to create a contract that will manage `.os` names. It utilizes the attributes of a node to store whether or not the owner of a node has relinquished permissions of control over the various subdomains it may have. It does not enforce any expiry dates, and it does enforce a requirement that the names it registers be 9 characers or longer.
 
 ### DotEthRegistar
 
