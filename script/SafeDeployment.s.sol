@@ -115,9 +115,9 @@ contract SafeDeployment is Script {
 
 contract VerificationConstructorArgs {
     address SAFE = 0x8E2f51D2992382080652B86eC7425A7dFC338055;
-    address KNS_IMPL = 0x1F2a95Db4927a84978A3A37827c4f7C954bfB32B;
-    address KNS_PROXY = 0x6e22E7b9f5a99D5921c14A88Aaf954502aC17B90;
-    address DOTOS_IMPL = 0x4C18DDb7fd0c8EaB356fA1dE088a9861ca1A9931;
+    address KNS_IMPL = 0x42D0298D742E4084F0DC1284BB87049008B61105; 
+    address KNS_PROXY = 0x3807fBD692Aa5c96F1D8D7c59a1346a885F40B1C; 
+    address DOTOS_IMPL = 0x76cd096Bd7006D5Bf7F60fB6a237c046C9b6cC24; 
 
     function run() public {
         bytes memory knsRegistryConstructorArgs = abi.encode(

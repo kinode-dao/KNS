@@ -72,9 +72,18 @@ The DotEthAuthenticator is responsible for sending the messages described above.
 
 ### Scripts
 
-```
+```bash
 forge install
 forge build
 forge script script/SafeDeployment.s.sol:SafeDeployment -vv --ffi --rpc-url <y
 our_rpc_http_url>
 ```
+
+### Deployed Contracts
+
+| Contract Name | Sepolia Testnet Address | Optimism Mainnet Address |
+| ------------- | --------------- | --------------- |
+| KNSRegistryResolver | [0x42D0298D742E4084F0DC1284BB87049008B61105](https://sepolia.etherscan.io/address/0x42D0298D742E4084F0DC1284BB87049008B61105) | [0x42d0298d742e4084f0dc1284bb87049008b61105](https://optimistic.etherscan.io/address/0x42d0298d742e4084f0dc1284bb87049008b61105) |
+| KNSRegistryResolver Proxy | [0x3807fBD692Aa5c96F1D8D7c59a1346a885F40B1C](https://sepolia.etherscan.io/address/0x3807fBD692Aa5c96F1D8D7c59a1346a885F40B1C) | [0xca5b5811c0c40aab3295f932b1b5112eb7bb4bd6](https://optimistic.etherscan.io/address/0xca5b5811c0c40aab3295f932b1b5112eb7bb4bd6) |
+| DotOsRegistrar | [0x76cd096Bd7006D5Bf7F60fB6a237c046C9b6cC24](https://sepolia.etherscan.io/address/0x76cd096Bd7006D5Bf7F60fB6a237c046C9b6cC24) | [0x76cd096bd7006d5bf7f60fb6a237c046c9b6cc24](https://optimistic.etherscan.io/address/0x76cd096bd7006d5bf7f60fb6a237c046c9b6cc24) |
+| DotOsRegistrar Proxy | [0xc5a939923e0b336642024b479502e039338bed00](https://sepolia.etherscan.io/address/0xc5a939923e0b336642024b479502e039338bed00) | [0x66929f55ea1e38591f9430e5013c92cdc01f6cad](https://optimistic.etherscan.io/address/0x66929f55ea1e38591f9430e5013c92cdc01f6cad) |
