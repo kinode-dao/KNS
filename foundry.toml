@@ -6,3 +6,5 @@ libs = ["lib"]
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 ignored_error_codes = [ 1878, 2072, 2462, 2519, 8760, ]
+
+solc_version = "0.8.23"
