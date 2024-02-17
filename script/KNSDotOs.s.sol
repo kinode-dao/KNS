@@ -52,7 +52,7 @@ contract KNSDotOsScript is Script {
             )
         );
 
-        knsRegistry.registerTLD(baseNode, address(dotUq));
+        knsRegistry.registerTLD(baseNode, address(dotOs));
     }
 }
 
@@ -66,7 +66,7 @@ contract QueryNode is Script {
         address DOTOS = vm.envAddress("DOT_UQ_REGISTRAR");
 
         KNSRegistryResolver kns = KNSRegistryResolver(KNS);
-        DotOsRegistrar dotuq = DotOsRegistrar(DOTOS);
+        DotOsRegistrar dotos = DotOsRegistrar(DOTOS);
 
         string memory node1 = "verification.os";
 
@@ -81,7 +81,7 @@ contract QueryNode is Script {
         (uint128 ip, uint16 ws, , , ) = kns.ip(node);
         console.log(ip, ws);
 
-        console.log(dotuq.ownerOf(uint(node)));
+        console.log(dotos.ownerOf(uint(node)));
     }
 }
 
@@ -145,7 +145,7 @@ contract SetNode is Script {
         inputs[1] = "--to-hex";
         inputs[2] = node1;
 
-        DotOsRegistrar dotuq = DotOsRegistrar(DOTOS);
+        DotOsRegistrar dotos = DotOsRegistrar(DOTOS);
 
         bytes memory name;
         bytes[] memory records;
@@ -177,7 +177,7 @@ contract SetNode is Script {
             WS_PORT
         );
 
-        dotuq.register(name, wallet.addr, records);
+        dotos.register(name, wallet.addr, records);
 
         vm.stopBroadcast();
     }
