@@ -13,23 +13,21 @@ import { INameWrapper } from "ens-contracts/wrapper/INameWrapper.sol";
 
 contract EnvironmentAndScript is Script {
     uint PRIVKEY = vm.envUint("PRIVATE_KEY");
-    string name = "testuq";
-    string subname = "qutset";
-    string namesubname = "qutset.testuq";
-    string ethname = "testuq.eth";
+    string name = "kinotest";
+    string subname = "kinosub";
+    string namesubname = "kinosub.kinotest";
+    string ethname = "kinotest.eth";
     address owner = vm.createWallet(PRIVKEY).addr;
     uint256 duration = 31536000;
     bytes32 secret = keccak256("secret");
-    address resolver = vm.envAddress("ENS_GOERLI_PUBLIC_RESOLVER");
+    address resolver = vm.envAddress("ENS_PUBLIC_RESOLVER_SEPOLIA");
     bytes[] data;
     bool reverse = false;
     uint16 fuses = 0;
 
-    IETHRegistrarController ethRegistrar =
-        IETHRegistrarController(vm.envAddress("ENS_GOERLI_ETH_CONTROLLER"));
-    INameWrapper nameWrapper = 
-        INameWrapper(vm.envAddress("ENS_GOERLI_NAME_WRAPPER"));
-    uint RPC_GOERLI = vm.createFork(vm.envString("RPC_GOERLI"));
+    IETHRegistrarController ethRegistrar = IETHRegistrarController(vm.envAddress("ENS_ETH_CONTROLLER_SEPOLIA"));
+    INameWrapper nameWrapper = INameWrapper(vm.envAddress("ENS_NAME_WRAPPER_SEPOLIA"));
+    uint RPC = vm.createFork(vm.envString("RPC_SEPOLIA"));
 
     bytes namednswire;
     bytes32 namelabel;
@@ -58,12 +56,13 @@ contract EnvironmentAndScript is Script {
 contract MakeCommitmentForETHName is EnvironmentAndScript {
     function run() public {
 
-        vm.selectFork(RPC_GOERLI);
+        vm.selectFork(RPC);
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        ethRegistrar.commit(ethRegistrar.makeCommitment(
-            name, owner, duration, secret, resolver, data, reverse, fuses
-        ));
+        bytes32 commitment = ethRegistrar
+            .makeCommitment(name, owner, duration, secret, resolver, data, reverse, fuses);
+
+        ethRegistrar.commit(commitment);
             
         vm.stopBroadcast();
 
@@ -73,7 +72,7 @@ contract MakeCommitmentForETHName is EnvironmentAndScript {
 contract RegisterETHNameFromCommitment is EnvironmentAndScript {
     function run() public {
 
-        vm.selectFork(RPC_GOERLI);
+        vm.selectFork(RPC);
 
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
@@ -91,7 +90,7 @@ contract RegisterETHNameFromCommitment is EnvironmentAndScript {
 contract UnwrapEthName is EnvironmentAndScript {
     function run() public {
 
-        vm.selectFork(RPC_GOERLI);
+        vm.selectFork(RPC);
         vm.broadcast(PRIVKEY);
         nameWrapper.unwrapETH2LD(
             namelabel,
@@ -104,7 +103,7 @@ contract UnwrapEthName is EnvironmentAndScript {
 
 contract RegisterSubNodeWithWrapper is EnvironmentAndScript {
     function run () public {
-        vm.selectFork(RPC_GOERLI);
+        vm.selectFork(RPC);
         vm.broadcast(PRIVKEY);
         bytes32 node = nameWrapper.setSubnodeOwner(
             BytesUtils.namehash(ethnamednswire, 0),
