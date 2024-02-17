@@ -15,17 +15,18 @@ import {BytesUtils} from "../src/lib/BytesUtils.sol";
 contract KNSDotOsScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address owner = vm.rememberKey(deployerPrivateKey);
 
         vm.startBroadcast(deployerPrivateKey);
 
         KNSRegistryResolver knsRegistryImpl = new KNSRegistryResolver();
-
         KNSRegistryResolver knsRegistry = KNSRegistryResolver(
             address(
                 new ERC1967Proxy(
                     address(knsRegistryImpl),
                     abi.encodeWithSelector(
-                        KNSRegistryResolver.initialize.selector
+                        KNSRegistryResolver.initialize.selector,
+                        owner
                     )
                 )
             )
@@ -37,14 +38,15 @@ contract KNSDotOsScript is Script {
         inputs[2] = "os";
         bytes memory baseNode = vm.ffi(inputs);
 
-        DotOsRegistrar dotUqImpl = new DotOsRegistrar();
-        DotOsRegistrar dotUq = DotOsRegistrar(
+        DotOsRegistrar dotOsImpl = new DotOsRegistrar();
+        DotOsRegistrar dotOs = DotOsRegistrar(
             address(
                 new ERC1967Proxy(
-                    address(dotUqImpl),
+                    address(dotOsImpl),
                     abi.encodeWithSelector(
                         DotOsRegistrar.initialize.selector,
-                        address(knsRegistry)
+                        address(knsRegistry),
+                        owner
                     )
                 )
             )
