@@ -8,7 +8,10 @@ import {BytesUtils} from "./lib/BytesUtils.sol";
 import {IKNSEnsExit} from "./interfaces/IKNSEnsExit.sol";
 import {IKNSRegistryResolver} from "./interfaces/IKNSRegistryResolver.sol";
 
-contract KNSEnsExit is IKNSEnsExit {
+contract KNSEnsExit is 
+    IKNSEnsExit
+    // UUpsUpgradeable
+{
     error NotEthName();
     error EthNameTooShort();
     error ParentNotRegistered();
@@ -17,8 +20,11 @@ contract KNSEnsExit is IKNSEnsExit {
 
     using BytesUtils for bytes;
 
-    bytes32 constant DOT_ETH_HASH =
+    bytes32 constant DOT_ETH_LABEL = 
         0xc65934a88d283a635602ca15e14e8b9a9a3d150eacacca3b07f4a85f5fdbface;
+    bytes32 constant DOT_ETH_HASH =
+        0x93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae;
+    uint256 constant DOT_ETH_NODE = uint(DOT_ETH_HASH);
 
     ILayerZeroEndpoint public immutable lz;
     uint16 public immutable lzc;
@@ -58,18 +64,34 @@ contract KNSEnsExit is IKNSEnsExit {
         bytes calldata fqdn,
         bytes[] calldata data
     ) external onlythis {
-        // if (fqdn.length < 5)
-        //     revert EthNameTooShort();
-        // if (DOT_ETH_HASH != keccak256(fqdn[fqdn.length-5:fqdn.length]))
-        //     revert NotEthName();
-        // ( uint parent, uint child ) =
-        //     _getParentAndChildNodes(fqdn);
-        // if (ensowners[parent] == address(0))
-        //     revert ParentNotRegistered();
-        // ensowners[child] = owner;
-        // IKNSRegistryResolver(kns).registerNode(fqdn);
-        // if (data.length != 0)
-        //     IKNSRegistryResolver(kns).multicallWithNodeCheck(child, data);
+
+        if (fqdn.length < 5)
+            revert EthNameTooShort();
+
+        if (DOT_ETH_LABEL != keccak256(fqdn[fqdn.length-5:fqdn.length]))
+            revert NotEthName();
+
+        ( uint parent, uint child ) = _getParentAndChildNodes(fqdn);
+
+        if (parent != DOT_ETH_NODE && ensowners[parent] == address(0))
+            revert ParentNotRegistered();
+
+        ensowners[child] = owner;
+
+        IKNSRegistryResolver(kns).registerNode(fqdn);
+
+        if (data.length != 0)
+            IKNSRegistryResolver(kns).multicallWithNodeCheck(bytes32(child), data);
+
+    }
+
+    function auth(
+        bytes32 _nodeId,
+        address _sender
+    ) public view returns (bool) {
+        return 
+            _sender == address(this) ||
+            _sender == ensowners[uint(_nodeId)];
     }
 
     function ownerOf(uint256 node) public returns (address) {
@@ -119,6 +141,8 @@ contract KNSEnsExit is IKNSEnsExit {
             emit Error(selector);
         }
     }
+
+    function __initTLDRegistration(bytes calldata fqdn, bytes32 tld) external { }
 
     function _getParentAndChildNodes(
         bytes memory fqdn
