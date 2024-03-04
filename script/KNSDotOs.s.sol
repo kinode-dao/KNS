@@ -129,16 +129,42 @@ contract ResetNode is Script {
     }
 }
 
+contract QueryKNS is Script {
+    function run () public {
+
+        address KNS = vm.envAddress("KNS_REGISTRY_SEPOLIA");
+
+        KNSRegistryResolver kns = KNSRegistryResolver(KNS);
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "./dnswire/target/debug/dnswire";
+        inputs[1] = "--to-hex";
+        inputs[2] = "eth";
+
+        bytes memory doteth = vm.ffi(inputs);
+
+        bytes32 dotethnode = BytesUtils.namehash(doteth, 0);
+
+        console.log("doteth");
+        console.logBytes(doteth);
+        console.logBytes32(dotethnode);
+
+        address registered = kns.TLDs(dotethnode);
+
+        console.log("registered", registered);
+
+    }
+}
+
 contract SetNode is Script {
     function run() public {
-        address KNS = vm.envAddress("KNS_REGISTRY");
 
-        address DOTOS = vm.envAddress("DOT_UQ_REGISTRAR");
+        address DOTOS = vm.envAddress("DOT_OS_REGISTRAR_SEPOLIA");
 
         uint128 WS_IP = 2130706433;
         uint16 WS_PORT = 3000;
 
-        string memory node1 = "verification.os";
+        string memory node1 = "skyskysky.os";
 
         string[] memory inputs = new string[](3);
         inputs[0] = "./dnswire/target/debug/dnswire";
