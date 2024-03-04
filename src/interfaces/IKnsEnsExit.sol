@@ -12,5 +12,4 @@ interface IKNSEnsExit {
         bytes[] calldata data
     ) external;
 
-    function ping() external;
 }
