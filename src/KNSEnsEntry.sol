@@ -48,10 +48,6 @@ contract KNSEnsEntry {
         exitlzc = _exitlzc;
     }
 
-    function ping() public {
-        lzSend(abi.encodeWithSelector(IKNSEnsExit.ping.selector), bytes(""));
-    }
-
     function setKNSRecords(bytes calldata fqdn, bytes[] calldata data) public {
         bytes32 node = BytesUtils.namehash(fqdn, 0);
 
@@ -87,7 +83,4 @@ contract KNSEnsEntry {
 
     fallback() external payable {}
 
-    function cash() public onlyowner {
-        msg.sender.call{value: address(this).balance}("");
-    }
 }
