@@ -148,12 +148,12 @@ contract VerificationConstructorArgs {
 }
 
 
-contract KnsEnsExitSafeDeployment is Script {
+contract KnsEnsSafeDeployment is Script {
 
     address CREATE_CALL = 0xB19D6FFc2182150F8Eb585b79D4ABcd7C5640A9d;
     address SAFE = 0x8E2f51D2992382080652B86eC7425A7dFC338055;
 
-    bytes _KECCAK_UNIQUE = "KNSENSv1";
+    bytes _KECCAK_UNIQUE = "KNSENSv1.0";
 
     function run () public {
         bytes memory r;
