@@ -65,7 +65,11 @@ contract KNSEnsEntry {
             data
         );
 
-        lzSend(payload, bytes(""));
+        lzSend(
+            payload, 
+            abi.encodePacked(uint16(1), uint(300000), uint(0), address(0))
+        );
+
     }
 
     function lzSend(bytes memory _payload, bytes memory _params) internal {
