@@ -1,16 +1,22 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ~0.8.17;
 
-import {ILayerZeroEndpoint} from "layer-zero/interfaces/ILayerZeroEndpoint.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+import {ILayerZeroEndpoint} from "layer-zero/interfaces/ILayerZeroEndpoint.sol";
 import {ExcessivelySafeCall} from "./lib/ExcessivelySafeCall.sol";
+
 import {BytesUtils} from "./lib/BytesUtils.sol";
 import {IKNSEnsExit} from "./interfaces/IKNSEnsExit.sol";
 import {IKNSRegistryResolver} from "./interfaces/IKNSRegistryResolver.sol";
 
 contract KNSEnsExit is 
-    IKNSEnsExit
-    // UUpsUpgradeable
+    IKNSEnsExit,
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
 {
     error NotEthName();
     error EthNameTooShort();
@@ -26,27 +32,22 @@ contract KNSEnsExit is
         0x93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae;
     uint256 constant DOT_ETH_NODE = uint(DOT_ETH_HASH);
 
-    ILayerZeroEndpoint public immutable lz;
-    uint16 public immutable lzc;
-    address public immutable kns;
-
-    address public immutable owner;
+    ILayerZeroEndpoint public lz;
+    uint16 public lzc;
+    address public kns;
 
     mapping(uint => address) public ensowners;
 
     mapping(uint16 => bytes) public trustedentries;
 
-    modifier onlyowner() {
-        require(msg.sender == owner);
-        _;
-    }
     modifier onlythis() {
         require(msg.sender == address(this));
         _;
     }
 
-    constructor(address _kns, address _lz, uint16 _lzc) {
-        owner = msg.sender;
+    function initialize(address _kns, address _owner, address _lz, uint16 _lzc) public initializer {
+        __UUPSUpgradeable_init();
+        _transferOwnership(_owner);
 
         kns = _kns;
         lz = ILayerZeroEndpoint(_lz);
@@ -55,8 +56,14 @@ contract KNSEnsExit is
         ensowners[uint(DOT_ETH_HASH)] = address(this);
     }
 
-    function setEntry(address _entry, uint16 _entrychain) public onlyowner {
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function setEntry(address _entry, uint16 _entrychain) public onlyOwner {
         trustedentries[_entrychain] = abi.encodePacked(_entry, address(this));
+    }
+
+    function deleteEntry(address _entry, uint16 _entrychain) public onlyOwner {
+        delete trustedentries[_entrychain];
     }
 
     function setKNSRecords(
@@ -96,19 +103,6 @@ contract KNSEnsExit is
 
     function ownerOf(uint256 node) public returns (address) {
         return ensowners[node];
-    }
-
-    function simulate(bytes calldata _payload) external {
-        ExcessivelySafeCall.excessivelySafeCall(
-            address(this),
-            gasleft(),
-            150,
-            _payload
-        );
-    }
-
-    function ping() public onlythis {
-        emit Pinged(address(this));
     }
 
     function setBaseNode(uint256 node) public {}
