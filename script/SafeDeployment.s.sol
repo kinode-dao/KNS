@@ -13,6 +13,8 @@ import {DotOsRegistrar} from "../src/DotOsRegistrar.sol";
 import {ITLDRegistrar} from "../src/interfaces/ITLDRegistrar.sol";
 import {IKNSRegistryResolver} from "../src/interfaces/IKNSRegistryResolver.sol";
 import {BytesUtils} from "../src/lib/BytesUtils.sol";
+import {KNSEnsExit} from "../src/KNSEnsExit.sol";
+import {KNSEnsEntry} from "../src/KNSEnsEntry.sol";
 
 contract SafeDeployment is Script {
     address CREATE_CALL = 0xB19D6FFc2182150F8Eb585b79D4ABcd7C5640A9d;
@@ -120,6 +122,7 @@ contract VerificationConstructorArgs {
     address DOTOS_IMPL = 0x76cd096Bd7006D5Bf7F60fB6a237c046C9b6cC24; 
 
     function run() public {
+
         bytes memory knsRegistryConstructorArgs = abi.encode(
             KNS_IMPL,
             abi.encodeWithSelector(
@@ -142,4 +145,110 @@ contract VerificationConstructorArgs {
         console.log("dot nec constructor args");
         console.logBytes(dotOsConstructorArgs);
     }
+}
+
+
+contract KnsEnsExitSafeDeployment is Script {
+
+    address CREATE_CALL = 0xB19D6FFc2182150F8Eb585b79D4ABcd7C5640A9d;
+    address SAFE = 0x8E2f51D2992382080652B86eC7425A7dFC338055;
+
+    bytes _KECCAK_UNIQUE = "KNSENSv1";
+
+    function run () public {
+        bytes memory r;
+
+        bytes memory knsExitImplDeployCode = abi.encodeWithSelector(
+            CreateCall.performCreate2.selector,
+            uint256(0),
+            vm.getCode("KNSEnsExit.sol:KNSEnsExit"),
+            keccak256(_KECCAK_UNIQUE)
+        );
+
+        console.log("kns exit impl deploy code");
+        console.logBytes(knsExitImplDeployCode);
+
+        (, r) = CREATE_CALL.call(knsExitImplDeployCode);
+        address knsEnsExitImplAddress = abi.decode(r, (address));
+
+        bytes memory knsExitProxyConstructorArgs = abi.encode(
+            knsEnsExitImplAddress,
+            abi.encodeWithSelector(
+                KNSEnsExit.initialize.selector,
+                vm.envAddress("KNS_REGISTRY_SEPOLIA"),
+                SAFE,
+                vm.envAddress("LZ_EP_SEPOLIA"),
+                uint16(vm.envUint("LZ_CID_SEPOLIA"))
+            )
+        );
+
+        bytes memory knsExitProxyDeployCode = abi.encodeWithSelector(
+            CreateCall.performCreate2.selector,
+            uint256(0),
+            abi.encodePacked(
+                vm.getCode("ERC1967Proxy.sol:ERC1967Proxy"),
+                knsExitProxyConstructorArgs
+            ),
+            keccak256(_KECCAK_UNIQUE)
+        );
+
+        console.log("kns exit proxy deploy code");
+        console.logBytes(knsExitProxyDeployCode);
+
+        (, r) = CREATE_CALL.call(knsExitProxyDeployCode);
+        address knsEnsExitProxyAddress = abi.decode(r, (address));
+
+        bytes memory knsEntryConstructorArgs = abi.encode(
+            vm.envAddress("ENS_REGISTRY_SEPOLIA"),
+            vm.envAddress("ENS_NAME_WRAPPER_SEPOLIA"),
+            vm.envAddress("LZ_EP_SEPOLIA"),
+            vm.envUint("LZ_CID_SEPOLIA"),
+            knsEnsExitProxyAddress,
+            vm.envUint("LZ_CID_SEPOLIA")
+        );
+
+        bytes memory knsEntryDeployCode = abi.encodeWithSelector(
+            CreateCall.performCreate2.selector,
+            uint256(0),
+            abi.encodePacked(
+                vm.getCode("KNSEnsEntry.sol:KNSEnsEntry"),
+                knsEntryConstructorArgs
+            ),
+            keccak256(_KECCAK_UNIQUE)
+        );
+
+        console.log("kns entry deploy code");
+        console.logBytes(knsEntryDeployCode);
+
+        (, r) = CREATE_CALL.call(knsEntryDeployCode);
+        address knsEnsEntryAddress = abi.decode(r, (address));
+
+        IKNSRegistryResolver kns = IKNSRegistryResolver(vm.envAddress("KNS_REGISTRY_SEPOLIA"));
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "./dnswire/target/debug/dnswire";
+        inputs[1] = "--to-hex";
+        inputs[2] = "eth";
+        bytes memory baseNode = vm.ffi(inputs);
+
+        bytes memory setDotEthCallCode = abi.encodeWithSelector(
+            KNSRegistryResolver.registerTLD.selector,
+            baseNode,
+            knsEnsExitProxyAddress
+        );
+
+        bytes memory setEntryOnExit = abi.encodeWithSelector(
+            KNSEnsExit.setEntry.selector,
+            knsEnsEntryAddress,
+            uint16(vm.envUint("LZ_CID_SEPOLIA"))
+        );
+
+        console.log("set eth call code", vm.envAddress("KNS_REGISTRY_SEPOLIA"));
+        console.logBytes(setDotEthCallCode);
+
+        console.log("set entry on exit", knsEnsExitProxyAddress);
+        console.logBytes(setEntryOnExit);
+
+    }
+
 }
