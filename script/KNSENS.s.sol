@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
 import {IETHRegistrarController} from "ens-contracts/ethregistrar/IETHRegistrarController.sol";
@@ -35,16 +37,31 @@ contract DeployENSExit is EnvironmentAndScript {
     function run() public {}
 }
 
+contract DeployExit is EnvironmentAndScript {
+
+}
+
 contract DeployEnsEntryExitPair is EnvironmentAndScript {
     function run() public {
 
         vm.selectFork(ENTRY_RPC);
         vm.startBroadcast(PRIVKEY);
 
-        exit = new KNSEnsExit(
-            address(kns),
-            vm.envAddress("LZ_EP_SEPOLIA"),
-            uint16(vm.envUint("LZ_CID_SEPOLIA"))
+        address owner = vm.rememberKey(PRIVKEY);
+
+        exit = KNSEnsExit(
+            address(
+                new ERC1967Proxy(
+                    address(new KNSEnsExit()),
+                    abi.encodeWithSelector(
+                        KNSEnsExit.initialize.selector,
+                        vm.envAddress("KNS_REGISTRY_SEPOLIA"),
+                        owner,
+                        vm.envAddress("LZ_EP_SEPOLIA"),
+                        uint16(vm.envUint("LZ_CID_SEPOLIA"))
+                    )
+                )
+            )
         );
 
         string[] memory inputs = new string[](3);
@@ -67,8 +84,6 @@ contract DeployEnsEntryExitPair is EnvironmentAndScript {
         address(entry).call{value: .1 ether}("");
 
         exit.setEntry(address(entry), uint16(vm.envUint("LZ_CID_SEPOLIA")));
-
-        entry.ping();
 
         inputs[2] = "kinotest.eth";
         bytes memory kinotest = vm.ffi(inputs);
@@ -114,33 +129,25 @@ contract SetWsForEnsNameOnKNS is EnvironmentAndScript {
     }
 }
 
-contract CashKNSEnsEntry is EnvironmentAndScript {
-    function run() public {
-        vm.selectFork(ENTRY_RPC);
-        vm.startBroadcast(PRIVKEY);
-        entry.cash();
-    }
-}
+// contract SimulateKNSEnsExit is EnvironmentAndScript {
+//     function run() public {
+//         vm.selectFork(EXIT_RPC);
 
-contract SimulateKNSEnsExit is EnvironmentAndScript {
-    function run() public {
-        vm.selectFork(EXIT_RPC);
+//         address from = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
+//         vm.startPrank(from);
 
-        address from = vm.createWallet(vm.envUint("PRIVATE_KEY")).addr;
-        vm.startPrank(from);
+//         KNSEnsExit code = new KNSEnsExit(
+//             address(kns),
+//             vm.envAddress("LZ_EP_SEPOLIA"),
+//             uint16(vm.envUint("LZ_CID_SEPOLIA"))
+//         );
 
-        KNSEnsExit code = new KNSEnsExit(
-            address(kns),
-            vm.envAddress("LZ_EP_SEPOLIA"),
-            uint16(vm.envUint("LZ_CID_SEPOLIA"))
-        );
+//         vm.etch(address(exit), address(code).code);
 
-        vm.etch(address(exit), address(code).code);
+//         exit.simulate(vm.envBytes("PAYLOAD"));
 
-        exit.simulate(vm.envBytes("PAYLOAD"));
-
-    }
-}
+//     }
+// }
 
 interface IEndpoint {
     function retryPayload(uint16 _srcChainId, bytes calldata _srcAddress, bytes calldata _payload) external;
