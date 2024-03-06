@@ -41,6 +41,25 @@ contract DeployExit is EnvironmentAndScript {
 
 }
 
+contract DeployEnsEntry is EnvironmentAndScript {
+    function run () public {
+
+        entry = new KNSEnsEntry(
+            ensregistry,
+            ensnamewrapper,       
+            // layer zero endpoint for the chain we are deploying this contract to
+            vm.envAddress("LZ_EP_SEPOLIA"),
+            // layer zero chain id for the chain we are deploying this contract to
+            uint16(vm.envUint("LZ_CID_SEPOLIA")),
+            // address of the KNS exit we are pointing this entry to
+            address(exit),
+            // layer zero chain id of the chain where the KNS lives
+            uint16(vm.envUint("LZ_CID_SEPOLIA"))
+        );
+
+    }
+}
+
 contract DeployEnsEntryExitPair is EnvironmentAndScript {
     function run() public {
 
