@@ -24,11 +24,6 @@ contract KNSEnsEntry {
     address public immutable ensregistry;
     address public immutable ensnamewrapper;
 
-    modifier onlyowner() {
-        require(msg.sender == owner);
-        _;
-    }
-
     constructor(
         address _ensregistry,
         address _ensnamewrapper,
@@ -40,7 +35,6 @@ contract KNSEnsEntry {
         ensregistry = _ensregistry;
         ensnamewrapper = _ensnamewrapper;
 
-        owner = msg.sender;
         lz = ILayerZeroEndpoint(_lz);
         lzc = _lzc;
 
